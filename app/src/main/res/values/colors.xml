@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFE0B2</color>
+    <color name="cat_face_blue">#1E3A8A</color>
+    <color name="cat_nose_pink">#F472B6</color>
+
+    <!-- ===== 暖橙 Material3 配色（亮色）===== -->
+    <color name="md_primary">#E65100</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#FFDDB8</color>
+    <color name="md_on_primary_container">#3A1500</color>
+    <color name="md_secondary">#B85C00</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#FFDEC0</color>
+    <color name="md_on_secondary_container">#3A1D00</color>
+    <color name="md_tertiary">#A86500</color>
+    <color name="md_on_tertiary">#FFFFFF</color>
+    <color name="md_tertiary_container">#FFE0A8</color>
+    <color name="md_on_tertiary_container">#332000</color>
+    <color name="md_surface">#FFF8F2</color>
+    <color name="md_on_surface">#241A12</color>
+    <color name="md_surface_variant">#F5DED0</color>
+    <color name="md_on_surface_variant">#53443A</color>
+    <color name="md_outline">#85736A</color>
+    <color name="md_background">#FFF8F2</color>
+    <color name="md_on_background">#241A12</color>
+    <color name="md_error">#BA1A1A</color>
+    <color name="md_on_error">#FFFFFF</color>
+    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_on_error_container">#410002</color>
+</resources>

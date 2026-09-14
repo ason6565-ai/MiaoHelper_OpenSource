@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E6FFF8F2">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#FFF3E0"
+        app:title="合成台"
+        app:titleTextColor="#3E2723"
+        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- 输入卡片 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#FFF3E0"
+                app:strokeColor="#FFCC80"
+                app:strokeWidth="1dp"
+                app:cornerRadius="16dp">
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="语言A"
+                        android:textSize="12sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <EditText
+                        android:id="@+id/etA"
+                        android:hint="例如中文：今天天气真好"
+                        android:minLines="1"
+                        android:background="@android:color/transparent"
+                        android:textColor="#3E2723"
+                        android:textColorHint="#A1887F"
+                        android:textSize="15sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="#FFCC80" android:layout_marginTop="6dp" android:layout_marginBottom="8dp" />
+                    <TextView
+                        android:text="语言B"
+                        android:textSize="12sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <EditText
+                        android:id="@+id/etB"
+                        android:hint="例如英文：the weather is really nice"
+                        android:minLines="1"
+                        android:background="@android:color/transparent"
+                        android:textColor="#3E2723"
+                        android:textColorHint="#A1887F"
+                        android:textSize="15sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="#FFCC80" android:layout_marginTop="6dp" android:layout_marginBottom="10dp" />
+                    <TextView
+                        android:text="合成人设"
+                        android:textSize="12sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <Spinner
+                        android:id="@+id/spPersona"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSynthesize"
+                        android:text="合成输出"
+                        android:layout_marginTop="12dp"
+                        android:backgroundTint="#FB8C00"
+                        android:textColor="#FFFFFF"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:text="把两种语言合成为一句，以所选人设的语气说出"
+                        android:textSize="11sp"
+                        android:textColor="#A1887F"
+                        android:layout_marginTop="6dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 结果容器（代码动态填充） -->
+            <LinearLayout
+                android:id="@+id/resultBox"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

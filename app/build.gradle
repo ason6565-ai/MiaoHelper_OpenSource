@@ -1,0 +1,69 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.miao.helper'
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.miao.helper"
+        // minSdk 26：TYPE_APPLICATION_OVERLAY 需要 Android 8.0+，避免悬浮球在 7.x 崩溃
+        minSdk 26
+        targetSdk 34
+        versionCode 131
+        versionName "5.0.0"
+        // 只打 arm64-v8a，避免 x86/x86_64/armeabi 重复打包膨胀体积（ML Kit OCR 已退役，仍保留 arm64 过滤）
+        ndk { abiFilters 'arm64-v8a' }
+    }
+    // 签名密码不写死：统一从根目录 keystore.properties 读取（已被 .gitignore 忽略，防止密码入库）
+    // 开源版：keystore.properties 缺失时 release 构建出未签名包并告警，debug/测试不受影响
+    def ksProps = new Properties()
+    def ksFile = rootProject.file('keystore.properties')
+    if (ksFile.exists()) {
+        ksFile.withInputStream { ksProps.load(it) }
+    }
+    signingConfigs {
+        release {
+            if (ksProps['MIAO_STORE_PASS'] != null) {
+                storeFile file(ksProps['MIAO_STORE_FILE'])
+                storePassword ksProps['MIAO_STORE_PASS']
+                keyAlias ksProps['MIAO_KEY_ALIAS']
+                keyPassword ksProps['MIAO_KEY_PASS']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (ksProps['MIAO_STORE_PASS'] != null) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // AGP 8+ 默认不生成 BuildConfig；ContentGuard（P0-5-1）需要 BuildConfig.DEBUG 区分 debug/release
+    buildFeatures {
+        buildConfig true
+    }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    implementation 'com.google.android.material:material:1.11.0'
+
+    // ===== 开源能力引入（许可证均宽松，可闭源商用）=====
+    // TinyPinyin（Apache-2.0，<30KB，纯 Java，Android 原生兼容）：汉字转拼音，用于脏词谐音变体识别
+    implementation 'io.github.biezhi:TinyPinyin:2.0.3.RELEASE'  // promeg TinyPinyin 的 mavenCentral 正规复刻，包名不变
+    // OkHttp（Apache-2.0）：主翻译链路 SSE 逐字流式，替代该链路上的 HttpURLConnection
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // diff-match-patch（Apache-2.0，Google，纯 Java）：原文/译文差异与改动率，支撑预览-确认/撤销
+    implementation 'org.bitbucket.cowwoc:diff-match-patch:1.2'
+
+    // ===== 单元测试基线 =====
+    // JUnit 4（EPL-1.0，标准单元测试框架）
+    testImplementation 'junit:junit:4.13.2'
+    // Mockito（MIT，mock 依赖，隔离 Android 框架）
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+}

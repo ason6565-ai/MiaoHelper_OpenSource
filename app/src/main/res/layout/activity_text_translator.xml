@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF8F0"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="文本翻译"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#E65100" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="返回"
+            android:textSize="13sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100" />
+    </LinearLayout>
+
+    <!-- v5.0 每本书术语档：输入书名启用该书术语表，点「术语表」管理条目 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <EditText
+            android:id="@+id/etBookName"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:hint="术语档书名（可选）"
+            android:padding="8dp"
+            android:textSize="13sp"
+            android:background="#FFFFFF"
+            android:singleLine="true"
+            android:inputType="text" />
+
+        <Button
+            android:id="@+id/btnGlossary"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="术语表"
+            android:textSize="13sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="原文"
+        android:textSize="13sp"
+        android:textColor="#8D6E63"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etInput"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:hint="粘贴文本，或点击下方导入文件..."
+        android:gravity="top|start"
+        android:padding="10dp"
+        android:textSize="14sp"
+        android:background="#FFFFFF"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:minLines="4" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnImport"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="导入文件"
+            android:textSize="13sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnTranslate"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="翻译"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:backgroundTint="#E65100"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnClear"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="清空"
+            android:textSize="13sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100"
+        android:progressTint="#E65100" />
+
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="12sp"
+        android:textColor="#8D6E63"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="译文"
+        android:textSize="13sp"
+        android:textColor="#8D6E63"
+        android:layout_marginBottom="4dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#FFFFFF"
+        android:padding="10dp">
+
+        <EditText
+            android:id="@+id/tvOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="#1A1A1A"
+            android:lineSpacingExtra="4dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:background="@null" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnCopy"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="复制译文"
+            android:textSize="12sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="保存TXT"
+            android:textSize="12sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnSaveEpub"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="保存EPUB"
+            android:textSize="12sp"
+            android:backgroundTint="#FFCC80"
+            android:textColor="#E65100"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+</LinearLayout>

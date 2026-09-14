@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="?attr/colorSurfaceVariant"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView android:text="本地词库管理"
+        android:textSize="20sp" android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <TextView android:id="@+id/tvStyleLabel"
+        android:text="当前风格：" android:textSize="13sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginTop="2dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+    <!-- AI 扩展词库区域 -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:layout_marginTop="10dp"
+        android:background="?attr/colorSurface"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:text="AI 扩展词库"
+                android:textSize="15sp" android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/swLexicon"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+        <TextView android:id="@+id/tvLexiconInfo"
+            android:text="未扩展：点击下方按钮生成"
+            android:textSize="12sp" android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLexiconExpand"
+                android:text="AI 扩展当前人设"
+                android:layout_marginEnd="6dp"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLexiconClear"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:text="清除"
+                android:layout_marginStart="6dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:text="输入中出现「原文」即替换为右侧文本；勾选「正则」按正则匹配"
+        android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginTop="6dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <ListView android:id="@+id/lvRules"
+        android:layout_marginTop="12dp"
+        android:background="?attr/colorSurface"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" />
+    <TextView android:id="@+id/tvEmpty"
+        android:text="还没有自定义规则"
+        android:gravity="center" android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:visibility="gone" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdd" android:text="➕ 添加规则"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSample"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:text="载入示例" android:layout_marginEnd="6dp"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnClear"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:text="清空全部" android:layout_marginStart="6dp"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackupExport"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:text="导出备份" android:layout_marginEnd="6dp"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackupImport"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:text="导入备份" android:layout_marginStart="6dp"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+</LinearLayout>

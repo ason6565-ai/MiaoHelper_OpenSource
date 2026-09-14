@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 悬浮球新背景：橙→粉渐变 + 亮描边（猫娘配色） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:startColor="#FFB74D"
+        android:centerColor="#F06292"
+        android:endColor="#EC407A"
+        android:angle="315" />
+    <stroke android:width="2dp" android:color="#FFFFD1DC" />
+</shape>

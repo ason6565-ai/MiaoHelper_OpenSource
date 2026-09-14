@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 5 条跳转列表 -->
+        <LinearLayout
+            android:id="@+id/navStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#FFF8E1"
+            android:paddingStart="16dp"
+            android:paddingEnd="14dp"
+            android:minHeight="52dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="风格设置"
+                android:textSize="14sp"
+                android:textColor="#3E2723"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="›"
+                android:textSize="20sp"
+                android:textColor="#E65100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navApi"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#FFF8E1"
+            android:paddingStart="16dp"
+            android:paddingEnd="14dp"
+            android:minHeight="52dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="API 设置"
+                android:textSize="14sp"
+                android:textColor="#3E2723"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="›"
+                android:textSize="20sp"
+                android:textColor="#E65100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navRule"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#FFF8E1"
+            android:paddingStart="16dp"
+            android:paddingEnd="14dp"
+            android:minHeight="52dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="词库管理"
+                android:textSize="14sp"
+                android:textColor="#3E2723"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="›"
+                android:textSize="20sp"
+                android:textColor="#E65100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navPersona"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#FFF8E1"
+            android:paddingStart="16dp"
+            android:paddingEnd="14dp"
+            android:minHeight="52dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="AI 生成人设"
+                android:textSize="14sp"
+                android:textColor="#3E2723"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="›"
+                android:textSize="20sp"
+                android:textColor="#E65100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- 意见反馈（无服务器，展示反馈邮箱） -->
+        <LinearLayout
+            android:id="@+id/navFeedback"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#FFF8E1"
+            android:paddingStart="16dp"
+            android:paddingEnd="14dp"
+            android:minHeight="52dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="意见反馈"
+                android:textSize="14sp"
+                android:textColor="#3E2723"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="›"
+                android:textSize="20sp"
+                android:textColor="#E65100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- 翻译引擎与调节 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="#FFF3E0"
+            app:strokeColor="#FFCC80"
+            app:strokeWidth="1dp"
+            app:cornerRadius="16dp">
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="翻译调节"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#E65100"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <!-- AI 裁判严格度 1-5 -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="AI 裁判严格度"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvJudgeLevel"
+                        android:text="3/5 平衡"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbJudge"
+                    android:max="4"
+                    android:progress="2"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 生成数量 1-16 滑条（与裁判数量独立调节） -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="生成数量"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvCandidateCount"
+                        android:text="6"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbCandidateCount"
+                    android:max="15"
+                    android:progress="5"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 裁判数量 1-3 滑条 -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="裁判数量"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvJudgeCount"
+                        android:text="1"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbJudgeCount"
+                    android:max="2"
+                    android:progress="0"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 随机性 Temperature -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="随机性 Temperature"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvTemperature"
+                        android:text="0.40"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbTemperature"
+                    android:max="200"
+                    android:progress="40"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 风格强度 1-5 -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="风格强度"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvIntensityLevel"
+                        android:text="3/5 标准"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbIntensity"
+                    android:max="4"
+                    android:progress="2"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 扩写等级 0=自动 1-5 -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="扩写等级"
+                        android:textSize="13sp"
+                        android:textColor="#8D6E63"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/tvExpandLevel"
+                        android:text="自动"
+                        android:textSize="13sp"
+                        android:textColor="#E65100"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/sbExpand"
+                    android:max="5"
+                    android:progress="0"
+                    android:layout_marginTop="-2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <!-- 权限入口 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnService"
+                android:text="无障碍设置"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:textColor="#E65100"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOverlay"
+                android:text="悬浮窗权限"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:textColor="#E65100"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

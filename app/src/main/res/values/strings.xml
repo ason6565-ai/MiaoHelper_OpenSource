@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">拟言助手</string>
+    <string name="service_desc">拟言助手无障碍服务（仅用于读取和替换当前输入框文字）</string>
+    <string name="accessibility_desc">本服务只在你主动开启后，读取当前输入框文字并按词库/API重写，不读取其他屏幕内容，不执行点击操作。</string>
+</resources>
