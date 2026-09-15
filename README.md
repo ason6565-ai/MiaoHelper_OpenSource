@@ -4,7 +4,7 @@ Android 无障碍输入文本增强工具：在任意 App 的输入框中，通�
 
 [![Download](https://img.shields.io/badge/Download-v5.0.0-4F8CFF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/ason6565-ai/MiaoHelper_OpenSource/releases/latest)
 
-> 本仓库为开源公开版。项目已获中国计算机软件著作权登记（软著），源码仅供学习交流。
+> 本仓库为开源公开版。软件著作权登记申请中，源码仅供学习交流。
 
 ## 特色亮点
 
