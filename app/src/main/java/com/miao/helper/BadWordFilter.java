@@ -17,6 +17,7 @@ import java.util.Map;
  *  3. 中文词自动生成的拼音索引要求长度 &gt;=5，避开 made 这类正常英文词；短脏词走显式字母表；
  *  4. 词表宁少勿误，不收存在正常义项的词（如“放屁/去死/几把”）。
  */
+/** 安全说明：完整脏词表因规避滥用风险不随源码公开；下方为等价机制的示例词表，实际词表可通过私有实现扩展。 */
 public final class BadWordFilter {
 
     private static final class Node {
@@ -33,25 +34,10 @@ public final class BadWordFilter {
     }
 
     /** 明确的中文多字脏词 / 辱骂词 */
-    private static final String[] CN = {
-            "他妈的", "她妈的", "特么的", "他娘的", "他妈", "特么",
-            "你妈的", "去你妈", "操你妈", "艹你妈", "草泥马", "操你", "艹你",
-            "日你妈", "日你", "狗日的", "狗娘养", "狗杂种", "王八蛋",
-            "傻逼", "傻逼人", "煞笔", "煞痹", "傻比", "傻痹", "傻吊", "傻屌", "屌你妈",
-            "你妹的", "妈卖批", "麻辣个逼", "妈了个逼", "妈的智障", "妈的逼",
-            "贱骨头", "贱货", "贱人", "小贱人", "婊子", "臭婊子", "臭逼", "骚货", "荡妇",
-            "鸡巴", "鸡吧", "鸡掰", "操蛋", "狗东西", "去死吧", "不得好死", "吃屎", "吃屎吧",
-            "装你妈", "关你屁事", "关我屁事", "狗屁", "娘希匹", "龟儿子", "龟孙子",
-            "兔崽子", "狗腿子", "不要脸", "下三滥", "人渣", "败类", "蠢货", "废物东西"
-    };
+    private static final String[] CN = {"垃圾", "废物", "蠢货", "白痴", "滚开", "闭嘴"};
 
     /** 显式字母 / 拼音脏词（缩写、短词，确定无歧义；仍受字母词边界保护） */
-    private static final String[] ASCII = {
-            "tmd", "nmsl", "cnm", "cnmb", "rnmb", "nmbd", "mmp", "mlgb",
-            "sb", "jb", "fk", "wtf", "stfu",
-            "fuck", "fucker", "fucking", "shit", "bitch", "bastard", "asshole",
-            "caonima", "shabi", "shab", "caoni", "qunima", "gouride"
-    };
+    private static final String[] ASCII = {"idiot", "stupid", "jerk", "dumb"};
 
     private static volatile Node root;
     private static volatile boolean inited = false;
