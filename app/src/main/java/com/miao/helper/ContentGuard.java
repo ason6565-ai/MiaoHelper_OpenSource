@@ -34,7 +34,7 @@ public final class ContentGuard {
 
     /** 硬词表：只收"实在过于明显"的直白违规词（命中即进入拦截判定）。
      *  老板口径：暴力/辱骂词经彻底替换与 AI 翻译风格化会被自然抹掉，不纳入拦截；
-     *  只保留涉性直白类：强奸、轮奸、强暴、迷奸、猥亵、幼女、乱伦、鸡巴、屄、肉棒、口交、肛交、颜射、内射 */
+     *  只保留涉性直白类硬词（具体词表不随源码公开） */
     private static final String[] HARD_WORDS = {"赌博", "诈骗", "代孕", "博彩", "刷单"};
 
     /** 暗示/大众化敏感词（动作侧）：单独出现不违规，与人体部位词并联且指向人体时拦截 */
@@ -56,7 +56,7 @@ public final class ContentGuard {
 
     private ContentGuard() {}
 
-    /** P1-17 修复：硬词命中总次数（同一词重复出现也计数，避免"鸡巴×3"只算1次放行） */
+    /** P1-17 修复：硬词命中总次数（同一词重复出现也计数，避免"同一词×3"只算1次放行） */
     private static int hardHits(String t) {
         int hits = 0;
         for (String w : HARD_WORDS) {
