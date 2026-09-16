@@ -1,0 +1,51 @@
+name: Bug 报告
+description: 反馈一个可复现的问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: android
+    attributes:
+      label: 安卓版本
+      description: 例如 Android 14（MIUI 14）
+      placeholder: 安卓版本
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 机型
+      placeholder: 例如 Redmi K60
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: App 版本
+      options:
+        - v5.0.0
+        - v5.1.0
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 怎么操作能复现这个问题
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志
+      description: 设置 → 关于 → 运行日志，复制最近 20 条（可脱敏）
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 你期望发生什么
