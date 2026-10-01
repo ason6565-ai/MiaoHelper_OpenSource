@@ -3,4 +3,680 @@
     <string name="app_name">拟言助手</string>
     <string name="service_desc">拟言助手无障碍服务（仅用于读取和替换当前输入框文字）</string>
     <string name="accessibility_desc">本服务只在你主动开启后，读取当前输入框文字并按词库/API重写，不读取其他屏幕内容，不执行点击操作。</string>
+
+    <!-- 主界面 -->
+    <string name="main_version_fmt">拟言助手 v%1$s · 左右滑动切换</string>
+    <string name="status_default">服务状态</string>
+    <string name="status_on">服务已开启</string>
+    <string name="status_off">服务未开启</string>
+
+    <!-- 主菜单 -->
+    <string name="menu_history">翻译历史</string>
+    <string name="menu_app_switch">按 App 切换</string>
+    <string name="menu_error_log">错误日志</string>
+    <string name="menu_privacy">隐私政策</string>
+    <string name="menu_support">赞助支持</string>
+    <string name="support_open_fail">无法打开赞助页面</string>
+    <string name="menu_float">悬浮窗调节</string>
+    <string name="menu_text_translate">文本翻译</string>
+    <string name="menu_notice">重新显示翻译须知</string>
+    <string name="menu_novel">小说生成</string>
+    <string name="menu_experimental">实验功能</string>
+    <string name="menu_language">语言</string>
+    <string name="lang_chinese">中文</string>
+    <string name="lang_english">English</string>
+    <string name="lang_japanese">日本語</string>
+    <string name="lang_korean">한국어</string>
+
+    <string name="float_replace">替换</string>
+    <string name="float_engine_local">本地</string>
+    <string name="float_engine_ai">AI 翻译</string>
+    <string name="float_engine_full">彻底替换</string>
+    <string name="float_engine_lex">本地词库</string>
+    <string name="float_localpre_on">AI 并联本地：开</string>
+    <string name="float_localpre">AI 并联本地</string>
+    <string name="float_persona_fmt">人设：%1$s</string>
+    <string name="float_desc_fmt">%1$s · 裁判 %2$d 级</string>
+    <string name="ms_timeout">请求超时，已自动恢复，可重试</string>
+    <string name="ms_localpre_on">已开启：AI 前用扩展词打底</string>
+    <string name="ms_localpre_off">已关闭：不打底，直接交给 AI</string>
+    <string name="ms_open_settings_fail">无法打开设置</string>
+    <string name="ms_persona_fmt">人设：%1$s</string>
+    <string name="ms_engine_local">引擎：本地词库</string>
+    <string name="ms_engine_full">引擎：AI 彻底替换</string>
+    <string name="ms_engine_ai">引擎：AI 翻译</string>
+    <string name="ms_fallback_on">AI 失败本地兜底：开（异常时转本地词库）</string>
+    <string name="ms_fallback_off">AI 失败本地兜底：关（异常直接报错）</string>
+    <string name="ms_float_hidden">悬浮球已隐藏（可在 App 设置重新开启）</string>
+    <string name="ms_busy_recovered">上次请求卡住，已自动恢复</string>
+    <string name="ms_translating">正在翻译中，请稍候…</string>
+    <string name="ms_no_input">没找到输入框，请先点进聊天输入框</string>
+    <string name="ms_input_empty">输入框是空的</string>
+    <string name="ms_need_key">API 模式需要先填写 Key</string>
+    <string name="ms_processing">处理中…</string>
+    <string name="ms_local_error">本地翻译出错，已记录日志</string>
+    <string name="ms_trigger_need_key">触发词翻译需要 API Key，请先填写</string>
+    <string name="ms_trigger_on">触发词模式已开启</string>
+    <string name="ms_trigger_off">触发词模式已关闭</string>
+    <string name="ms_trigger_set_fmt">触发词已设为：%1$s</string>
+    <string name="ms_dialog_fail">无法弹出对话框，请检查悬浮窗权限</string>
+    <string name="ms_no_undo_trigger">没有可撤销的触发词翻译</string>
+    <string name="ms_restored_trigger">已恢复触发前原文</string>
+    <string name="ms_no_input_copied">未找到输入框，原文已复制到剪贴板</string>
+    <string name="ms_no_input_copy_fail">未找到输入框，复制失败，请手动复制</string>
+    <string name="ms_no_undo_style">没有可撤销的风格化记录</string>
+    <string name="ms_restored">已恢复原文</string>
+    <string name="ms_strictness_fmt">裁判严格度：%1$s</string>
+    <string name="ms_processing2">正在处理中，请稍候…</string>
+    <string name="ms_reply_need_key">生成回复需要调用 AI，请先在设置里填写 API Key</string>
+    <string name="ms_generating_reply">正在生成回复…</string>
+    <string name="ms_focus_reply_copied">输入框焦点已变化，回复已复制到剪贴板</string>
+    <string name="ms_focus_copy_fail">输入框焦点已变化，复制失败，请手动复制</string>
+    <string name="ms_focus_trans_copied">输入框焦点已变化，译文已复制到剪贴板</string>
+    <string name="ms_ai_offtrack">AI 输出跑偏，请重试</string>
+    <string name="ms_ai_error">AI 输出异常，请重试</string>
+    <string name="ms_ai_dialog_error">AI 输出异常（对话式回应），请重试</string>
+    <string name="ms_cancelled">已取消，输入框保持原文</string>
+    <string name="ms_write_rejected_copied">输入框写入被拒，已复制到剪贴板</string>
+    <string name="ms_write_fail">输入框写入失败，请手动复制</string>
+    <string name="trigger_title">设置触发词</string>
+    <string name="trigger_msg">输入「触发词+内容」即翻译；触发词首字符写两遍可输出字面</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+    <string name="judge_title">AI 裁判严格度</string>
+    <string name="judge_level_fmt">%1$s（%2$d/5）</string>
+    <string name="reply_title">生成回复</string>
+    <string name="reply">生成回复</string>
+    <string name="reply_hint">长按这里粘贴对方发来的话，或手动输入…</string>
+    <string name="reply_empty">请先输入或粘贴对方的话</string>
+    <string name="ma_exp_trigger">触发词模式（前缀翻译）</string>
+    <string name="ma_trigger_current_fmt">设置触发词（当前：%1$s）</string>
+    <string name="ma_trigger_default">\?翻</string>
+    <string name="ma_exp_undo_trigger">撤销触发词翻译</string>
+    <string name="ma_danger">千 万 别 点</string>
+    <string name="ma_notice_again">下次进入翻译功能将重新显示须知</string>
+    <string name="ma_float_title">悬浮窗调节</string>
+    <string name="ma_size_fmt">大小：%1$d dp</string>
+    <string name="ma_opacity_fmt">透明度：%1$d%%</string>
+    <string name="ma_done">完成</string>
+
+    <!-- 裁判严格度档位 -->
+    <string-array name="judge_levels">
+        <item>最宽松</item>
+        <item>偏宽松</item>
+        <item>平衡(默认)</item>
+        <item>偏严格</item>
+        <item>最严格</item>
+    </string-array>
+    <string-array name="judge_descs">
+        <item>几乎不拦截，风格化扩写一律算忠实</item>
+        <item>允许较大幅度风格化，只拦明确跑偏</item>
+        <item>平衡：正常风格化放行，加戏/对话拦截</item>
+        <item>偏严格：不鼓励扩写，添加情绪可能判跑偏</item>
+        <item>最严格：只允许换自称+口癖，任何添加都可能跑偏</item>
+    </string-array>
+
+    <string name="trigger_hint_default">默认：?翻</string>
+
+    <string name="api_force_https_fmt">已强制使用 HTTPS：%1$s</string>
+    <string name="api_edit_key">编辑 API Key</string>
+    <string name="api_key_empty">请先填写 API Key</string>
+    <string name="api_testing">测试中…</string>
+    <string name="api_test_conn">测试连接</string>
+    <string name="api_test_ok_fmt">成功：%1$s</string>
+    <string name="api_test_fail_fmt">失败：%1$s</string>
+    <string name="api_fetching_models">正在获取模型列表…</string>
+    <string name="api_models_title_fmt">可用模型（%1$d），点选使用</string>
+    <string name="api_selected_fmt">已选择：%1$s</string>
+    <string name="api_cache_cleared">缓存已清空</string>
+    <string name="api_json_url_empty">请先填写版本 JSON 地址</string>
+    <string name="api_checking">检查中…</string>
+    <string name="api_check_update">检查更新</string>
+    <string name="api_new_version_fmt">发现新版本 %1$s
+
+%2$s</string>
+    <string name="api_update_available">有可用更新</string>
+    <string name="api_go_download">前往下载</string>
+    <string name="api_download_fail">无法打开下载链接</string>
+    <string name="api_later">稍后</string>
+    <string name="api_latest">当前已是最新版本</string>
+    <string name="api_check_fail_fmt">检查失败：%1$s</string>
+    <string name="api_refresh_models">刷新可用模型（从服务器实时拉取后点选）</string>
+    <string name="api_cache_stats_fmt">缓存命中：%1$d 次 | 总请求：%2$d 次 | 磁盘占用：%3$s MB / %4$d MB</string>
+    <string name="api_ttl_fmt">缓存有效期：%1$s</string>
+    <string name="api_loglevel_fmt">日志级别：%1$s</string>
+    <string name="api_backup_count_fmt">当前 %1$d 个备用引擎</string>
+    <string name="api_add_backup">＋ 添加新备用引擎</string>
+    <string name="api_backup_manage">备用引擎管理（点击编辑，长按删除）</string>
+    <string name="api_close">关闭</string>
+    <string name="api_backup_name_hint">引擎名称（如：备用1）</string>
+    <string name="api_backup_url_hint">接口地址（https://...）</string>
+    <string name="api_backup_model_hint">模型名称</string>
+    <string name="api_edit_backup">编辑备用引擎</string>
+    <string name="api_add_backup_title">添加备用引擎</string>
+    <string name="api_backup_empty">名称和地址不能为空</string>
+    <string name="api_saved_fmt">已保存：%1$s</string>
+    <string name="api_delete">删除</string>
+    <string name="api_deleted">已删除</string>
+    <string-array name="ttl_labels">
+        <item>1 小时</item>
+        <item>6 小时</item>
+        <item>12 小时</item>
+        <item>24 小时</item>
+        <item>7 天</item>
+        <item>永久</item>
+    </string-array>
+    <string-array name="log_level_labels">
+        <item>DEBUG（详细）</item>
+        <item>INFO（默认）</item>
+        <item>WARN（仅警告）</item>
+        <item>ERROR（仅错误）</item>
+    </string-array>
+    <string name="fb_dedup_skip">原文没变化，已跳过重复翻译</string>
+    <string name="fb_key_invalid">API Key 无效，请在设置里检查或重新填写</string>
+    <string name="fb_network_retry">网络超时，已自动重试，请稍后再试</string>
+    <string name="his_all">全部记录</string>
+    <string name="his_clear">清空</string>
+    <string name="his_clear_msg">确定要清空全部翻译历史吗？此操作不可恢复。</string>
+    <string name="his_clear_title">清空历史记录</string>
+    <string name="his_cleared">已清空</string>
+    <string name="his_copied">已复制译文</string>
+    <string name="his_copy_trans">复制译文</string>
+    <string name="his_del_title">删除这条记录？</string>
+    <string name="his_delete">删除</string>
+    <string name="his_detail">记录详情</string>
+    <string name="his_diff_hint_fmt">AI 把原文片段改成了这些词，可直接修改右侧替换词。保存后将写入「%1$s」自定义词库，下次本地引擎按新词生效。</string>
+    <string name="his_diff_title_fmt">替换明细 · %1$s</string>
+    <string name="his_empty">没有历史记录</string>
+    <string name="his_fav">收藏</string>
+    <string name="his_fav_only">只看收藏</string>
+    <string name="his_hr_ago_fmt">%1$s 小时前</string>
+    <string name="his_just_now">刚刚</string>
+    <string name="his_min_ago_fmt">%1$s 分钟前</string>
+    <string name="his_new">＋新增</string>
+    <string name="his_no_diff">该次替换没有可提取的词级差异。</string>
+    <string name="his_no_export">没有可导出的记录</string>
+    <string name="his_no_history">还没有翻译记录
+去别的 App 里输入文字试试吧</string>
+    <string name="his_no_saveable">没有可保存的替换项（纯新增内容无法作为规则保存）</string>
+    <string name="his_nomatch">没有匹配的记录
+换个关键词或取消收藏筛选试试</string>
+    <string name="his_orig_fmt">原文：%1$s</string>
+    <string name="his_save_rule">保存为自定义规则</string>
+    <string name="his_saved_rules_fmt">已保存 %1$s 条替换到「%2$s」词库</string>
+    <string name="his_trans_fmt">译文：%1$s</string>
+    <string name="his_unfav">取消收藏</string>
+    <string name="lab_again">重新合成</string>
+    <string name="lab_api_done">API 合成</string>
+    <string name="lab_copied_fmt">已复制「%1$s」合成结果</string>
+    <string name="lab_copy">复制</string>
+    <string name="lab_local_fail_fmt">本地合并结果（API 失败：%1$s）</string>
+    <string name="lab_local_no_key">本地合并结果（未配置 API Key）</string>
+    <string name="lab_synth_fail">在线合成失败，保留本地结果</string>
+    <string name="lab_synth_ing">本地合并 · 在线合成中…</string>
+    <string name="lab_two_langs">请填写两种语言的内容</string>
+    <string name="log_all">查看全部</string>
+    <string name="log_cleared">日志已清空</string>
+    <string name="log_copied">日志已复制</string>
+    <string name="log_file_section">===== File Log =====</string>
+    <string name="log_fresh_section">===== 本次运行（未落盘）=====</string>
+    <string name="log_none">（暂无日志）</string>
+    <string name="log_nothing_save">暂无日志可保存</string>
+    <string name="log_read_fail_fmt">读取日志文件失败：%1$s</string>
+    <string name="log_recent">最近50条</string>
+    <string name="log_save_fail_fmt">保存失败：%1$s</string>
+    <string name="log_saved_fmt">已保存到下载：%1$s</string>
+    <string name="log_saved_path_fmt">已保存：%1$s</string>
+    <string name="log_share">分享日志</string>
+    <string name="log_subject">拟言助手错误日志</string>
+    <string name="nav_copy_mail">复制邮箱</string>
+    <string name="nav_feedback_msg_fmt">使用中遇到问题或想提建议，欢迎发邮件告诉我们：
+
+%1$s</string>
+    <string name="nav_feedback_title">意见反馈</string>
+    <string name="nav_mail_copied_fmt">邮箱已复制：%1$s</string>
+    <string name="nav_no_mailer">未找到邮件客户端，请复制邮箱后自行发送</string>
+    <string name="nav_write_mail">写邮件</string>
+    <string name="nov_add">添加</string>
+    <string name="nov_add_char">添加角色</string>
+    <string name="nov_add_char2">添加角色</string>
+    <string name="nov_add_event">添加事件</string>
+    <string name="nov_add_event_title">添加事件（未引出）</string>
+    <string name="nov_ai_char">AI 生成角色</string>
+    <string name="nov_ai_char_hint">角色描述：如「一个沉默寡言的退役军人，开着一家旧书店」</string>
+    <string name="nov_ai_char_title">AI 生成角色</string>
+    <string name="nov_ai_ing">AI 正在生成角色…</string>
+    <string name="nov_all_done">大纲章节已写完且事件池为空，可在设定处新建故事</string>
+    <string name="nov_cancel_auto">取消（自动推进大纲）</string>
+    <string name="nov_char_desc">人设：性格、身份、背景（一句话）</string>
+    <string name="nov_char_done_fmt">角色「%1$s」已生成</string>
+    <string name="nov_char_list">角色列表（点击编辑/删除）</string>
+    <string name="nov_char_name">角色名</string>
+    <string name="nov_char_name_empty">角色名不能为空</string>
+    <string name="nov_char_voice">口风：说话风格（如「自称『我』，爱用省略号，紧张时结巴」）</string>
+    <string name="nov_chars_empty">无（可添加或 AI 生成）</string>
+    <string name="nov_chars_none">角色：无</string>
+    <string name="nov_chars_prefix">角色：</string>
+    <string name="nov_copied">已复制本章</string>
+    <string name="nov_copy">复制本章</string>
+    <string name="nov_current">  ← 当前</string>
+    <string name="nov_default_char">角色</string>
+    <string name="nov_del">删除</string>
+    <string name="nov_desc_empty">请填写角色描述</string>
+    <string name="nov_edit_char">编辑角色</string>
+    <string name="nov_event_hint">事件描述，如：深夜有人敲画室的门</string>
+    <string name="nov_events_empty">无未引出事件</string>
+    <string name="nov_events_none">事件池：无</string>
+    <string name="nov_events_prefix">事件池：</string>
+    <string name="nov_evt_ing_fmt">正在推进事件：%1$s …</string>
+    <string name="nov_evt_picked">已选中事件，点击「生成」推进</string>
+    <string name="nov_fail_fmt">生成失败：%1$s</string>
+    <string name="nov_gen">生成下一章</string>
+    <string name="nov_gen_btn">生成</string>
+    <string name="nov_gen_done_fmt">已生成「%1$s」</string>
+    <string name="nov_gen_ing">正在生成下一章…</string>
+    <string name="nov_hint">输入故事大体 → 自动生成大纲与事件池 → 按大纲推进、事件池联动生成故事。角色口风与伏笔自动跟踪。</string>
+    <string name="nov_need_key">未配置 API Key，请先在 API 设置中填写</string>
+    <string name="nov_need_key2">未配置 API Key</string>
+    <string name="nov_need_premise">请先输入故事大体</string>
+    <string name="nov_need_setup">请先生成大纲与事件池</string>
+    <string name="nov_no_unused">没有未引出事件</string>
+    <string name="nov_nothing_copy">还没有结果可复制</string>
+    <string name="nov_outline">大纲</string>
+    <string name="nov_outline_empty">无（先生成大纲与事件池）</string>
+    <string name="nov_outline_empty2">大纲为空，请重新生成</string>
+    <string name="nov_outline_none">大纲：无</string>
+    <string name="nov_outline_prefix">大纲：</string>
+    <string name="nov_pick_event">大纲已写完，请从事件池选中一个事件继续推进</string>
+    <string name="nov_pick_evt_title">选择事件（用于生成下一段）</string>
+    <string name="nov_premise_hint">故事大体：主角、世界观、想讲什么样的故事…</string>
+    <string name="nov_save">保存</string>
+    <string name="nov_sec_chars">角色（口风自动学习）</string>
+    <string name="nov_sec_events">事件池（点击选中→以此事件生成）</string>
+    <string name="nov_selected">（已选中）</string>
+    <string name="nov_setup">生成大纲与事件池</string>
+    <string name="nov_setup_done_fmt">大纲 %1$s 章 / 事件池 %2$s 个，可以开始生成故事了</string>
+    <string name="nov_setup_ing">正在生成大纲与事件池…</string>
+    <string name="nov_status_fmt">故事：%1$s（%2$s） 章节 %3$s/%4$s 事件 %5$s（未引出 %6$s / 已引出 %7$s）</string>
+    <string name="nov_status_none">当前故事：无（填写设定后生成）</string>
+    <string name="nov_summary_fmt">剧情摘要：
+%1$s</string>
+    <string name="nov_title">小说生成</string>
+    <string name="nov_title_hint">故事名（可选）</string>
+    <string name="nov_voice_pre">（口风：</string>
+    <string name="nov_voice_suf">）</string>
+    <string name="pb_apply">采用</string>
+    <string name="pb_title">译文预览</string>
+    <string name="pb_title_chg_fmt">译文预览 · 改动 %1$s%%</string>
+    <string name="pg_custom">自定义人设</string>
+    <string name="pg_done">生成成功！可以修改后保存</string>
+    <string name="pg_fail_fmt">生成失败：%1$s</string>
+    <string name="pg_generate">生成人设</string>
+    <string name="pg_generating">生成中…</string>
+    <string name="pg_list_prefix">已保存的自定义人设：</string>
+    <string name="pg_need_desc">请先输入人设描述</string>
+    <string name="pg_need_key">请先在主界面配置 API Key</string>
+    <string name="pg_need_name">请填写人设名称</string>
+    <string name="pg_need_prompt">请先生成或填写人设 prompt</string>
+    <string name="pg_none">已保存的自定义人设：无</string>
+    <string name="pg_saved_fmt">已保存「%1$s」，返回主界面即可在风格列表中选择</string>
+    <string name="pp_fail_fmt">试译失败：%1$s</string>
+    <string name="pp_hint">输入一句话，看看效果</string>
+    <string name="pp_need_input">先输入一句话</string>
+    <string name="pp_no_key">未配置 API Key：无法预览。
+请先在主界面配置 API Key 后重试。</string>
+    <string name="pp_title_fmt">%1$s · 效果预览</string>
+    <string name="pp_try">试译</string>
+    <string name="pp_trying">试译中…</string>
+    <string name="privacy_fail">隐私政策加载失败，请稍后重试。</string>
+    <string name="privacy_title">隐私政策</string>
+    <string name="privacy_dialog_title">隐私政策确认</string>
+    <string name="privacy_dialog_accept">同意并继续</string>
+    <string name="privacy_dialog_reject">不同意并退出</string>
+    <string name="privacy_dialog_hint">请先阅读并同意隐私政策后使用本应用。若不同意，应用将退出。</string>
+    <string name="rule_add">添加</string>
+    <string name="rule_add_title">添加替换规则</string>
+    <string name="rule_backup_fail">生成备份失败</string>
+    <string name="rule_backup_prefix">拟言助手备份_%1$s</string>
+    <string name="rule_clear">清除</string>
+    <string name="rule_clear_all">清空</string>
+    <string name="rule_clear_all_msg">确定删除全部自定义规则吗？可随时点「载入示例」恢复教学规则。</string>
+    <string name="rule_clear_all_title">清空全部规则</string>
+    <string name="rule_clear_lex_msg">确定清除所有 AI 扩展词吗？清除后需重新扩展。</string>
+    <string name="rule_clear_lex_title">清除 AI 扩展词库</string>
+    <string name="rule_count_mid"> 词，仅展示前 </string>
+    <string name="rule_count_prefix">
+…共 </string>
+    <string name="rule_count_suffix"> 条</string>
+    <string name="rule_cur_style_fmt">当前人设：%1$s（点击切换）</string>
+    <string name="rule_expand">AI 扩展当前人设</string>
+    <string name="rule_expand_done_fmt">扩展完成：%1$s 词 / %2$s 变体（人设：%3$s），已自动启用</string>
+    <string name="rule_expand_fail_fmt">扩展失败：%1$s</string>
+    <string name="rule_expand_inc">增量扩展当前人设（新词不覆盖已有）</string>
+    <string name="rule_expand_lib">AI 扩展词库</string>
+    <string name="rule_expand_prog_fmt">扩展中 %1$s/%2$s（%3$s词）</string>
+    <string name="rule_expanding">扩展中…</string>
+    <string name="rule_export_cancel">已取消导出</string>
+    <string name="rule_export_fail_fmt">导出失败：%1$s</string>
+    <string name="rule_export_io">导出失败：无法写入</string>
+    <string name="rule_exported">✅ 备份已导出（规则/扩展词库/人设）</string>
+    <string name="rule_from_empty">原文不能为空</string>
+    <string name="rule_from_hint">原文（要被替换的词）</string>
+    <string name="rule_import">导入</string>
+    <string name="rule_import_fail_fmt">导入失败：%1$s</string>
+    <string name="rule_import_msg">导入将覆盖当前的：
+• 自定义替换规则
+• AI 扩展词库
+• 自定义人设
+
+确认继续？</string>
+    <string name="rule_import_title">导入备份</string>
+    <string name="rule_imported">✅ 备份已导入</string>
+    <string name="rule_importing">正在导入…</string>
+    <string name="rule_lex_cleared">已清除扩展词库</string>
+    <string name="rule_lexicon_empty">该人设的扩展词库已是空的</string>
+    <string name="rule_lexicon_hint">未扩展：点击下方按钮，用 API 结合当前人设为 100+ 高频词生成多个替换变体</string>
+    <string name="rule_lexicon_off_fmt">已扩展但未启用：%1$s 词 / %2$s 变体（人设：%3$s），打开开关后生效</string>
+    <string name="rule_lexicon_on_fmt">已启用：%1$s 词 / %2$s 变体（人设：%3$s）</string>
+    <string name="rule_lexicon_title_fmt">扩展词库（%1$s）</string>
+    <string name="rule_list_empty">列表已经是空的</string>
+    <string name="rule_more_prefix"> …共</string>
+    <string name="rule_no_lexicon">该人设还没有 AI 扩展词条。
+
+点击「AI 扩展当前人设」生成后，可再次点击此处查看。</string>
+    <string name="rule_pick_persona">选择人设（词库按人设独立）</string>
+    <string name="rule_read_fail">读取文件失败</string>
+    <string name="rule_regex_err_fmt">正则语法错误：%1$s</string>
+    <string name="rule_regex_label">正则表达式（如 \\d+ 匹配数字；替换文不支持 $1）</string>
+    <string name="rule_regex_tag">  [正则]</string>
+    <string name="rule_samples_added_fmt">已追加 %1$s 条示例规则</string>
+    <string name="rule_samples_exist">示例规则都已在列表中</string>
+    <string name="rule_samples_filled">已填入示例规则</string>
+    <string name="rule_switched_fmt">已切换人设：%1$s</string>
+    <string name="rule_to_hint">替换为</string>
+    <string name="rule_variants">变体</string>
+    <string name="style_app_default_fmt">%1$s 的默认风格</string>
+    <string name="style_current_fmt">当前：%1$s</string>
+    <string name="style_delete">删除</string>
+    <string name="style_deleted_fmt">已删除「%1$s」，24 小时内可在下方恢复</string>
+    <string name="style_expired">已超过 24 小时无法恢复</string>
+    <string name="style_follow">跟随当前</string>
+    <string name="style_hr_ago_fmt">（%1$s 小时前）</string>
+    <string name="style_lexicon_off">已关闭：不打底，直接交给 AI</string>
+    <string name="style_lexicon_on">已开启：AI 翻译前用 AI 扩展词打底</string>
+    <string name="style_min_ago_fmt">（%1$s 分钟前）</string>
+    <string name="style_no_persona">暂无自定义人设（可在「AI 生成人设」或「词库管理」添加）</string>
+    <string name="style_off">关闭风格化</string>
+    <string name="style_restore">恢复</string>
+    <string name="style_restored_fmt">已恢复「%1$s」</string>
+    <string name="style_unnamed">未命名</string>
+    <string name="sw_api">AI API</string>
+    <string name="sw_full">彻底替换</string>
+    <string name="sw_local">本地词库</string>
+    <string name="sw_off">关</string>
+    <string name="sw_on">开</string>
+    <string name="tm_applied">已应用（可重复生成副本）</string>
+    <string name="tm_applied_fmt">已应用「%1$s」，可在风格设置中继续修改</string>
+    <string name="tm_apply">应用模板</string>
+    <string name="tm_example">示例</string>
+    <string name="tm_example_fmt">原文：%1$s
+译文：%2$s</string>
+    <string name="tm_fail_fmt">试译失败：%1$s</string>
+    <string name="tm_need_input">先输入一句话</string>
+    <string name="tm_no_key">未配置 API Key：无法在线试译。
+请先在主界面配置 API Key 后重试。</string>
+    <string name="tm_preview">试译预览</string>
+    <string name="tm_scenes">适用场景</string>
+    <string name="tm_suitable_fmt">适合：%1$s</string>
+    <string name="tm_test_hint">输入一句话，看看这个模板的效果</string>
+    <string name="tm_try">试译</string>
+    <string name="tm_trying">试译中…</string>
+    <string name="tt_add">添加</string>
+    <string name="tt_busy">翻译中，请先等待完成</string>
+    <string name="tt_clip_label">译文</string>
+    <string name="tt_confirm_msg">文件翻译可能涉及成人内容。
+
+本应用不做云端留存、不做社区分享，确认状态仅保存在本地，可随时撤回。</string>
+    <string name="tt_confirm_no">暂不翻译</string>
+    <string name="tt_confirm_ok">确认并继续</string>
+    <string name="tt_confirm_title">内容确认</string>
+    <string name="tt_copied">已复制到剪贴板</string>
+    <string name="tt_del_term">删除术语</string>
+    <string name="tt_del_term_msg_fmt">删除「%1$s = %2$s」？</string>
+    <string name="tt_delete">删除</string>
+    <string name="tt_done">完成</string>
+    <string name="tt_done_fmt">翻译完成，共 %1$s 段%2$s</string>
+    <string name="tt_draft_discard">放弃草稿</string>
+    <string name="tt_draft_msg_fmt">上次翻译进行到第 %1$s/%2$s 段，是否继续？</string>
+    <string name="tt_draft_resume">继续翻译</string>
+    <string name="tt_draft_title">检测到未完成的翻译草稿</string>
+    <string name="tt_empty_file">文件内容为空或无法解析</string>
+    <string name="tt_empty_terms">暂无条目，输入「原文=译名」添加</string>
+    <string name="tt_epub_chapters_fmt">EPUB %1$s 章</string>
+    <string name="tt_filename_prefix">译文_</string>
+    <string name="tt_glossary_fmt">术语表：%1$s</string>
+    <string name="tt_imported_fmt">已导入：%1$s，%2$s 字</string>
+    <string name="tt_need_book">请先在上方输入术语档书名</string>
+    <string name="tt_need_key">请先在 API 设置中配置 Key</string>
+    <string name="tt_need_text">请输入或导入文本</string>
+    <string name="tt_no_copy">没有可复制的译文</string>
+    <string name="tt_no_save">没有可保存的译文</string>
+    <string name="tt_notice_msg">本应用仅提供翻译功能框架。
+
+翻译内容由你发起并仅由你使用，请确保使用行为合法合规，并对翻译内容及其使用负全部责任。
+
+请勿用于违法用途。</string>
+    <string name="tt_notice_no">暂不使用</string>
+    <string name="tt_notice_ok">我知道了，继续使用</string>
+    <string name="tt_notice_title">翻译功能使用须知</string>
+    <string name="tt_open_fail">无法打开文件</string>
+    <string name="tt_pick_file">选择文本/EPUB 文件</string>
+    <string name="tt_progress_fmt">翻译中... %1$s/%2$s 段</string>
+    <string name="tt_read_fail_fmt">读取文件失败：%1$s</string>
+    <string name="tt_retry_timeout">重试超时(90s)</string>
+    <string name="tt_save_fail_fmt">保存失败：%1$s</string>
+    <string name="tt_saved_epub_fmt">已保存 EPUB 到下载：%1$s</string>
+    <string name="tt_saved_fmt">已保存到下载：%1$s</string>
+    <string name="tt_seg_blocked_fmt">〔第 %1$s 段未翻译（内容审核）〕
+
+</string>
+    <string name="tt_seg_blocked_prog_fmt">第 %1$s 段被拦截，已标记未翻译，继续...</string>
+    <string name="tt_seg_failed_fmt">〔第 %1$s 段翻译失败，已跳过〕
+
+</string>
+    <string name="tt_seg_skip_fmt">第 %1$s 段翻译失败已跳过，继续翻译后续段落...</string>
+    <string name="tt_seg_timeout">单段翻译超时(90s)</string>
+    <string name="tt_term_fmt_err">格式：原文=译名</string>
+    <string name="tt_term_fmt_hint">原文=译名</string>
+    <string name="tt_translating">正在翻译中，请稍候</string>
+    <string name="ms_full_fail_fmt">彻底替换失败：%1$s</string>
+    <string name="ms_reply_fail_fmt">生成回复失败：%1$s</string>
+    <string name="ms_style_fail_fmt">风格化失败：%1$s</string>
+    <string name="miao_fb_stop">停</string>
+    <string name="miao_menu_persona">人设风格</string>
+    <string name="miao_menu_engine">引擎</string>
+    <string name="miao_menu_engine_local">本地词库</string>
+    <string name="miao_menu_engine_api">AI 翻译</string>
+    <string name="miao_menu_engine_replace">AI 彻底替换</string>
+    <string name="miao_menu_ai_fallback">AI 失败本地兜底</string>
+    <string name="miao_menu_gen_reply">生成回复（输入对方的话）</string>
+    <string name="miao_menu_judge_strength">裁判严格度（当前 %1$d/5）</string>
+    <string name="miao_menu_undo">撤销上次风格化</string>
+    <string name="miao_menu_hide_float">隐藏悬浮球</string>
+    <string name="miao_hist_reply_prefix">回复·%1$s</string>
+    <string name="miao_clip_label">风格化译文</string>
+    <string name="miao_err_unknown">未知错误</string>
+    <string name="miao_engine_backup">备用%1$d</string>
+    <string name="miao_engine_main">主引擎</string>
+    <string name="tm_field_selfref">自称：%1$s</string>
+    <string name="tm_field_addr">称呼对方：%1$s</string>
+    <string name="tm_field_tail">句尾口癖/语气词：%1$s</string>
+    <string name="tm_field_words">常用词：%1$s</string>
+    <string name="tm_field_avoid">禁用词/回避：%1$s</string>
+    <string name="tm_name_default">未命名</string>
+    <string name="tm_default_me">我</string>
+    <string name="tm_default_you">你</string>
+    <string name="err_file_create">创建文件失败</string>
+    <string name="err_file_readback">回读失败：无法打开文件</string>
+    <string name="err_file_empty">回读校验失败：文件为空</string>
+    <string name="title_rule_editor">本地词库管理</string>
+    <string name="title_app_style">按 App 自动切换风格</string>
+    <string name="title_history">翻译历史</string>
+    <string name="title_persona">AI 生成人设</string>
+    <string name="title_style_settings">风格设置</string>
+    <string name="title_api_settings">API 设置</string>
+    <string name="title_log">错误日志</string>
+    <string name="title_text_translator">文本翻译</string>
+    <string name="title_novel">小说生成</string>
+    <string name="ui_tile_float">悬浮球</string>
+    <string name="ui_tile_realtime">实时翻译</string>
+    <string name="ui_tile_tail">句尾口癖</string>
+    <string name="ui_tile_verify">AI 二次校验</string>
+    <string name="ui_tile_replace">彻底替换</string>
+    <string name="ui_tile_localpre">AI 并联本地</string>
+    <string name="ui_tile_stream">流式输出</string>
+    <string name="ui_tile_preview">结果预览</string>
+    <string name="ui_engine_title">翻译引擎</string>
+    <string name="ui_nav_style">风格设置</string>
+    <string name="ui_nav_api">API 设置</string>
+    <string name="ui_nav_dict">词库管理</string>
+    <string name="ui_nav_persona">AI 生成人设</string>
+    <string name="ui_nav_feedback">意见反馈</string>
+    <string name="ui_nav_adjust">翻译调节</string>
+    <string name="ui_nav_judge">AI 裁判严格度</string>
+    <string name="ui_nav_gen_count">生成数量</string>
+    <string name="ui_nav_judge_count">裁判数量</string>
+    <string name="ui_nav_temp">随机性</string>
+    <string name="ui_nav_style_strength">风格强度</string>
+    <string name="ui_nav_expand">扩写等级</string>
+    <string name="ui_nav_auto">自动</string>
+    <string name="ui_nav_a11y">无障碍设置</string>
+    <string name="ui_nav_overlay">悬浮窗权限</string>
+    <string name="ui_balance">平衡</string>
+    <string name="ui_standard">标准</string>
+    <string name="ui_float_style">风格选择</string>
+    <string name="ui_float_persona">人设</string>
+    <string name="ui_float_input">风格化输入框</string>
+    <string name="ui_float_gen">生成回复</string>
+    <string name="ui_float_undo">撤销</string>
+    <string name="ui_float_judge">裁判严格度</string>
+    <string name="ui_float_dict">本地词库</string>
+    <string name="ui_float_hide">隐藏悬浮窗</string>
+    <string name="ui_float_settings">打开设置</string>
+    <string name="ui_float_localpre">AI 并联本地</string>
+    <string name="ui_float_collapse">收起</string>
+    <string name="ui_float_local">本地</string>
+    <string name="ui_menu">菜单</string>
+    <string name="ui_api_vendor">API 厂商</string>
+    <string name="ui_api_baseurl">接口地址</string>
+    <string name="ui_api_model">模型名称</string>
+    <string name="ui_api_model_long">长文本/文件翻译模型</string>
+    <string name="ui_api_model_hint">留空则与上方模型一致</string>
+    <string name="ui_api_refresh">刷新可用模型</string>
+    <string name="ui_api_verify">AI 二次校验</string>
+    <string name="ui_api_audit">审核拦截预览</string>
+    <string name="ui_api_edit">编辑</string>
+    <string name="ui_api_test">测试连接</string>
+    <string name="ui_api_clear_cache">清除缓存</string>
+    <string name="ui_api_cache_stat">缓存命中：%1$d 次  |  总请求：%2$d 次</string>
+    <string name="ui_api_advanced">高级设置</string>
+    <string name="ui_api_cache_ttl">缓存有效期</string>
+    <string name="ui_api_log_level">日志级别</string>
+    <string name="ui_api_fallback">备用引擎</string>
+    <string name="ui_api_fallback_count">当前 %1$d 个备用引擎</string>
+    <string name="ui_api_manage">管理</string>
+    <string name="ui_api_update">应用更新</string>
+    <string name="ui_api_update_url">版本 JSON 地址</string>
+    <string name="ui_api_check_update">检查更新</string>
+    <string name="ui_history_search">搜索原文 / 译文 / 人设</string>
+    <string name="ui_history_recent">最近 100 条翻译记录</string>
+    <string name="ui_history_export">导出</string>
+    <string name="ui_history_fav_only">只看收藏</string>
+    <string name="ui_history_clear">清空</string>
+    <string name="ui_history_empty">还没有翻译记录
+去别的 App 里输入文字试试吧</string>
+    <string name="ui_log_refresh">刷新</string>
+    <string name="ui_log_copy">复制</string>
+    <string name="ui_log_share">分享</string>
+    <string name="ui_log_clear">清空</string>
+    <string name="ui_log_save">保存为 TXT</string>
+    <string name="ui_log_view_all">查看全部</string>
+    <string name="ui_persona_desc">描述你想要的人设风格，AI 会自动生成完整的人设 prompt。</string>
+    <string name="ui_persona_hint">例如：一个喜欢打游戏的宅女猫娘，说话带点慵懒</string>
+    <string name="ui_persona_gen">生成人设</string>
+    <string name="ui_persona_result">生成结果</string>
+    <string name="ui_persona_name_hint">人设名称（生成后自动填入，可修改）</string>
+    <string name="ui_persona_result_hint">生成的人设 prompt 会显示在这里，可以手动修改</string>
+    <string name="ui_persona_preview">预览效果</string>
+    <string name="ui_persona_save">保存人设</string>
+    <string name="ui_persona_saved_none">已保存的自定义人设：无</string>
+    <string name="ui_rule_current">当前风格：</string>
+    <string name="ui_rule_ai_dict">AI 扩展词库</string>
+    <string name="ui_rule_not_extended">未扩展：点击下方按钮生成</string>
+    <string name="ui_rule_extend">AI 扩展当前人设</string>
+    <string name="ui_rule_clear">清除</string>
+    <string name="ui_rule_hint">输入中出现「原文」即替换为右侧文本；勾选「正则」按正则匹配</string>
+    <string name="ui_rule_empty">还没有自定义规则</string>
+    <string name="ui_rule_add">添加规则</string>
+    <string name="ui_rule_example">载入示例</string>
+    <string name="ui_rule_clear_all">清空全部</string>
+    <string name="ui_rule_export">导出备份</string>
+    <string name="ui_rule_import">导入备份</string>
+    <string name="ui_style_localpre">本地前置打底（AI 扩展词）</string>
+    <string name="ui_style_localpre_desc">开启后：AI 翻译/彻底替换前，仅用当前人设的 AI 扩展词库做一次打底作为风格参考（不跑任何内置预设词），原文仍作语义基准。</string>
+    <string name="ui_style_persona">人设风格</string>
+    <string name="ui_style_preview">预览效果</string>
+    <string name="ui_style_custom_prompt">自定义 Prompt（人设选「自定义」时生效）</string>
+    <string name="ui_style_custom_hint">例如：你是傲娇，说话带点小脾气…</string>
+    <string name="ui_style_manage">自定义人设管理</string>
+    <string name="ui_style_deleted">已删除（24 小时内可恢复）</string>
+    <string name="ui_trans_back">返回</string>
+    <string name="ui_trans_book_hint">术语档书名（可选）</string>
+    <string name="ui_trans_glossary">术语表</string>
+    <string name="ui_trans_source">原文</string>
+    <string name="ui_trans_source_hint">粘贴文本，或点击下方导入文件...</string>
+    <string name="ui_trans_import">导入文件</string>
+    <string name="ui_trans_translate">翻译</string>
+    <string name="ui_trans_clear">清空</string>
+    <string name="ui_trans_result">译文</string>
+    <string name="ui_trans_copy">复制译文</string>
+    <string name="ui_trans_save_txt">保存TXT</string>
+    <string name="ui_trans_save_epub">保存EPUB</string>
+    <string name="ui_template_desc">12 套精选人设模板，一键应用为自定义人设，可在此基础上继续修改。</string>
+    <string name="ui_template_applied">已应用</string>
+    <string name="ui_item_source">原文</string>
+    <string name="ui_item_target">译文</string>
+    <string name="ui_item_view_replace">查看替换</string>
+    <string name="ui_item_copy">复制</string>
+    <string name="ui_item_delete">删除</string>
+    <string name="ui_item_just_now">刚刚</string>
+    <string name="ui_item_delete_desc">删除</string>
+    <string name="ui_synth_lang_a">语言A</string>
+    <string name="ui_synth_lang_a_hint">例如中文：今天天气真好</string>
+    <string name="ui_synth_lang_b">语言B</string>
+    <string name="ui_synth_lang_b_hint">例如英文：the weather is really nice</string>
+    <string name="ui_synth_make">合成人设</string>
+    <string name="ui_synth_output">合成输出</string>
+    <string name="ui_synth_desc">把两种语言合成为一句，以所选人设的语气说出</string>
+    <string name="ui_appstyle_title">按 App 自动切换风格</string>
+    <string name="ui_appstyle_desc">为不同 App 设置默认风格，打开时自动切换</string>
+    <string name="ui_a11y_go_enable">去开启无障碍</string>
+    <string name="ui_float_ai_mode">AI 模式 · 裁判 3 级</string>
+    <string name="persona_tsundere">傲娇</string>
+    <string name="persona_catgirl">猫娘</string>
+    <string name="err_no_api_key">未配置有效的 API Key</string>
+    <string name="err_model_empty">模型返回为空，请重试</string>
+    <string name="err_network_timeout">网络连接失败，已重试一次仍超时，请检查网络</string>
+    <string name="err_empty_text">原文为空</string>
+    <string name="err_candidate_schedule">候选生成调度失败</string>
+    <string name="err_no_api_key_fill">未配置 API Key，请先在 API 设置中填写</string>
+    <string name="err_no_persona_prompt">该人设无 prompt，无法扩展</string>
+    <string name="err_stream_no_data">服务端未返回流式数据，回退非流式</string>
+    <string name="err_stream_empty">流式返回为空，回退非流式</string>
+    <string name="err_stream_error">流式译文异常，回退非流式</string>
+    <string name="err_no_models">未返回可用模型，可手动输入模型 ID。</string>
+    <string name="err_all_engines_fail">所有引擎均请求失败，请稍后重试</string>
+    <string name="err_too_many_requests">当前请求过多，请稍后再试</string>
+    <string name="err_api_content_bad">API 返回内容异常，本次使用本地兜底</string>
 </resources>

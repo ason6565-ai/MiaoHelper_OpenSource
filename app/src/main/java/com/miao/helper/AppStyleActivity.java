@@ -19,13 +19,13 @@ import androidx.appcompat.app.AppCompatActivity;
 public class AppStyleActivity extends AppCompatActivity {
 
     // 风格选项（显示名），人设部分运行时从 StyleManager 动态生成
-    private static String[] buildStyleNames() {
+    private String[] buildStyleNames() {
         String[] p = StyleManager.personaNames();
         String[] names = new String[p.length + 2];
         int i = 0;
-        names[i++] = "跟随当前";
+        names[i++] = getString(R.string.style_follow);
         for (String n : p) names[i++] = n;
-        names[i] = "关闭风格化";
+        names[i] = getString(R.string.style_off);
         return names;
     }
 
@@ -65,13 +65,13 @@ public class AppStyleActivity extends AppCompatActivity {
             if (STYLE_VALUES[i].equals(current)) { checked = i; break; }
         }
         new AlertDialog.Builder(this)
-                .setTitle(Prefs.PRESET_APPS[pos][1] + " 的默认风格")
+                .setTitle(getString(R.string.style_app_default_fmt, Prefs.PRESET_APPS[pos][1]))
                 .setSingleChoiceItems(STYLE_NAMES, checked, (d, w) -> {
                     Prefs.setAppStyle(pkg, STYLE_VALUES[w]);
                     adapter.notifyDataSetChanged();
                     d.dismiss();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -80,7 +80,7 @@ public class AppStyleActivity extends AppCompatActivity {
         for (int i = 0; i < STYLE_VALUES.length; i++) {
             if (STYLE_VALUES[i].equals(val)) return STYLE_NAMES[i];
         }
-        return "跟随当前";
+        return getString(R.string.style_follow);
     }
 
     // ---- 列表适配器 ----
@@ -100,7 +100,7 @@ public class AppStyleActivity extends AppCompatActivity {
             TextView tvStyle = convertView.findViewById(R.id.tvAppStyle);
             tvName.setText(app[1]);
             String val = Prefs.appStyle(app[0]);
-            tvStyle.setText("当前：" + styleDisplay(val));
+            tvStyle.setText(getString(R.string.style_current_fmt, styleDisplay(val)));
             return convertView;
         }
     }

@@ -29,8 +29,8 @@ public class ApiSettingsActivity extends AppCompatActivity {
     private MaterialButton btnManageEngines;
     private TextView tvBackupCount;
     private static final long[] TTL_VALUES = {3600_000L, 6*3600_000L, 12*3600_000L, 24*3600_000L, 7*24*3600_000L, Long.MAX_VALUE};
-    private static final String[] TTL_LABELS = {"1 小时", "6 小时", "12 小时", "24 小时", "7 天", "永久"};
-    private static final String[] LOG_LEVEL_LABELS = {"DEBUG（详细）", "INFO（默认）", "WARN（仅警告）", "ERROR（仅错误）"};
+    // TTL/日志级别选项已资源化（R.array.ttl_labels / log_level_labels）
+
     private TextView tvCacheStats;
     private String prevKey = "";
     private String latestEditedKey = null;   // 编辑对话框里正在输入的最新 Key（未保存也算），测试连接优先用它
@@ -129,7 +129,7 @@ public class ApiSettingsActivity extends AppCompatActivity {
                 String cur = ApiMiaoifier.secureBase(raw, "https://api.deepseek.com");
                 if (!cur.equals(raw)) {
                     etBaseUrl.setText(cur);
-                    Toast.makeText(ApiSettingsActivity.this, "已强制使用 HTTPS：" + cur, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_force_https_fmt, cur), Toast.LENGTH_SHORT).show();
                 }
                 if (!cur.equals(Prefs.apiBaseUrl())) Prefs.set("apiBaseUrl", cur);
             }
@@ -162,15 +162,15 @@ public class ApiSettingsActivity extends AppCompatActivity {
                 @Override public void afterTextChanged(android.text.Editable s) {}
             });
             new AlertDialog.Builder(this)
-                    .setTitle("编辑 API Key")
+                    .setTitle(getString(R.string.api_edit_key))
                     .setView(input)
-                    .setPositiveButton("保存", (d, w) -> {
+                    .setPositiveButton(getString(R.string.save), (d, w) -> {
                         String k = input.getText().toString().trim();
                         Prefs.set("apiKey", k);
                         prevKey = k;
                         etKey.setText(maskKey(k));
                     })
-                    .setNegativeButton("取消", null)
+                    .setNegativeButton(getString(R.string.cancel), null)
                     .show();
         });
 
@@ -180,25 +180,25 @@ public class ApiSettingsActivity extends AppCompatActivity {
             String key = (latestEditedKey != null && !latestEditedKey.isEmpty())
                     ? latestEditedKey : Prefs.apiKey().trim();
             if (key.isEmpty()) {
-                Toast.makeText(this, "请先填写 API Key", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.api_key_empty), Toast.LENGTH_SHORT).show();
                 return;
             }
             btnTest.setEnabled(false);
-            btnTest.setText("测试中…");
+            btnTest.setText(getString(R.string.api_testing));
             ApiMiaoifier.testConnection(key, etBaseUrl.getText().toString().trim(),
                     etModel.getText().toString().trim(), new ApiMiaoifier.Callback() {
                 @Override public void onSuccess(String text) {
                     runOnUiThread(() -> {
                         btnTest.setEnabled(true);
-                        btnTest.setText("测试连接");
-                        Toast.makeText(ApiSettingsActivity.this, "成功：" + text, Toast.LENGTH_LONG).show();
+                        btnTest.setText(getString(R.string.api_test_conn));
+                        Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_test_ok_fmt, text), Toast.LENGTH_LONG).show();
                     });
                 }
                 @Override public void onError(String msg) {
                     runOnUiThread(() -> {
                         btnTest.setEnabled(true);
-                        btnTest.setText("测试连接");
-                        Toast.makeText(ApiSettingsActivity.this, "失败：" + msg, Toast.LENGTH_LONG).show();
+                        btnTest.setText(getString(R.string.api_test_conn));
+                        Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_test_fail_fmt, msg), Toast.LENGTH_LONG).show();
                     });
                 }
             });
@@ -210,11 +210,11 @@ public class ApiSettingsActivity extends AppCompatActivity {
                     ? latestEditedKey : Prefs.apiKey().trim();
             String base = etBaseUrl.getText().toString().trim();
             if (key.isEmpty()) {
-                Toast.makeText(this, "请先填写 API Key", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.api_key_empty), Toast.LENGTH_SHORT).show();
                 return;
             }
             btnFetchModels.setEnabled(false);
-            btnFetchModels.setText("正在获取模型列表…");
+            btnFetchModels.setText(getString(R.string.api_fetching_models));
             Prefs.set("apiModel", etModel.getText().toString().trim());
             Prefs.set("apiModelLong", etModelLong.getText().toString().trim());
             ApiMiaoifier.listModels(key, base, new ApiMiaoifier.ModelListCallback() {
@@ -226,15 +226,15 @@ public class ApiSettingsActivity extends AppCompatActivity {
                         String cur = etModel.getText().toString().trim();
                         for (int i = 0; i < arr.length; i++) if (arr[i].equals(cur)) checked = i;
                         new AlertDialog.Builder(ApiSettingsActivity.this)
-                                .setTitle("可用模型（" + arr.length + "），点选使用")
+                                .setTitle(getString(R.string.api_models_title_fmt, arr.length))
                                 .setSingleChoiceItems(arr, checked, (d, which) -> {
                                     String id = arr[which];
                                     etModel.setText(id);
                                     Prefs.set("apiModel", id);
-                                    Toast.makeText(ApiSettingsActivity.this, "已选择：" + id, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_selected_fmt, id), Toast.LENGTH_SHORT).show();
                                     d.dismiss();
                                 })
-                                .setNegativeButton("取消", null)
+                                .setNegativeButton(getString(R.string.cancel), null)
                                 .show();
                     });
                 }
@@ -250,7 +250,7 @@ public class ApiSettingsActivity extends AppCompatActivity {
         btnClearCache.setOnClickListener(v -> {
             ApiMiaoifier.clearCache();
             updateCacheStats();
-            Toast.makeText(this, "缓存已清空", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.api_cache_cleared), Toast.LENGTH_SHORT).show();
         });
 
         // v3.3 应用内更新检查：地址可配置，只检查+提示+跳浏览器，不在应用内下载安装
@@ -263,40 +263,40 @@ public class ApiSettingsActivity extends AppCompatActivity {
         btnCheckUpdate.setOnClickListener(v -> {
             Prefs.set("updateUrl", etUpdateUrl.getText().toString().trim());
             if (Prefs.updateUrl().isEmpty()) {
-                Toast.makeText(this, "请先填写版本 JSON 地址", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.api_json_url_empty), Toast.LENGTH_SHORT).show();
                 return;
             }
             btnCheckUpdate.setEnabled(false);
-            btnCheckUpdate.setText("检查中…");
+            btnCheckUpdate.setText(getString(R.string.api_checking));
             UpdateChecker.check(this, new UpdateChecker.Callback() {
                 @Override public void onUpdate(UpdateChecker.Info info) {
                     btnCheckUpdate.setEnabled(true);
-                    btnCheckUpdate.setText("检查更新");
-                    String msg = "发现新版本 " + info.versionName + "\n\n" + (info.notes == null ? "" : info.notes);
+                    btnCheckUpdate.setText(getString(R.string.api_check_update));
+                    String msg = getString(R.string.api_new_version_fmt, info.versionName, (info.notes == null ? "" : info.notes));
                     new AlertDialog.Builder(ApiSettingsActivity.this)
-                            .setTitle("有可用更新")
+                            .setTitle(getString(R.string.api_update_available))
                             .setMessage(msg)
-                            .setPositiveButton("前往下载", (d, w) -> {
+                            .setPositiveButton(getString(R.string.api_go_download), (d, w) -> {
                                 try {
                                     android.content.Intent it = new android.content.Intent(android.content.Intent.ACTION_VIEW,
                                             android.net.Uri.parse(info.url));
                                     startActivity(it);
                                 } catch (Exception ex) {
-                                    Toast.makeText(ApiSettingsActivity.this, "无法打开下载链接", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_download_fail), Toast.LENGTH_SHORT).show();
                                 }
                             })
-                            .setNegativeButton("稍后", null)
+                            .setNegativeButton(getString(R.string.api_later), null)
                             .show();
                 }
                 @Override public void onUpToDate() {
                     btnCheckUpdate.setEnabled(true);
-                    btnCheckUpdate.setText("检查更新");
-                    Toast.makeText(ApiSettingsActivity.this, "当前已是最新版本", Toast.LENGTH_SHORT).show();
+                    btnCheckUpdate.setText(getString(R.string.api_check_update));
+                    Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_latest), Toast.LENGTH_SHORT).show();
                 }
                 @Override public void onFail(String m) {
                     btnCheckUpdate.setEnabled(true);
-                    btnCheckUpdate.setText("检查更新");
-                    Toast.makeText(ApiSettingsActivity.this, "检查失败：" + m, Toast.LENGTH_SHORT).show();
+                    btnCheckUpdate.setText(getString(R.string.api_check_update));
+                    Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_check_fail_fmt, m), Toast.LENGTH_SHORT).show();
                 }
             });
         });
@@ -333,14 +333,12 @@ public class ApiSettingsActivity extends AppCompatActivity {
 
     private void resetFetchBtn() {
         btnFetchModels.setEnabled(true);
-        btnFetchModels.setText("刷新可用模型（从服务器实时拉取后点选）");
+        btnFetchModels.setText(getString(R.string.api_refresh_models));
     }
     private void updateCacheStats() {
         long bytes = ApiMiaoifier.getCacheBytes();
         String mb = String.format(java.util.Locale.US, "%.1f", bytes / (1024f * 1024f));
-        tvCacheStats.setText("缓存命中：" + ApiMiaoifier.getCacheHits()
-                + " 次  |  总请求：" + ApiMiaoifier.getTotalRequests() + " 次  |  磁盘占用："
-                + mb + " MB / " + (FileCacheStore.DEFAULT_MAX_BYTES / (1024 * 1024)) + " MB");
+        tvCacheStats.setText(getString(R.string.api_cache_stats_fmt, ApiMiaoifier.getCacheHits(), ApiMiaoifier.getTotalRequests(), mb, (FileCacheStore.DEFAULT_MAX_BYTES / (1024 * 1024))));
     }
 
     private String maskKey(String key) {
@@ -352,11 +350,12 @@ public class ApiSettingsActivity extends AppCompatActivity {
     // ==================== 5.0 高级设置 ====================
 
     private void initCacheTtlSpinner() {
+        String[] ttlLabels = getResources().getStringArray(R.array.ttl_labels);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, TTL_LABELS);
+                android.R.layout.simple_spinner_dropdown_item, ttlLabels);
         spCacheTtl.setAdapter(adapter);
         long cur = Prefs.cacheTtlMs();
-        int sel = TTL_LABELS.length - 1;
+        int sel = ttlLabels.length - 1;
         for (int i = 0; i < TTL_VALUES.length; i++) {
             if (TTL_VALUES[i] == cur) { sel = i; break; }
         }
@@ -365,24 +364,25 @@ public class ApiSettingsActivity extends AppCompatActivity {
             @Override public void onItemSelected(android.widget.AdapterView<?> p, android.view.View v, int pos, long id) {
                 Prefs.setCacheTtlMs(TTL_VALUES[pos]);
                 ApiMiaoifier.refreshCacheTtl();
-                Toast.makeText(ApiSettingsActivity.this, "缓存有效期：" + TTL_LABELS[pos], Toast.LENGTH_SHORT).show();
+                Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_ttl_fmt, getResources().getStringArray(R.array.ttl_labels)[pos]), Toast.LENGTH_SHORT).show();
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> p) {}
         });
     }
 
     private void initLogLevelSpinner() {
+        String[] logLabels = getResources().getStringArray(R.array.log_level_labels);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, LOG_LEVEL_LABELS);
+                android.R.layout.simple_spinner_dropdown_item, logLabels);
         spLogLevel.setAdapter(adapter);
         int cur = Prefs.logLevel();
-        spLogLevel.setSelection(Math.max(0, Math.min(LOG_LEVEL_LABELS.length - 1, cur - 1)));
+        spLogLevel.setSelection(Math.max(0, Math.min(logLabels.length - 1, cur - 1)));
         spLogLevel.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(android.widget.AdapterView<?> p, android.view.View v, int pos, long id) {
                 int lv = pos + 1;
                 Prefs.setLogLevel(lv);
                 AppLog.setLevel(lv);
-                Toast.makeText(ApiSettingsActivity.this, "日志级别：" + LOG_LEVEL_LABELS[pos], Toast.LENGTH_SHORT).show();
+                Toast.makeText(ApiSettingsActivity.this, getString(R.string.api_loglevel_fmt, getResources().getStringArray(R.array.log_level_labels)[pos]), Toast.LENGTH_SHORT).show();
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> p) {}
         });
@@ -395,7 +395,7 @@ public class ApiSettingsActivity extends AppCompatActivity {
 
     private void updateBackupCount() {
         int n = Prefs.backupEngines().size();
-        tvBackupCount.setText("当前 " + n + " 个备用引擎");
+        tvBackupCount.setText(getString(R.string.api_backup_count_fmt, n));
     }
 
     private void showBackupEngineDialog() {
@@ -404,10 +404,10 @@ public class ApiSettingsActivity extends AppCompatActivity {
         for (int i = 0; i < engines.size(); i++) {
             items[i] = engines.get(i).name + "  —  " + engines.get(i).baseUrl;
         }
-        items[engines.size()] = "＋ 添加新备用引擎";
+        items[engines.size()] = getString(R.string.api_add_backup);
 
         new AlertDialog.Builder(this)
-                .setTitle("备用引擎管理（点击编辑，长按删除）")
+                .setTitle(getString(R.string.api_backup_manage))
                 .setItems(items, (d, which) -> {
                     if (which == engines.size()) {
                         showAddEngineDialog(engines, -1);
@@ -415,7 +415,7 @@ public class ApiSettingsActivity extends AppCompatActivity {
                         showAddEngineDialog(engines, which);
                     }
                 })
-                .setNegativeButton("关闭", null)
+                .setNegativeButton(getString(R.string.api_close), null)
                 .show();
     }
 
@@ -425,11 +425,11 @@ public class ApiSettingsActivity extends AppCompatActivity {
         ll.setPadding(32, 16, 32, 16);
 
         final EditText etName = new EditText(this);
-        etName.setHint("引擎名称（如：备用1）");
+        etName.setHint(getString(R.string.api_backup_name_hint));
         final EditText etBase = new EditText(this);
-        etBase.setHint("接口地址（https://...）");
+        etBase.setHint(getString(R.string.api_backup_url_hint));
         final EditText etModel = new EditText(this);
-        etModel.setHint("模型名称");
+        etModel.setHint(getString(R.string.api_backup_model_hint));
         final EditText etKey = new EditText(this);
         etKey.setHint("API Key");
         etKey.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -448,15 +448,15 @@ public class ApiSettingsActivity extends AppCompatActivity {
         ll.addView(etKey);
 
         AlertDialog.Builder b = new AlertDialog.Builder(this)
-                .setTitle(editIndex >= 0 ? "编辑备用引擎" : "添加备用引擎")
+                .setTitle(editIndex >= 0 ? getString(R.string.api_edit_backup) : getString(R.string.api_add_backup_title))
                 .setView(ll)
-                .setPositiveButton("保存", (d, w) -> {
+                .setPositiveButton(getString(R.string.save), (d, w) -> {
                     String name = etName.getText().toString().trim();
                     String base = etBase.getText().toString().trim();
                     String model = etModel.getText().toString().trim();
                     String key = etKey.getText().toString().trim();
                     if (name.isEmpty() || base.isEmpty()) {
-                        Toast.makeText(this, "名称和地址不能为空", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.api_backup_empty), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     Engine e = new Engine(name, base, key, model);
@@ -464,15 +464,15 @@ public class ApiSettingsActivity extends AppCompatActivity {
                     else engines.add(e);
                     Prefs.setBackupEngines(engines);
                     updateBackupCount();
-                    Toast.makeText(this, "已保存：" + name, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.api_saved_fmt, name), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("取消", null);
+                .setNegativeButton(getString(R.string.cancel), null);
         if (editIndex >= 0) {
-            b.setNeutralButton("删除", (d, w) -> {
+            b.setNeutralButton(getString(R.string.api_delete), (d, w) -> {
                 engines.remove(editIndex);
                 Prefs.setBackupEngines(engines);
                 updateBackupCount();
-                Toast.makeText(this, "已删除", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.api_deleted), Toast.LENGTH_SHORT).show();
             });
         }
         b.show();

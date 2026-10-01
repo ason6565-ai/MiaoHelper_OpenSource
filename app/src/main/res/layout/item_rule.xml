@@ -12,6 +12,6 @@
     <ImageButton android:id="@+id/btnDelete"
         android:src="@android:drawable/ic_menu_delete"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="删除"
+        android:contentDescription="@string/ui_item_delete_desc"
         android:layout_width="40dp" android:layout_height="40dp" />
 </LinearLayout>

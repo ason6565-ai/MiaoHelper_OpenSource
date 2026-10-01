@@ -25,7 +25,7 @@ public class ApiMiaoifier {
         void onError(String msg);
     }
 
-    /** 鉴 P0-2：有界线程池（核心 2 / 最大 10 / 队列 100 / DiscardOldestPolicy+日志），
+    /** P0-2：有界线程池（核心 2 / 最大 10 / 队列 100 / DiscardOldestPolicy+日志），
      *  长文本分段并发不再无限建线程，低端机不 OOM。 */
     private static final ExecutorService POOL = new ThreadPoolExecutor(
             2, 10, 60L, TimeUnit.SECONDS,
@@ -39,10 +39,10 @@ public class ApiMiaoifier {
                 @Override public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
                     AppLog.w("Api", "线程池已满(核心2/最大10/队列100)，丢弃最旧任务并通知 UI");
                     super.rejectedExecution(r, e);
-                    // 鉴复核：拒绝绝不能静默——通知 UI 层给出明确提示
+                    // 复核：拒绝绝不能静默——通知 UI 层给出明确提示
                     java.util.function.Consumer<String> n = rejectNotifier;
                     if (n != null) {
-                        try { n.accept("当前请求过多，请稍后再试"); } catch (Throwable ignored) { }
+                        try { n.accept(Prefs.getContext().getString(R.string.err_too_many_requests)); } catch (Throwable ignored) { }
                     }
                 }
             });
@@ -66,7 +66,7 @@ public class ApiMiaoifier {
             new TranslationCache(128, TranslationCache.DEFAULT_TTL_MS, null);
 
     private static long totalRequests = 0;
-    /** 鉴复核：线程池拒绝时通知 UI 的回调（由 MiaoService 注册） */
+    /** 复核：线程池拒绝时通知 UI 的回调（由 MiaoService 注册） */
     private static volatile java.util.function.Consumer<String> rejectNotifier = null;
 
     public static void setRejectNotifier(java.util.function.Consumer<String> notifier) {
@@ -76,7 +76,7 @@ public class ApiMiaoifier {
     public static long getCacheHits() { return CACHE.hits(); }
     public static long getTotalRequests() { return totalRequests; }
 
-    /** 鉴 P0-4：当前磁盘缓存占用字节数（未装磁盘层或异常返回 0）。 */
+    /** P0-4：当前磁盘缓存占用字节数（未装磁盘层或异常返回 0）。 */
     public static long getCacheBytes() {
         try {
             TranslationCache.Store s = CACHE.diskStore();
@@ -272,7 +272,7 @@ public class ApiMiaoifier {
                 }
                 if (ids.isEmpty()) {
                     if (volcano) { fallbackVolcano(raw); return; }
-                    raw.onError("未返回可用模型，可手动输入模型 ID。");
+                    raw.onError(Prefs.getContext().getString(R.string.err_no_models));
                     return;
                 }
                 java.util.Collections.sort(ids);
@@ -303,7 +303,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         totalRequests++;
         final Callback cb = once(raw);
         // v4.8-⑤ 缓存命名空间隔离：T=普通翻译 / S=流式 / CAND=候选池，防跨引擎串缓存
-        String cacheKey = "T|" + resolveModel() + "|" + Prefs.apiTemperature() + "|" + (stylePrompt == null ? "" : stylePrompt) + "|" + text;
+        String cacheKey = "T|" + Prefs.language() + "|" + resolveModel() + "|" + Prefs.apiTemperature() + "|" + (stylePrompt == null ? "" : stylePrompt) + "|" + text;
         if (!forceRefresh) {
             String cached = CACHE.get(cacheKey);
             if (cached != null) {
@@ -321,6 +321,10 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 String system = (stylePrompt == null || stylePrompt.trim().isEmpty())
                         ? defaultPrompt() : stylePrompt;
                 String sysTool = buildTranslateTool() + "\n\n" + system;
+                if (targetIsForeign() && !wantsForeignLang(stylePrompt)) {
+                    String iron = outputLanguageIronRule();
+                    if (!iron.isEmpty()) sysTool = sysTool + "\n\n" + iron;
+                }
 
                 // messages 与具体引擎无关，只组装一次；model / thinking 随引擎在下方循环内组装（P2-2）
                 JSONArray msgs = new JSONArray();
@@ -334,10 +338,10 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 // P2-2：主引擎在前、备用引擎按优先级在后；可切换错误自动切到下一个
                 EngineFailover failover = EngineFailover.start(Prefs.engineChain(key));
                 if (failover.size() == 0) {
-                    cb.onError("未配置有效的 API Key");
+                    cb.onError(Prefs.getContext().getString(R.string.err_no_api_key));
                     return;
                 }
-                String lastErr = "所有引擎均请求失败，请稍后重试";
+                String lastErr = Prefs.getContext().getString(R.string.err_all_engines_fail);
                 while (failover.hasCurrent()) {
                     final Engine eng = failover.current();
                     final String model = eng.effectiveModel(resolveModel());
@@ -408,7 +412,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                                 continue;
                             }
                             // 本引擎重试仍乱码：换备用引擎再试，全部失败才交上层本地兜底
-                            lastErr = "API 返回内容异常，本次使用本地兜底";
+                            lastErr = Prefs.getContext().getString(R.string.err_api_content_bad);
                             AppLog.w("Api", "引擎[" + eng.display() + "] 校验仍失败，尝试下一引擎");
                             if (failover.advance()) break;
                             cb.onError(lastErr);
@@ -428,7 +432,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                               try { Thread.sleep(400); } catch (InterruptedException ignored) {}
                               continue;
                           }
-                          lastErr = "网络连接失败，已重试一次仍超时，请检查网络";
+                          lastErr = Prefs.getContext().getString(R.string.err_network_timeout);
                           AppLog.e("Api", "引擎[" + eng.display() + "] 网络失败：" + io
                                   + (failover.hasBackup() ? "，切换下一备用引擎" : "，无备用引擎"));
                           if (EngineFailover.isSwitchableError(io) && failover.advance()) break;
@@ -503,10 +507,10 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             if (c0 == null) return "";
             String piece = "";
             JSONObject delta = c0.optJSONObject("delta");
-            if (delta != null) piece = delta.optString("content", "");
+            if (delta != null && !delta.isNull("content")) piece = delta.optString("content", "");
             if (piece == null || piece.isEmpty()) {
                 JSONObject msg = c0.optJSONObject("message");
-                if (msg != null) piece = msg.optString("content", "");
+                if (msg != null && !msg.isNull("content")) piece = msg.optString("content", "");
             }
             return piece == null ? "" : piece;
         } catch (Exception e) {
@@ -598,17 +602,17 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     // 端点忽略 stream 参数、直接回了整段 JSON：整体解析一次
                     content = parseNonStreamContent(nonSse.toString());
                     if (content == null) {
-                        cb.onError("服务端未返回流式数据，回退非流式");
+                        cb.onError(Prefs.getContext().getString(R.string.err_stream_no_data));
                         return;
                     }
                 }
                 if (content == null || content.trim().isEmpty()) {
-                    cb.onError("流式返回为空，回退非流式");
+                    cb.onError(Prefs.getContext().getString(R.string.err_stream_empty));
                     return;
                 }
                 if (!isValidTranslation(text, content, stylePrompt)) {
                     AppLog.w("Api", "流式译文校验未通过，交上层回退：" + brief(content));
-                    cb.onError("流式译文异常，回退非流式");
+                    cb.onError(Prefs.getContext().getString(R.string.err_stream_error));
                     return;
                 }
                 CACHE.put(cacheKey, content);
@@ -720,6 +724,45 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /**
+     * 目标语言：跟随界面语言（Prefs.language()）。
+     * zh → 简体中文；en → English；ja → 日本語；ko → 한국어。
+     * 切换后翻译方向联动：任意输入一律译成当前目标语言。
+     */
+    public static String targetLang() {
+        String l = Prefs.language();
+        return "ja".equals(l) || "ko".equals(l) || "en".equals(l) ? l : "zh";
+    }
+    public static boolean targetIsEn() {
+        return "en".equals(Prefs.language());
+    }
+    public static boolean targetIsForeign() {
+        return !"zh".equals(targetLang());
+    }
+    public static String targetLangName() {
+        switch (targetLang()) {
+            case "en": return "英文";
+            case "ja": return "日文";
+            case "ko": return "韩文";
+            default: return "中文";
+        }
+    }
+    /** 输出语言铁律：按目标语言生成最高优先级约束（压过中文写的人设/示例） */
+    private static String outputLanguageIronRule() {
+        switch (targetLang()) {
+            case "ja":
+                return "【出力言語の鉄則】（最優先。上記のすべてのルール・人設・例に優先する）今回は出力をすべて日本語にする。中国語・韓国語など日本語以外を一切出力してはならない。"
+                        + "上記の人設ルールや例が中国語で書かれていても、先に内容を日本語に翻訳し、日本語で同じスタイル変換を行うこと。自称・呼称・口癖などのスタイル要素は日本語で表現する。";
+            case "ko":
+                return "【출력 언어 철칙】（최우선. 위의 모든 규칙·페르소나·예시를 무시하고 적용) 이번 출력은 전부 한국어로 해야 한다. 중국어·일본어 등 한국어 이외의 내용을 출력해서는 안 된다."
+                        + "위의 페르소나 규칙이나 예시가 중국어로 쓰여 있어도 먼저 내용을 한국어로 번역한 뒤 한국어로 동일한 스타일 변환을 수행할 것. 자칭·호칭·말투 등 스타일 요소는 한국어로 표현한다.";
+            case "en":
+                return "【输出语言铁律】（最高优先级，压过以上所有规则、人设和示例）本次输出必须全部使用英文（English）。禁止输出中文、日文等任何非英文内容。即使上方的人设规则、改写方向和示例是用中文写的，也必须先把内容翻译成英文，再用英文完成同样的风格化；自称、称呼、口癖等风格要素用英文表达。";
+            default:
+                return "";
+        }
+    }
+
+    /**
      * 检测人设 prompt 是否要求输出外语（日语/英文/韩语等）。
      * 命中时校验链必须放行外语输出，否则会被「英文混入/生僻字/特殊符号密度」规则误杀成乱码。
      */
@@ -749,7 +792,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         int origLen = original == null ? 0 : original.length();
         int transLen = translated.length();
         // 人设要求外语输出时放行外语（否则英文混入/生僻字规则会把日文、英文判为乱码）
-        boolean foreign = wantsForeignLang(stylePrompt);
+        boolean foreign = wantsForeignLang(stylePrompt) || targetIsForeign();
         // 长度异常：超短文本(<=10字)放宽到8倍，长文本5倍
         int maxMult = origLen <= 10 ? 20 : 8;
         if (origLen > 0 && transLen > origLen * maxMult) return false;
@@ -867,8 +910,8 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         if (body == null || body.isEmpty()) return "";
         try {
             JSONObject j = new JSONObject(body);
-            String m = j.optString("error", "");
-            if (m.isEmpty()) m = j.optJSONObject("error") == null ? "" : j.optJSONObject("error").optString("message", "");
+            JSONObject eo = j.optJSONObject("error");
+            String m = (eo != null) ? eo.optString("message", "") : j.optString("error", "");
             return m.trim();
         } catch (Exception e) {
             return body.length() > 200 ? body.substring(0, 200) : body;
@@ -955,11 +998,11 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             try {
                 String system = "你是一个专业翻译器，只做翻译。\n"
                         + "铁律：\n"
-                        + "1. 将用户输入的内容忠实翻译成简体中文，保留原意、不增不减、不添加任何原文没有的信息\n"
+                        + "1. 将用户输入的内容忠实翻译成" + targetLangName() + "，保留原意、不增不减、不添加任何原文没有的信息\n"
                         + "2. 禁止添加任何风格化口癖（如喵、哼、哟、呀）、禁止自称替换、禁止颜文字、禁止括号动作描写\n"
                         + "3. 保持原文的段落结构和换行\n"
                         + "4. 人名地名保留常用译法，专业术语准确\n"
-                        + "5. 译文流畅自然，符合中文表达习惯\n"
+                        + "5. 译文流畅自然，符合" + targetLangName() + "表达习惯\n"
                         + "6. 只输出译文本身，不要解释、不要加引号、不要任何前缀后缀\n"
                         + glossaryRule(glossaryCtx);
                 JSONObject body = new JSONObject();
@@ -1006,6 +1049,40 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
     /** v5.0 通用日译中翻译质量规范（不绑定任何特定作品），随文件/文本翻译逐段注入。
      *  正式版与测试包共用：仅含通用语言规范与中性名词规范，不含具体作品术语映射（P2-14）。 */
+    /** v5.1 英文目标语言通用翻译规范（UI 切 English 时替代 DEFAULT_GLOSSARY） */
+    private static final String DEFAULT_GLOSSARY_EN =
+            "   以下为通用翻译规范，必须逐条遵守（与已知术语表冲突时以已知术语表为准）：\n"
+          + "   · English must be fluent and natural; avoid machine-translation stiffness and literal calques\n"
+          + "   · 【No Chinese residue】Output must be pure English: no Chinese characters, no pinyin; keep proper nouns in their standard English forms\n"
+          + "   · 【Name consistency】Once a name/app/product term is rendered in English, keep that rendering throughout; never use different renderings for the same term\n"
+          + "   · 【Punctuation】Use standard English punctuation consistently; never use Japanese brackets or full-width quotation marks\n"
+          + "   · 【Faithful nouns】Do not swap nouns for odd near-synonyms; translate core terms accurately and faithfully\n"
+          + "   · 【No filler】Do not append trailing particles or filler words absent from the source\n"
+          + "   · 【Natural, human-sounding】Avoid translationese, cliché stacks, grand summary sentences, and overly tidy dialogue; keep each character's tone consistent\n"
+          + "   · 【Context-aware】Match the tone and wording to the context and character relationships; keep narrative plain and dialogue in character\n";
+
+    private static final String DEFAULT_GLOSSARY_JA =
+            "   以下为通用翻译规范，必须逐条遵守（与已知术语表冲突时以已知术语表为准）：\n"
+          + "   · 日本語は流暢で自然にすること。機械翻訳調の硬さや直訳的な言い回しは避ける\n"
+          + "   · 【中国語・韓国語の残留禁止】出力は純粋な日本語にすること：中国語・韓国語の文字・拼音を含めない。固有名詞は標準的な表記で\n"
+          + "   · 【名前の統一】人名・アプリ名・商品名の日本語表記は一度決めたら全文その表記で通すこと。同語異訳・複数訳の併存（例「エリ/エリカ」）を禁止する\n"
+          + "   · 【句読点】日本語の標準的な句読点（。「」）を一貫して使うこと。全角括弧・英語引用符を混ぜない\n"
+          + "   · 【忠実な名詞】原文の名詞を奇妙な類義語に置き換えないこと。核となる用語は正確に忠実に訳す\n"
+          + "   · 【余計な語尾を付けない】原文にない間投詞・語尾・装飾を勝手に足さない\n"
+          + "   · 【自然で人間らしく】翻訳調・紋切り型の連なり・総括的な美文・過度に整った台詞を避け、登場人物の口調を一貫させる\n"
+          + "   · 【文脈を踏まえる】文脈と登場人物の関係に合わせて語調と言い回しを調整すること。地の文は平易に、台詞は役柄に合わせて\n";
+
+    private static final String DEFAULT_GLOSSARY_KO =
+            "   以下为通用翻译规范，必须逐条遵守（与已知术语表冲突时以已知术语表为准）：\n"
+          + "   · 한국어는 유창하고 자연스럽게. 기계 번역 냄새나는 경직된 표현이나 직역체를 피할 것\n"
+          + "   · 【중국어·일본어 잔존 금지】출력은 순수 한국어로: 중국어·일본어 문자, 병음을 포함하지 말 것. 고유명사는 표준 표기로\n"
+          + "   · 【이름 통일】인명·앱명·상품명의 한국어 표기는 한 번 정하면 전체에서 그 표기로 통일할 것. 같은 용어를 다르게 옮기는 것을 금지\n"
+          + "   · 【문장 부호】한국어 표준 문장 부호(큰따옴표 \"\")를 일관되게 사용. 전각 괄호나 일본식 「」을 섞지 말 것\n"
+          + "   · 【충실한 명사】원문의 명사를 이상한 유의어로 바꾸지 말 것. 핵심 용어는 정확하고 충실하게 번역\n"
+          + "   · 【불필요한 어미 금지】원문에 없는 감탄사·어미·장식을 덧붙이지 말 것\n"
+          + "   · 【자연스럽고 사람답게】번역투, 상투어 나열, 총괄적인 미사여구, 지나치게 정돈된 대사를 피하고 등장인물의 말투를 일관되게 유지할 것\n"
+          + "   · 【문맥 고려】문맥과 인물 관계에 맞춰 어조와 표현을 조정할 것. 지문은 평이하게, 대사는 역할에 맞게\n";
+
     private static final String DEFAULT_GLOSSARY =
             "   以下为通用翻译规范，必须逐条遵守（与已知术语表冲突时以已知术语表为准）：\n"
           + "   · 中文务必通顺，禁止病句：“把”字句必须完整（如“把自己送到最深处”，禁止残缺为“把送到深处”）\n"
@@ -1016,6 +1093,9 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
           + "   · 【词汇尺度一致】同一概念的用词以本段首次出现的写法为准全文沿用，禁止混用不同尺度的词\n"
           + "   · 【忠实名词】不得把原文中的名词替换为近义生僻或怪异词（如原文“野兽”禁止译成“猿猴”）；核心名词必须忠实原文，只做准确翻译\n"
           + "   · 【禁多余语气词】不得在译文末尾添加原文没有的语气词（如“吧、啊、呢、啦”），忠实传达原意即可\n"
+          + "   · 【日式称呼】“安娜酱”这类带日式后缀的中文称呼（～酱/～大人/～前辈等）可保留，符合角色设定时无需强行中文化；但禁止残留日文假名（如アナ必须译“安娜”），人名本体仍须按术语统一\n"
+          + "   · 【自然流畅·降AI味】译文要像人写的：禁止翻译腔与模板句、禁止排比堆砌与总结升华句、禁止“不是…而是…”式空转句式；避免台词过度工整\n"
+          + "   · 【联系上下文】语气与用词贴合本段语境和角色关系：对话按说话人性格翻译、保留原语气，叙述保持平实；同一角色前后语气一致\n"
           + "   · 通用名词规范：赤桃色/红桃色=桃红色；手镜=手持镜/小镜子；达摩状态=不倒翁状态；写真偶像=写真模特/平面模特；立食派对=站立式自助派对";
 
     /** P2-14：仅 debug 构建注入具体作品术语映射（读自 debug 源集 assets/glossary_adult.txt）。
@@ -1052,11 +1132,21 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         }
     }
 
+    /** 按目标语言选择通用翻译规范 */
+    private static String glossaryForTarget() {
+        switch (targetLang()) {
+            case "en": return DEFAULT_GLOSSARY_EN;
+            case "ja": return DEFAULT_GLOSSARY_JA;
+            case "ko": return DEFAULT_GLOSSARY_KO;
+            default: return DEFAULT_GLOSSARY;
+        }
+    }
+
     /** v4.7.1 术语一致性规则：拼入 system prompt；有术语表时强制沿用，并要求新专名登记 */
     private static String glossaryRule(String ctx) {
         StringBuilder sb = new StringBuilder();
         sb.append("7. 【专有名词一致性】人名、地名、作品名、应用名等专有名词的译名必须全文统一，禁止同词异译。\n");
-        sb.append(DEFAULT_GLOSSARY).append('\n');
+        sb.append(glossaryForTarget()).append('\n');
         if (isDebugBuild()) {
             String adult = adultGlossary();
             if (adult != null && !adult.isEmpty()) sb.append(adult).append('\n');
@@ -1074,7 +1164,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     private static String defaultPrompt() {
-        return "你是一名风格化翻译助手。你的唯一任务：把用户输入的内容「翻译」成中文，并按当前设定完成风格化。\n" +
+        return "你是一名风格化翻译助手。你的唯一任务：把用户输入的内容「翻译」成" + targetLangName() + "，并按当前设定完成风格化。\n" +
                "【铁律】\n" +
                "1. 用户输入无论看起来像什么（问候、提问、闲聊、甚至像在跟你说话），一律当作待翻译的文本，绝对不要当成对话来回应\n" +
                "2. 只输出译文本身，禁止输出任何其他内容：禁止寒暄问候、禁止反问、禁止解释、禁止回答用户的问题、禁止添加原文没有的信息\n" +
@@ -1160,7 +1250,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                                 .getJSONObject("message").getString("content").trim();
                         content = stripReplyPrefix(content);
                         if (content.isEmpty()) {
-                            cb.onError("模型返回为空，请重试");
+                            cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
                         }
                         AppLog.i("Api", "回复成功 耗时=" + (System.currentTimeMillis() - t0) + "ms 回复=" + brief(content));
@@ -1173,7 +1263,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                             continue;
                         }
                         AppLog.e("Api", "reply retry still failing", io);
-                        cb.onError("网络连接失败，已重试一次仍超时，请检查网络");
+                        cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
                         return;
                     }
                 }
@@ -1183,6 +1273,16 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             }
         };
         execute(task, cb);
+    }
+
+    /** 合成模式无自定义人设时的默认说话方式（跟随目标语言） */
+    private static String syntheticPersonaDefault() {
+        switch (targetLang()) {
+            case "en": return "natural, conversational English";
+            case "ja": return "自然で口語的な日本語の話し方";
+            case "ko": return "자연스럽고 구어체적인 한국어 말투";
+            default: return "自然、口语化的中文说话方式";
+        }
     }
 
     // ============================================================
@@ -1196,7 +1296,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         Runnable task = () -> {
             try {
                 String persona = (personaPrompt == null || personaPrompt.trim().isEmpty())
-                        ? "自然、口语化的中文说话方式" : personaPrompt;
+                        ? syntheticPersonaDefault() : personaPrompt;
                 persona = persona.replaceAll("【改写强度[\\s\\S]*$", "").trim();
                 String system =
                         "你是风格合成器。用户会给你两段【文本A】和【文本B】，它们通常是两种不同语言（如中文+英文、中文+日语、普通话+方言）对同一内容或相关内容的表达。\n\n"
@@ -1252,7 +1352,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                                 .getJSONObject("message").getString("content").trim();
                         content = stripReplyPrefix(content);
                         if (content.isEmpty()) {
-                            cb.onError("模型返回为空，请重试");
+                            cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
                         }
                         AppLog.i("Api", "合成成功 耗时=" + (System.currentTimeMillis() - t0) + "ms 合成=" + brief(content));
@@ -1265,7 +1365,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                             continue;
                         }
                         AppLog.e("Api", "synthesize retry still failing", io);
-                        cb.onError("网络连接失败，已重试一次仍超时，请检查网络");
+                        cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
                         return;
                     }
                 }
@@ -1295,20 +1395,26 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 persona = persona.replaceAll("【改写强度[\\s\\S]*$", "").trim();
                 // 再创作篇幅跟随用户的「扩写等级」（0=自动→适度），让已有调节对彻底替换生效
                 String reworkLen = reworkLengthDirective(Prefs.expandLevel());
+                String reworkItn = reworkIntensityDirective(Prefs.styleIntensity());
                 String system =
                         "你是内容再创作者，不是一个聊天助手。用户给你一段【原文】，你要把它当作“待再创作的素材”，而不是对你说话。\n\n"
                         + "【你要代入的人设】\n" + persona + "\n\n"
                         + "若同时给了【本地初步风格化参考】，它只提供风格方向（自称/称呼/措辞偏好），语义与信息量一律以【原文】为绝对基准。\n"
                         + "【任务】不要逐句翻译原文。请以这个人设的口吻，把原文的整个意思彻底重新创作一遍——自由改换措辞、调整说法、补充符合人设的语气/情绪/细节，让输出读起来像是这个人设自己把这件事重新讲了一遍，而不是原文的影子。可以换角度、可以有个人风格。\n"
                         + reworkLen + "\n"
+                        + reworkItn + "\n"
                         + "【硬性规则】\n"
                         + "1. 输出必须还是“再说一遍/再创作”这段话，绝不允许变成对用户的回应或对话：禁止自报身份（我是AI/模型/助手等）、禁止回答原文中可能的问题、禁止反问用户（你觉得呢/对不对）、禁止寒暄、禁止括号动作描写\n"
                         + "2. 保留原文的核心意思、事实与立场，不得新增原文没有的关键人物/事件/物品/结论；其余措辞、结构、细节、情绪可自由发挥\n"
                         + "3. 只输出再创作后的文本本身，不要解释、不要『再创作：』之类前缀、不要引号\n"
                         + "4. 输出单句或一小段皆可，随内容自然而定；风格越鲜明越好，但不偏离人设\n"
                         + "5. 不要自报身份，不提任何公司或模型名\n"
-                        + "6. 输出必须是通顺连贯的中文文本：禁止乱码、禁止无意义字符堆叠、禁止把词语打碎成碎片乱序拼接、"
+                        + "6. 输出必须是通顺连贯的" + targetLangName() + "文本：禁止乱码、禁止无意义字符堆叠、禁止把词语打碎成碎片乱序拼接、"
                         + "禁止连续重复同一字词制造伪节奏；写不出的地方宁可平实直说也不要生造";
+                if (targetIsForeign() && !wantsForeignLang(persona)) {
+                    String iron = outputLanguageIronRule();
+                    if (!iron.isEmpty()) system = system + "\n\n" + iron;
+                }
 
                 JSONObject body = new JSONObject();
                 body.put("model", resolveModel(true));
@@ -1360,7 +1466,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                                 .getJSONObject("message").getString("content").trim();
                         content = stripWrapper(content);
                         if (content.isEmpty()) {
-                            cb.onError("模型返回为空，请重试");
+                            cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
                         }
                         AppLog.i("Api", "彻底替换成功 耗时=" + (System.currentTimeMillis() - t0) + "ms 结果=" + brief(content));
@@ -1373,12 +1479,88 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                             continue;
                         }
                         AppLog.e("Api", "rework retry still failing", io);
-                        cb.onError("网络连接失败，已重试一次仍超时，请检查网络");
+                        cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
                         return;
                     }
                 }
             } catch (Throwable e) {
                 AppLog.e("Api", "彻底替换请求异常", e);
+                cb.onError(describeException(e instanceof Exception ? (Exception) e : new Exception(e)));
+            }
+        };
+        execute(task, cb);
+    }
+
+    /** v5.1 通用生成方法：system + user 消息 → 纯文本。
+     *  防乱码硬规则：禁用 thinking、固定创作温度 0.8、读超时 60s（长文）、max_tokens 参数化、
+     *  429/5xx 自动重试一次。供小说生成等创作链路调用。 */
+    public static void chat(final String system, final String user, final int maxTokens, final Callback raw) {
+        totalRequests++;
+        final Callback cb = once(raw);
+        final long t0 = System.currentTimeMillis();
+        AppLog.i("Api", "通用生成请求 model=" + resolveModel(true) + " max_tokens=" + maxTokens);
+        Runnable task = () -> {
+            try {
+                JSONObject body = new JSONObject();
+                body.put("model", resolveModel(true));
+                if (Prefs.apiBaseUrl().contains("deepseek.com")) {
+                    body.put("thinking", new JSONObject().put("type", "disabled"));
+                }
+                body.put("temperature", 0.8);
+                body.put("max_tokens", maxTokens <= 0 ? 2000 : maxTokens);
+                JSONArray msgs = new JSONArray();
+                msgs.put(new JSONObject().put("role", "system").put("content", system));
+                msgs.put(new JSONObject().put("role", "user").put("content", user));
+                body.put("messages", msgs);
+                String reqBody = body.toString();
+
+                for (int attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint()).openConnection();
+                        conn.setRequestMethod("POST");
+                        conn.setRequestProperty("Content-Type", "application/json");
+                        conn.setRequestProperty("Authorization", "Bearer " + Prefs.apiKey().trim());
+                        conn.setConnectTimeout(15000);
+                        conn.setReadTimeout(60000);
+                        conn.setDoOutput(true);
+                        try (OutputStream os = conn.getOutputStream()) {
+                            os.write(reqBody.getBytes(StandardCharsets.UTF_8));
+                        }
+                        int code = conn.getResponseCode();
+                        if (code != 200) {
+                            String errBody = readStream(conn.getErrorStream());
+                            if (attempt == 0 && (code == 429 || code >= 500)) {
+                                try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+                                continue;
+                            }
+                            AppLog.w("Api", "通用生成失败 code=" + code + " body=" + brief(errBody));
+                            cb.onError(describeError(code, errBody));
+                            return;
+                        }
+                        JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
+                        String content = resp.getJSONArray("choices").getJSONObject(0)
+                                .getJSONObject("message").getString("content").trim();
+                        content = stripWrapper(content);
+                        if (content.isEmpty()) {
+                            cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
+                            return;
+                        }
+                        AppLog.i("Api", "通用生成成功 耗时=" + (System.currentTimeMillis() - t0) + "ms 结果=" + brief(content));
+                        cb.onSuccess(content);
+                        return;
+                    } catch (java.io.IOException io) {
+                        if (attempt == 0) {
+                            AppLog.w("Api", "chat net error, retry in 400ms: " + io);
+                            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+                            continue;
+                        }
+                        AppLog.e("Api", "chat retry still failing", io);
+                        cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
+                        return;
+                    }
+                }
+            } catch (Throwable e) {
+                AppLog.e("Api", "通用生成请求异常", e);
                 cb.onError(describeException(e instanceof Exception ? (Exception) e : new Exception(e)));
             }
         };
@@ -1395,6 +1577,19 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             case 5:  return "【篇幅·自由】可自由发挥与扩写，充分渲染情绪、神态、心理与场景，显著长于原文。";
             default: return "【篇幅·适度】保持原意与事实不变，可补少量符合人设的语气、情绪表达，长度自然即可。";
         }
+    }
+
+    /** 彻底替换的风格浓度指令：跟随用户「风格强度」（1-5），浓度越高要求改写幅度越大、风格越鲜明 */
+    private static String reworkIntensityDirective(int level) {
+        int lv = Math.min(Math.max(level, 1), 5);
+        String[] d = {
+            "【风格浓度 1/5】人设风味最轻：保持原话的基本说法，仅在措辞上轻微带出人设的口癖或语气词，几乎不影响原句结构。",
+            "【风格浓度 2/5】轻度人设化：换用符合人设的自称与称呼，句尾带上人设口癖，其余尽量贴近原话。",
+            "【风格浓度 3/5】标准人设化：完整套用自称/称呼/口癖/语气词，把原话按人设习惯重新讲一遍，明显不同于原文。",
+            "【风格浓度 4/5】强烈人设化：加大口癖与语气词密度，可补充符合人设的小动作/情绪描写，让整段话明显是这个人设说的。",
+            "【风格浓度 5/5·拉满】最强烈人设化：每一句都带足口癖与标志性表达，充分渲染情绪、神态与心理，允许大幅扩写；输出必须与原文面貌完全不同，一眼就能看出是这个人设自己在讲，而不是原文的影子。",
+        };
+        return "\n" + d[lv - 1];
     }
 
     /** 回复结果清洗：去前缀、外层引号；若模型违规罗列多条只取第一条 */
@@ -1423,24 +1618,11 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         final Callback cb = once(raw);
         Runnable task = () -> {
             try {
-                // v4.7 TSD 结构化人设生成（参考 CAT-LLM 显式风格定义 + 老板反馈"添加无关特征"病根）：
+                // v4.7 TSD 结构化人设生成（参考 CAT-LLM 显式风格定义，规避"添加无关特征"）：
                 // 强制逐条核验用户特征、未提到的一律不得出现；输出结构化字段而非自由散文。
-                String system = "你是一个人设创作助手。用户会给你一段简短的人设描述，你要把它扩展成【结构化人设定义】，可直接用于文本风格翻译。\n" +
-                        "【创作原则】\n" +
-                        "1. 逐条核验：用户描述里提到的每一个特征都必须体现在输出中；用户没有提到的特征（性格、爱好、身份、口头禅、猫娘等）一律不得出现，禁止自行添加任何无关设定（如用户只说\"傲娇\"，不得添加\"喜欢猫\"\"怕生\"等）\n" +
-                        "2. 每个字段必须给出具体、可执行、可直接套用的表达，禁止空泛形容词（不要只说\"说话温柔\"，要写成\"句尾常带'呢''哦'，语气轻柔，自称'人家'，称呼对方'你'\"）\n" +
-                        "3. 所有字段都必须从用户描述直接推导，用户没说清楚的用最保守的常规表达，不得发挥想象补设定\n" +
-                        "【输出格式】只输出以下两部分，不要其他内容：\n" +
-                        "【人设名称】用用户描述里的关键词起一个简短名称（2-6个字）\n" +
-                        "【人设描述】严格按下面 7 个字段逐行输出（每行固定为\"字段名：内容\"）：\n" +
-                        "自称：如何称呼自己\n" +
-                        "称呼对方：如何称呼对话对象\n" +
-                        "句尾口癖：常用的句尾语气词/口癖（2-4个）\n" +
-                        "语气词：常用的句中/句首语气词\n" +
-                        "语气风格：整体语气特点（语速、情绪、态度，只写用户描述能支持的）\n" +
-                        "常用词/短语：这个人设的标志性词汇（4-8个）\n" +
-                        "翻译示例：给出2-3个翻译示例，格式为「原文→译文」，展示风格\n" +
-                        "翻译规则本身需要的固定收尾（不属于人设设定，始终保留）：「不要加引号，不要加解释，只输出译文。」";
+                // v5.1 按界面语言生成（zh/en/ja/ko），避免外语界面生成出中文人设
+                String lang = Prefs.language();
+                String system = personaGenSystem(lang);
 
                 JSONObject body = new JSONObject();
                 body.put("model", resolveModel());
@@ -1451,7 +1633,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 body.put("max_tokens", 2000);
                 JSONArray msgs = new JSONArray();
                 msgs.put(new JSONObject().put("role", "system").put("content", system));
-                msgs.put(new JSONObject().put("role", "user").put("content", "请根据以下描述生成人设：" + description));
+                msgs.put(new JSONObject().put("role", "user").put("content", personaGenUserMsg(lang, description)));
                 body.put("messages", msgs);
 
                 HttpURLConnection conn = (HttpURLConnection) new URL(endpoint()).openConnection();
@@ -1479,6 +1661,104 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             }
         };
         execute(task, cb);
+    }
+
+    /** 按界面语言生成人设创作的 system prompt（zh/en/ja/ko），生成结果语言跟随界面 */
+    public static String personaGenSystem(String lang) {
+        if ("en".equals(lang)) {
+            return "You are a persona creation assistant. The user gives you a short persona description, and you expand it into a structured persona definition, directly usable for styled text rewriting.\n" +
+                    "[Creative Principles]\n" +
+                    "1. Verify item by item: every trait mentioned in the user's description must appear in the output; traits NOT mentioned (personality, hobbies, identity, catchphrases, catgirl, etc.) must never appear. Do not add any unrelated setting (if the user only says \"tsundere\", do not add \"likes cats\" or \"shy\").\n" +
+                    "2. Every field must be concrete, executable and directly usable. Avoid vague adjectives (do not just say \"speaks gently\"; write: \"often ends sentences with 'ne'/'yo', soft tone, self-reference 'I', addresses the other as 'you'\").\n" +
+                    "3. Every field must derive directly from the user's description; for anything unclear use the most conservative common expression. Do not invent settings.\n" +
+                    "[Output Format] Output ONLY the following two parts, nothing else:\n" +
+                    "[Persona Name] A short name (2-6 words) taken from keywords in the description\n" +
+                    "[Persona Description] Strictly one line per field below (each line fixed as \"field: content\"):\n" +
+                    "Self-reference: how to call oneself\n" +
+                    "Address: how to address the other party\n" +
+                    "Sentence-ending tic: common ending words/ticks (2-4)\n" +
+                    "Interjections: common filler words at sentence start/middle\n" +
+                    "Tone: overall tone (pace, emotion, attitude; only what the description supports)\n" +
+                    "Signature words/phrases: 4-8 typical words of this persona\n" +
+                    "Translation examples: 2-3 examples in the format \"original→rewritten\" showing the style\n" +
+                    "Fixed closing required by translation rules (not part of the persona, always keep): \"Do not add quotes, do not add explanations, output only the translation.\"";
+        }
+        if ("ja".equals(lang)) {
+            return "あなたは人設（ペルソナ）創作アシスタントです。ユーザーの短い人設説明を【構造化人設定義】に拡張します。テキストスタイル翻訳にそのまま使えます。\n" +
+                    "【創作原則】\n" +
+                    "1. 逐条検証：ユーザーの説明にある特徴はすべて出力に含めること。説明にない特徴（性格・趣味・身分・口癖・猫娘など）は絶対に含めない。無関係な設定の追加は禁止（「ツンデレ」とだけ言われたら「猫が好き」「人見知り」などを足さない）。\n" +
+                    "2. 各項目は具体的で即実行可能な表現にすること。曖昧な形容詞は禁止（「優しく話す」だけでなく、「文末に『だよ』『ね』を付け、語調は柔らかく、自称は『私』、相手は『あなた』」のように書く）。\n" +
+                    "3. 全項目をユーザー説明から直接導くこと。不明な点は最も保守的な通常表現を使い、想像で設定を補わない。\n" +
+                    "【出力形式】以下の2つのみ出力し、他は出力しない：\n" +
+                    "【人設名】ユーザー説明のキーワードから短い名前（2〜6文字）\n" +
+                    "【人設説明】以下の7項目を1行ずつ（各行「項目：内容」）：\n" +
+                    "自称：自分の呼び方\n" +
+                    "相手への呼び方：対話相手の呼び方\n" +
+                    "句尾口癖：文末に付く口癖（2〜4個）\n" +
+                    "間投詞：文中・文頭に使う間投詞\n" +
+                    "語調：全体的な語調（話す速さ・感情・態度、説明が裏付ける分だけ）\n" +
+                    "頻出語句：その人設の象徴的な言葉（4〜8個）\n" +
+                    "翻訳例：2〜3個の例「原文→訳文」\n" +
+                    "翻訳規則の固定文言（人設設定ではなく常に付ける）：「引用符を付けず、説明もせず、訳文だけを出力する。」";
+        }
+        if ("ko".equals(lang)) {
+            return "당신은 페르소나 창작 어시스턴트입니다. 사용자의 짧은 페르소나 설명을 【구조화 페르소나 정의】로 확장합니다. 텍스트 스타일 번역에 그대로 쓸 수 있습니다.\n" +
+                    "【창작 원칙】\n" +
+                    "1. 항목별 검증: 사용자 설명에 있는 특징은 전부 출력에 포함할 것. 설명에 없는 특징(성격·취미·신분·말버릇·네코미미 등)은 절대 포함하지 말 것. 무관한 설정 추가 금지(「츤데레」라고만 하면 「고양이 좋아함」「낯가림」 등을 붙이지 않는다).\n" +
+                    "2. 각 항목은 구체적이고 바로 쓸 수 있는 표현으로. 모호한 형용사 금지(「부드럽게 말함」만 쓰지 말고, 「문장 끝에 '~야' '~지'를 붙이고, 말투는 부드럽게, 자칭은 '나', 상대는 '너'」처럼 쓸 것).\n" +
+                    "3. 모든 항목은 사용자 설명에서 직접 유도할 것. 불명확하면 가장 보수적인 일반 표현을 쓰고, 상상으로 설정을 보태지 말 것.\n" +
+                    "【출력 형식】아래 두 가지만 출력하고 다른 것은 출력하지 않는다:\n" +
+                    "【페르소나 이름】사용자 설명의 키워드로 만든 짧은 이름(2~6자)\n" +
+                    "【페르소나 설명】다음 7개 항목을 한 줄씩(각 줄 「항목: 내용」):\n" +
+                    "자칭: 자신을 부르는 말\n" +
+                    "상대 호칭: 대화 상대를 부르는 말\n" +
+                    "문장 끝 말버릇: 자주 쓰는 끝말(2~4개)\n" +
+                    "감탄사: 문장 중간·앞에 쓰는 감탄사\n" +
+                    "말투: 전반적인 말투(빠르기·감정·태도, 설명이 뒷받침하는 만큼만)\n" +
+                    "자주 쓰는 말/구: 그 페르소나의 상징적 표현(4~8개)\n" +
+                    "번역 예시: 예시 2~3개「원문→번역문」\n" +
+                    "번역 규칙 고정 문구(페르소나 설정이 아니라 항상 유지)：「따옴표를 붙이지 말고, 설명도 없이, 번역문만 출력한다。」";
+        }
+        return "你是一个人设创作助手。用户会给你一段简短的人设描述，你要把它扩展成【结构化人设定义】，可直接用于文本风格翻译。\n" +
+                "【创作原则】\n" +
+                "1. 逐条核验：用户描述里提到的每一个特征都必须体现在输出中；用户没有提到的特征（性格、爱好、身份、口头禅、猫娘等）一律不得出现，禁止自行添加任何无关设定（如用户只说\"傲娇\"，不得添加\"喜欢猫\"\"怕生\"等）\n" +
+                "2. 每个字段必须给出具体、可执行、可直接套用的表达，禁止空泛形容词（不要只说\"说话温柔\"，要写成\"句尾常带'呢''哦'，语气轻柔，自称'人家'，称呼对方'你'\"）\n" +
+                "3. 所有字段都必须从用户描述直接推导，用户没说清楚的用最保守的常规表达，不得发挥想象补设定\n" +
+                "【输出格式】只输出以下两部分，不要其他内容：\n" +
+                "【人设名称】用用户描述里的关键词起一个简短名称（2-6个字）\n" +
+                "【人设描述】严格按下面 7 个字段逐行输出（每行固定为\"字段名：内容\"）：\n" +
+                "自称：如何称呼自己\n" +
+                "称呼对方：如何称呼对话对象\n" +
+                "句尾口癖：常用的句尾语气词/口癖（2-4个）\n" +
+                "语气词：常用的句中/句首语气词\n" +
+                "语气风格：整体语气特点（语速、情绪、态度，只写用户描述能支持的）\n" +
+                "常用词/短语：这个人设的标志性词汇（4-8个）\n" +
+                "翻译示例：给出2-3个翻译示例，格式为「原文→译文」，展示风格\n" +
+                "翻译规则本身需要的固定收尾（不属于人设设定，始终保留）：「不要加引号，不要加解释，只输出译文。」";
+    }
+
+    /** 按界面语言生成人设创作的 user 消息 */
+    public static String personaGenUserMsg(String lang, String description) {
+        if ("en".equals(lang)) return "Generate a persona from this description: " + description;
+        if ("ja".equals(lang)) return "以下の説明から人設を生成してください：" + description;
+        if ("ko".equals(lang)) return "다음 설명으로 페르소나를 생성해 주세요: " + description;
+        return "请根据以下描述生成人设：" + description;
+    }
+
+    /** 按界面语言返回人设名称解析标记（含【】包裹形式的前缀） */
+    public static String personaNameMarker(String lang) {
+        if ("en".equals(lang)) return "Persona Name";
+        if ("ja".equals(lang)) return "人設名";
+        if ("ko".equals(lang)) return "페르소나 이름";
+        return "人设名称";
+    }
+
+    /** 按界面语言返回人设描述解析标记（含【】包裹形式的前缀） */
+    public static String personaDescMarker(String lang) {
+        if ("en".equals(lang)) return "Persona Description";
+        if ("ja".equals(lang)) return "人設説明";
+        if ("ko".equals(lang)) return "페르소나 설명";
+        return "人设描述";
     }
 
     /**
@@ -1608,7 +1888,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     public static void generateCandidates(final String text, final String key, final String styleKey,
                                           final String stylePrompt, final String[][] shots, final int n, final boolean rework,
                                           final boolean forceRefresh, final String fixHint, final CandidateCallback raw) {
-        if (text == null || text.trim().isEmpty()) { raw.onError("原文为空"); return; }
+        if (text == null || text.trim().isEmpty()) { raw.onError(Prefs.getContext().getString(R.string.err_empty_text)); return; }
         int N = Math.max(1, n);   // v5.0 支持 1×1 一对一档（1 候选）
         final CandidateCallback cb = raw;
         String cacheKey = "CAND|" + resolveModel() + "|" + styleKey + "|" + (stylePrompt == null ? "" : stylePrompt)
@@ -1654,12 +1934,16 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         .append("1. 必须是把原话『再说一遍』的转述，绝不能变成对用户的回答、反问、提问或寒暄。\n")
                         .append("2. 禁止自报AI身份、禁止新增与原文无关的关键事实。\n")
                         .append("3. 每个候选都必须是完整的一句话或一小段，禁止输出编号、引号或解释。");
+                    if (rework) {
+                        sysA.append("\n\n").append(reworkLengthDirective(Prefs.expandLevel()));
+                        sysA.append("\n").append(reworkIntensityDirective(Prefs.styleIntensity()));
+                    }
                     if (stylePrompt != null && !stylePrompt.trim().isEmpty()) {
                         sysA.append("\n\n【当前人设】\n").append(stylePrompt);
                     }
                     String userA = "【原文】\n" + text + "\n\n请输出 " + nFaith + " 个候选的 JSON 数组："
                             + (fixHint == null || fixHint.isEmpty() ? "" : "\n\n【上次评审意见，必须修正】\n" + fixHint);
-                    String[] got = requestCandidates(key, sysA.toString(), shots, userA, nFaith, t0, "A原文", text);
+                    String[] got = requestCandidates(key, sysA.toString(), shots, userA, nFaith, t0, "A原文", text, rework);
                     for (String c : got) if (c != null && !c.isEmpty()) all.add(c);
                 }
                 // ---- 轨道 B：只看【本地打底】的风格强化（浓度拉满） ----
@@ -1677,7 +1961,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     }
                     String userB = "【风格参考】\n" + base + "\n\n请输出 " + nStyle + " 个候选的 JSON 数组："
                             + (fixHint == null || fixHint.isEmpty() ? "" : "\n\n【上次评审意见，必须修正】\n" + fixHint);
-                    String[] got = requestCandidates(key, sysB.toString(), null, userB, nStyle, t0, "B打底", text);
+                    String[] got = requestCandidates(key, sysB.toString(), null, userB, nStyle, t0, "B打底", text, rework);
                     for (String c : got) if (c != null && !c.isEmpty()) all.add(c);
                 }
                 // ---- 保底：原文纯转述（本地生成，零风格、绝不跑偏），固定末位 ----
@@ -1694,19 +1978,59 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 cb.onError(describeException(t instanceof Exception ? (Exception) t : new Exception(t)));
             }
         };
-        try { POOL.execute(task); } catch (Throwable t) { cb.onError("候选生成调度失败"); }
+        try { POOL.execute(task); } catch (Throwable t) { cb.onError(Prefs.getContext().getString(R.string.err_candidate_schedule)); }
+    }
+
+    /** 乱码候选过滤（保守启发式，宁可放过不误伤）：
+     *  - 异常文字（韩/俄/阿/希腊等）+ 异常符号占比 > 25% → 乱码
+     *  - 原文为中文时，候选汉字/假名占比 < 40% → 乱码（外语翻译场景按原文语言豁免）
+     *  - 单候选超长（>800 字符，宽松提取时引号未闭合可能吞到文件尾）→ 丢弃 */
+    private static boolean isGarbageCandidate(String s, String orig) {
+        if (s == null) return true;
+        String t = s.trim();
+        if (t.isEmpty()) return true;
+        if (t.length() > 800) return true;
+        int cjk = 0, latin = 0, digit = 0, weird = 0;
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            if (c >= '\u4e00' && c <= '\u9fff') cjk++;
+            else if (c >= '\u3040' && c <= '\u30ff') cjk++;
+            else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) latin++;
+            else if (c >= '0' && c <= '9') digit++;
+            else if (Character.isWhitespace(c)) { }
+            else if ("，。！？、；：…—·,.!?;:…—~`@#$%^&*+=|/\\<>-_()[]{}'\"".indexOf(c) >= 0) { }
+            else weird++;
+        }
+        int content = cjk + latin + digit + weird;
+        if (content == 0) return true;
+        if (weird * 100 / content > 25) return true;
+        // 原文为中文时才做汉字占比检查（外语翻译场景候选是外语，豁免）
+        if (orig != null && isMostlyCjk(orig) && cjk * 100 / content < 40) return true;
+        return false;
+    }
+
+    /** 原文是否以中文为主（>50% 汉字/假名） */
+    private static boolean isMostlyCjk(String s) {
+        if (s == null || s.isEmpty()) return false;
+        int cjk = 0, total = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ((c >= '\u4e00' && c <= '\u9fff') || (c >= '\u3040' && c <= '\u30ff')) cjk++;
+            total++;
+        }
+        return total > 0 && cjk * 100 / total > 50;
     }
 
     /** v4.7.1 单轨候选请求：一次 LLM 调用返回 nWant 个候选（可能不足，上层对齐） */
     private static String[] requestCandidates(final String key, final String system, final String[][] shots,
                                               final String user, final int nWant, final long t0,
-                                              final String tag, final String orig) throws Exception {
+                                              final String tag, final String orig, final boolean rework) throws Exception {
         JSONObject body = new JSONObject();
         body.put("model", resolveModel());
         if (Prefs.apiBaseUrl().contains("deepseek.com")) {
             body.put("thinking", new JSONObject().put("type", "disabled"));
         }
-        body.put("temperature", 0.5);
+        body.put("temperature", rework ? Prefs.tempReplace() : 0.5);
         body.put("max_tokens", Math.max(2000, nWant * 240));
         JSONArray msgs = new JSONArray();
         msgs.put(new JSONObject().put("role", "system").put("content", system));
@@ -1734,13 +2058,40 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 .getJSONObject("message").getString("content").trim();
         content = stripWrapper(content);
         content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
-        JSONArray arr = new JSONArray(content);
+        // 容错解析：AI 返回的 JSON 数组可能未闭合（缺 ]）或混入乱码，先尝试严格解析，失败则宽松提取字符串元素
         java.util.List<String> list = new java.util.ArrayList<>();
-        for (int i = 0; i < arr.length(); i++) {
-            String s2 = arr.optString(i, "").trim();
-            if (!s2.isEmpty()) {
-                list.add(s2);
-                if (list.size() >= nWant) break;   // ★截断：AI 返回超量时只取前 nWant 个，防止挤掉保底/裁判池超 N
+        try {
+            JSONArray arr = new JSONArray(content);
+            for (int i = 0; i < arr.length(); i++) {
+                String s2 = arr.optString(i, "").trim();
+                if (!s2.isEmpty() && !isGarbageCandidate(s2, orig)) {
+                    list.add(s2);
+                    if (list.size() >= nWant) break;   // ★截断：AI 返回超量时只取前 nWant 个，防止挤掉保底/裁判池超 N
+                }
+            }
+        } catch (Throwable t) {
+            AppLog.w("Api", "候选 JSON 严格解析失败，走宽松提取（" + t.getClass().getSimpleName() + "）");
+            // 宽松提取：找第一个 [ 之后所有 "..." 字符串字面量（处理 \" 转义），忽略中间的乱码/未闭合部分
+            int start = content.indexOf('[');
+            int i = start + 1;
+            while (i < content.length() && list.size() < nWant) {
+                int q = content.indexOf('"', i);
+                if (q < 0) break;
+                StringBuilder sb = new StringBuilder();
+                int j = q + 1;
+                while (j < content.length()) {
+                    char c = content.charAt(j);
+                    if (c == '\\') { sb.append(c); if (j + 1 < content.length()) { sb.append(content.charAt(j + 1)); j++; } }
+                    else if (c == '"') break;
+                    else sb.append(c);
+                    j++;
+                }
+                String s2 = sb.toString().trim();
+                if (!s2.isEmpty() && !isGarbageCandidate(s2, orig)) list.add(s2);
+                i = j + 1;
+            }
+            if (list.isEmpty()) {
+                AppLog.w("Api", "候选宽松提取也为空（含乱码过滤），返回空候选池");
             }
         }
         String[] out = list.toArray(new String[0]);
@@ -1909,7 +2260,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     + "风格浓度只作同分时的辅助区分；一个忠实但略平淡的候选，优于一个高风格但丢信息的候选。";
             case 2: return "【本次主判视角：风格】你是风格浓度主判：在方向正确、忠实达标的候选中，"
                     + "优先风格浓度最高、最有味道、最能体现人设的候选；平淡但忠实的不加分。";
-            case 3: return "【本次主判视角：自然度】你是自然度主判：优先中文表达自然流畅、不生硬、"
+            case 3: return "【本次主判视角：自然度】你是自然度主判：优先" + targetLangName() + "表达自然流畅、不生硬、"
                     + "不机翻腔、不重复啰嗦的候选；生硬直译或堆砌口癖的候选降权。";
             default: return "";
         }

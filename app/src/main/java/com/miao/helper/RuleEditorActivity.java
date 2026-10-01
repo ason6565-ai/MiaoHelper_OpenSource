@@ -88,7 +88,7 @@ public class RuleEditorActivity extends AppCompatActivity {
         if (currentStyleId == null || currentStyleId.isEmpty()) currentStyleId = StyleManager.currentId();
         rules = new ArrayList<>(Prefs.customRulesFor(currentStyle));
         TextView tvStyle = findViewById(R.id.tvStyleLabel);
-        tvStyle.setText("当前人设：" + currentStyle + "（点击切换）");
+        tvStyle.setText(getString(R.string.rule_cur_style_fmt, currentStyle));
         tvStyle.setOnClickListener(v -> showPersonaPicker());
         seedSamplesIfFirst();
 
@@ -127,7 +127,7 @@ public class RuleEditorActivity extends AppCompatActivity {
     private void showPersonaPicker() {
         final String[] names = StyleManager.personaNames();
         new AlertDialog.Builder(this)
-                .setTitle("选择人设（词库按人设独立）")
+                .setTitle(getString(R.string.rule_pick_persona))
                 .setItems(names, (d, w) -> {
                     String picked = names[w];
                     if (picked.equals(currentStyle)) return;
@@ -135,13 +135,13 @@ public class RuleEditorActivity extends AppCompatActivity {
                     currentStyleId = StyleManager.personaId(w);
                     rules = new ArrayList<>(Prefs.customRulesFor(currentStyle));
                     TextView tvStyle = findViewById(R.id.tvStyleLabel);
-                    tvStyle.setText("当前人设：" + currentStyle + "（点击切换）");
+                    tvStyle.setText(getString(R.string.rule_cur_style_fmt, currentStyle));
                     adapter.notifyDataSetChanged();
                     refreshEmpty();
                     refreshLexicon();
-                    Toast.makeText(RuleEditorActivity.this, "已切换人设：" + currentStyle, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RuleEditorActivity.this, getString(R.string.rule_switched_fmt, currentStyle), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -149,36 +149,36 @@ public class RuleEditorActivity extends AppCompatActivity {
     private void exportBackup() {
         String json = BackupManager.buildBackup();
         if (json == null) {
-            Toast.makeText(this, "生成备份失败", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.rule_backup_fail), Toast.LENGTH_SHORT).show();
             return;
         }
         String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(new Date());
-        createDocLauncher.launch("拟言助手备份_" + stamp + ".txt");
+        createDocLauncher.launch(getString(R.string.rule_backup_prefix, stamp) + ".txt");
     }
 
     private final ActivityResultLauncher<String> createDocLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument("text/plain"), uri -> {
                 if (uri == null) {
-                    Toast.makeText(this, "已取消导出", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.rule_export_cancel), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 String json = BackupManager.buildBackup();
                 if (json == null) {
-                    Toast.makeText(this, "生成备份失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.rule_backup_fail), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 try (OutputStream os = getContentResolver().openOutputStream(uri)) {
                     if (os != null) {
                         os.write(json.getBytes(StandardCharsets.UTF_8));
                         os.flush();
-                        Toast.makeText(this, "✅ 备份已导出（规则/扩展词库/人设）", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, getString(R.string.rule_exported), Toast.LENGTH_LONG).show();
                         return;
                     }
                 } catch (Exception e) {
-                    Toast.makeText(this, "导出失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, getString(R.string.rule_export_fail_fmt, e.getMessage()), Toast.LENGTH_LONG).show();
                     return;
                 }
-                Toast.makeText(this, "导出失败：无法写入", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.rule_export_io), Toast.LENGTH_SHORT).show();
             });
 
     /** 导入备份：系统文件选择器 → 解析并全量覆盖 */
@@ -191,30 +191,30 @@ public class RuleEditorActivity extends AppCompatActivity {
                 if (uri == null) return;
                 // 弹确认：导入会覆盖现有规则/词库/人设
                 new AlertDialog.Builder(this)
-                        .setTitle("导入备份")
-                        .setMessage("导入将覆盖当前的：\n• 自定义替换规则\n• AI 扩展词库\n• 自定义人设\n\n确认继续？")
-                        .setPositiveButton("导入", (d, w) -> {
-                            Toast.makeText(this, "正在导入…", Toast.LENGTH_SHORT).show();
+                        .setTitle(getString(R.string.rule_import_title))
+                        .setMessage(getString(R.string.rule_import_msg))
+                        .setPositiveButton(getString(R.string.rule_import), (d, w) -> {
+                            Toast.makeText(this, getString(R.string.rule_importing), Toast.LENGTH_SHORT).show();
                             // P2-30：readUri + applyBackup 全部移到后台线程，完成后回主线程更新 UI
                             BACKUP_POOL.execute(() -> {
                                 String content = readUri(uri);
-                                final String err = content == null ? "读取文件失败" : BackupManager.applyBackup(content);
+                                final String err = content == null ? getString(R.string.rule_read_fail) : BackupManager.applyBackup(content);
                                 runOnUiThread(() -> {
                                     if (err != null) {
-                                        Toast.makeText(this, "导入失败：" + err, Toast.LENGTH_LONG).show();
+                                        Toast.makeText(this, getString(R.string.rule_import_fail_fmt, err), Toast.LENGTH_LONG).show();
                                         return;
                                     }
                                     rules = new ArrayList<>(Prefs.customRulesFor(currentStyle));
                                     TextView tvStyle = findViewById(R.id.tvStyleLabel);
-                                    tvStyle.setText("当前人设：" + currentStyle + "（点击切换）");
+                                    tvStyle.setText(getString(R.string.rule_cur_style_fmt, currentStyle));
                                     adapter.notifyDataSetChanged();
                                     refreshEmpty();
                                     refreshLexicon();
-                                    Toast.makeText(this, "✅ 备份已导入", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(this, getString(R.string.rule_imported), Toast.LENGTH_LONG).show();
                                 });
                             });
                         })
-                        .setNegativeButton("取消", null)
+                        .setNegativeButton(getString(R.string.cancel), null)
                         .show();
             });
 
@@ -240,16 +240,16 @@ public class RuleEditorActivity extends AppCompatActivity {
         int wordCount = stats[0];
         int variantCount = stats[1];
         if (wordCount == 0) {
-            tvLexiconInfo.setText("未扩展：点击下方按钮，用 API 结合当前人设为 100+ 高频词生成多个替换变体");
-            btnLexiconExpand.setText("AI 扩展当前人设");
+            tvLexiconInfo.setText(getString(R.string.rule_lexicon_hint));
+            btnLexiconExpand.setText(getString(R.string.rule_expand));
             return;
         }
         if (enabled) {
-            tvLexiconInfo.setText("已启用：" + wordCount + " 词 / " + variantCount + " 变体（人设：" + currentStyle + "）");
+            tvLexiconInfo.setText(getString(R.string.rule_lexicon_on_fmt, wordCount, variantCount, currentStyle));
         } else {
-            tvLexiconInfo.setText("已扩展但未启用：" + wordCount + " 词 / " + variantCount + " 变体（人设：" + currentStyle + "），打开开关后生效");
+            tvLexiconInfo.setText(getString(R.string.rule_lexicon_off_fmt, wordCount, variantCount, currentStyle));
         }
-        btnLexiconExpand.setText("增量扩展当前人设（新词不覆盖已有）");
+        btnLexiconExpand.setText(getString(R.string.rule_expand_inc));
     }
 
     /** v4.8-⑥ 词库查看：弹出当前人设 AI 扩展词条（原文→变体）Dialog，便于核对与检查 */
@@ -269,39 +269,39 @@ public class RuleEditorActivity extends AppCompatActivity {
                         if (i > 0) sb.append(" / ");
                         sb.append(vars[i]);
                     }
-                    if (vars.length > 4) sb.append(" …共").append(vars.length).append("变体");
+                    if (vars.length > 4) sb.append(getString(R.string.rule_more_prefix)).append(vars.length).append(getString(R.string.rule_variants));
                 }
                 sb.append("\n");
                 shown++;
             }
-            if (shown < total) sb.append("\n…共 ").append(total).append(" 词，仅展示前 ").append(shown).append(" 条");
+            if (shown < total) sb.append(getString(R.string.rule_count_prefix)).append(total).append(getString(R.string.rule_count_mid)).append(shown).append(getString(R.string.rule_count_suffix));
         } else {
-            sb.append("该人设还没有 AI 扩展词条。\n\n点击「AI 扩展当前人设」生成后，可再次点击此处查看。");
+            sb.append(getString(R.string.rule_no_lexicon));
         }
         new AlertDialog.Builder(this)
-                .setTitle("扩展词库（" + currentStyle + "）")
+                .setTitle(getString(R.string.rule_lexicon_title_fmt, currentStyle))
                 .setMessage(sb.toString())
-                .setPositiveButton("关闭", null)
+                .setPositiveButton(getString(R.string.api_close), null)
                 .show();
     }
 
     /** 调用 API 扩展当前人设词库 */
     private void expandLexicon() {
         btnLexiconExpand.setEnabled(false);
-        btnLexiconExpand.setText("扩展中…");
+        btnLexiconExpand.setText(getString(R.string.rule_expanding));
         ApiLexiconExpander.expandFor(currentStyleId, new ApiLexiconExpander.ExpandCallback() {
             @Override
             public void onProgress(int batch, int totalBatches, int wordCount) {
-                runOnUiThread(() -> btnLexiconExpand.setText("扩展中 " + batch + "/" + totalBatches + "（" + wordCount + "词）"));
+                runOnUiThread(() -> btnLexiconExpand.setText(getString(R.string.rule_expand_prog_fmt, batch, totalBatches, wordCount)));
             }
             @Override
             public void onSuccess(int wordCount, int variantCount, String styleName) {
                 runOnUiThread(() -> {
                     btnLexiconExpand.setEnabled(true);
-                    btnLexiconExpand.setText("AI 扩展词库");
+                    btnLexiconExpand.setText(getString(R.string.rule_expand_lib));
                     refreshLexicon();
                     Toast.makeText(RuleEditorActivity.this,
-                            "扩展完成：" + wordCount + " 词 / " + variantCount + " 变体（人设：" + styleName + "），已自动启用",
+                            getString(R.string.rule_expand_done_fmt, wordCount, variantCount, styleName),
                             Toast.LENGTH_LONG).show();
                 });
             }
@@ -309,9 +309,9 @@ public class RuleEditorActivity extends AppCompatActivity {
             public void onError(String msg) {
                 runOnUiThread(() -> {
                     btnLexiconExpand.setEnabled(true);
-                    btnLexiconExpand.setText("AI 扩展词库");
+                    btnLexiconExpand.setText(getString(R.string.rule_expand_lib));
                     refreshLexicon();
-                    Toast.makeText(RuleEditorActivity.this, "扩展失败：" + msg, Toast.LENGTH_LONG).show();
+                    Toast.makeText(RuleEditorActivity.this, getString(R.string.rule_expand_fail_fmt, msg), Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -320,18 +320,18 @@ public class RuleEditorActivity extends AppCompatActivity {
     /** 清除当前人设的扩展词库 */
     private void clearLexicon() {
         if (!ApiLexiconExpander.hasFor(currentStyleId)) {
-            Toast.makeText(this, "该人设的扩展词库已是空的", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.rule_lexicon_empty), Toast.LENGTH_SHORT).show();
             return;
         }
         new AlertDialog.Builder(this)
-                .setTitle("清除 AI 扩展词库")
-                .setMessage("确定清除所有 AI 扩展词吗？清除后需重新扩展。")
-                .setPositiveButton("清除", (d, w) -> {
+                .setTitle(getString(R.string.rule_clear_lex_title))
+                .setMessage(getString(R.string.rule_clear_lex_msg))
+                .setPositiveButton(getString(R.string.rule_clear), (d, w) -> {
                     ApiLexiconExpander.clearFor(currentStyleId);
                     refreshLexicon();
-                    Toast.makeText(this, "已清除扩展词库", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.rule_lex_cleared), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -341,7 +341,7 @@ public class RuleEditorActivity extends AppCompatActivity {
         if (rules.isEmpty()) {
             for (String[] s : SAMPLE_RULES) rules.add(new String[]{s[0], s[1], s[2]});
             Prefs.setCustomRulesFor(currentStyle, rules);
-            Toast.makeText(this, "已填入示例规则", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.rule_samples_filled), Toast.LENGTH_LONG).show();
         }
         Prefs.setRulesExampleSeeded(true);
     }
@@ -358,26 +358,26 @@ public class RuleEditorActivity extends AppCompatActivity {
             }
         }
         if (add == 0) {
-            Toast.makeText(this, "示例规则都已在列表中", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.rule_samples_exist), Toast.LENGTH_SHORT).show();
             return;
         }
         saveAndRefresh();
-        Toast.makeText(this, "已追加 " + add + " 条示例规则", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.rule_samples_added_fmt, add), Toast.LENGTH_SHORT).show();
     }
 
     private void confirmClear() {
         if (rules.isEmpty()) {
-            Toast.makeText(this, "列表已经是空的", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.rule_list_empty), Toast.LENGTH_SHORT).show();
             return;
         }
         new AlertDialog.Builder(this)
-                .setTitle("清空全部规则")
-                .setMessage("确定删除全部自定义规则吗？可随时点「载入示例」恢复教学规则。")
-                .setPositiveButton("清空", (d, w) -> {
+                .setTitle(getString(R.string.rule_clear_all_title))
+                .setMessage(getString(R.string.rule_clear_all_msg))
+                .setPositiveButton(getString(R.string.rule_clear_all), (d, w) -> {
                     rules.clear();
                     saveAndRefresh();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -387,37 +387,37 @@ public class RuleEditorActivity extends AppCompatActivity {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(48, 24, 48, 0);
         final EditText etFrom = new EditText(this);
-        etFrom.setHint("原文（要被替换的词）");
+        etFrom.setHint(getString(R.string.rule_from_hint));
         final EditText etTo = new EditText(this);
-        etTo.setHint("替换为");
+        etTo.setHint(getString(R.string.rule_to_hint));
         final CheckBox cbRegex = new CheckBox(this);
-        cbRegex.setText("正则表达式（如 \\d+ 匹配数字；替换文不支持 $1）");
+        cbRegex.setText(getString(R.string.rule_regex_label));
         layout.addView(etFrom);
         layout.addView(etTo);
         layout.addView(cbRegex);
 
         new AlertDialog.Builder(this)
-                .setTitle("添加替换规则")
+                .setTitle(getString(R.string.rule_add_title))
                 .setView(layout)
-                .setPositiveButton("添加", (d, w) -> {
+                .setPositiveButton(getString(R.string.rule_add), (d, w) -> {
                     String from = etFrom.getText().toString().trim();
                     String to = etTo.getText().toString();
                     if (from.isEmpty()) {
-                        Toast.makeText(this, "原文不能为空", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.rule_from_empty), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     boolean regex = cbRegex.isChecked();
                     if (regex) {
                         String err = SafeRegex.validate(from);
                         if (err != null) {
-                            Toast.makeText(this, "正则语法错误：" + err, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, getString(R.string.rule_regex_err_fmt, err), Toast.LENGTH_LONG).show();
                             return;
                         }
                     }
                     rules.add(new String[]{from, to, regex ? "1" : "0"});
                     saveAndRefresh();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 
@@ -450,7 +450,7 @@ public class RuleEditorActivity extends AppCompatActivity {
             }
             String[] r = rules.get(position);
             TextView tv = convertView.findViewById(R.id.tvRule);
-            String tag = r.length > 2 && "1".equals(r[2]) ? "  [正则]" : "";
+            String tag = r.length > 2 && "1".equals(r[2]) ? getString(R.string.rule_regex_tag) : "";
             tv.setText("「" + r[0] + "」  →  「" + r[1] + "」" + tag);
             convertView.findViewById(R.id.btnDelete).setOnClickListener(v -> deleteRule(position));
             return convertView;

@@ -27,8 +27,8 @@ public class BookGlossaryStore {
     public static synchronized Map<String, String> load(Context ctx, String book) {
         LinkedHashMap<String, String> map = new LinkedHashMap<>();
         if (ctx == null || book == null || book.trim().isEmpty()) return map;
+        File f = new File(ctx.getFilesDir(), FILE);
         try {
-            File f = new File(ctx.getFilesDir(), FILE);
             if (!f.exists()) return map;
             String json = new String(readAll(f), StandardCharsets.UTF_8);
             JSONObject root = new JSONObject(json);
@@ -43,7 +43,20 @@ public class BookGlossaryStore {
                 }
             }
         } catch (Exception e) {
-            AppLog.w("Glossary", "术语档读取失败：" + e);
+            AppLog.e("Glossary", "术语档读取失败（文件可能损坏），尝试留档并从 .tmp 恢复：" + e);
+            // 损坏文件留档
+            try {
+                File bad = new File(ctx.getFilesDir(), FILE + ".bad-" + System.currentTimeMillis());
+                f.renameTo(bad);
+                // 尝试从 .tmp 恢复
+                File tmp = new File(ctx.getFilesDir(), FILE + ".tmp");
+                if (tmp.exists() && tmp.length() > 0) {
+                    tmp.renameTo(f);
+                    AppLog.i("Glossary", "已从 .tmp 恢复术语档");
+                }
+            } catch (Exception ex) {
+                AppLog.e("Glossary", "术语档留档/恢复失败：" + ex);
+            }
         }
         return map;
     }
@@ -67,9 +80,20 @@ public class BookGlossaryStore {
                 }
             }
             root.put(book.trim(), b);
-            try (FileOutputStream fos = new FileOutputStream(f)) {
+            // 原子写：先写 .tmp，fsync 后 renameTo 覆盖，写一半被杀不会损坏原文件
+            File tmp = new File(ctx.getFilesDir(), FILE + ".tmp");
+            try (FileOutputStream fos = new FileOutputStream(tmp)) {
                 fos.write(root.toString().getBytes(StandardCharsets.UTF_8));
                 fos.flush();
+                fos.getFD().sync();
+            }
+            if (!tmp.renameTo(f)) {
+                // rename 失败（跨卷等），退化为复制覆盖
+                try (FileOutputStream fos = new FileOutputStream(f)) {
+                    fos.write(root.toString().getBytes(StandardCharsets.UTF_8));
+                    fos.flush();
+                }
+                tmp.delete();
             }
         } catch (Exception e) {
             AppLog.w("Glossary", "术语档写入失败：" + e);

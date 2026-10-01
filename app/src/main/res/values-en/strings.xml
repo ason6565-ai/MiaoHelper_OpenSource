@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Miao Helper</string>
+    <string name="service_desc">Miao Helper accessibility service (reads and rewrites the current input field only)</string>
+    <string name="accessibility_desc">Only after you enable it, this service reads the current input text and rewrites it per dictionary/API. It does not read other screen content or perform clicks.</string>
+
+    <!-- Main screen -->
+    <string name="main_version_fmt">Miao Helper v%1$s · swipe to switch pages</string>
+    <string name="status_default">Service status</string>
+    <string name="status_on">Service running</string>
+    <string name="status_off">Service stopped</string>
+
+    <!-- Main menu -->
+    <string name="menu_history">Translation History</string>
+    <string name="menu_app_switch">Per-App Switch</string>
+    <string name="menu_error_log">Error Log</string>
+    <string name="menu_privacy">Privacy Policy</string>
+    <string name="menu_support">Support</string>
+    <string name="support_open_fail">Could not open the support page</string>
+    <string name="menu_float">Float Ball Settings</string>
+    <string name="menu_text_translate">Text Translator</string>
+    <string name="menu_notice">Show Translation Notice Again</string>
+    <string name="menu_novel">Novel Generator</string>
+    <string name="menu_experimental">Experimental</string>
+    <string name="menu_language">Language</string>
+    <string name="lang_chinese">中文</string>
+    <string name="lang_english">English</string>
+    <string name="lang_japanese">日本語</string>
+    <string name="lang_korean">한국어</string>
+
+    <string name="float_replace">Replace</string>
+    <string name="float_engine_local">Local</string>
+    <string name="float_engine_ai">AI Translate</string>
+    <string name="float_engine_full">Full Replace</string>
+    <string name="float_engine_lex">Local Lexicon</string>
+    <string name="float_localpre_on">AI + Local: On</string>
+    <string name="float_localpre">AI + Local</string>
+    <string name="float_persona_fmt">Persona: %1$s</string>
+    <string name="float_desc_fmt">%1$s · Judge %2$d</string>
+    <string name="ms_timeout">Request timed out, auto-recovered, retry</string>
+    <string name="ms_localpre_on">On: extended lexicon priming before AI</string>
+    <string name="ms_localpre_off">Off: no priming, straight to AI</string>
+    <string name="ms_open_settings_fail">Cannot open settings</string>
+    <string name="ms_persona_fmt">Persona: %1$s</string>
+    <string name="ms_engine_local">Engine: Local Lexicon</string>
+    <string name="ms_engine_full">Engine: AI Full Replace</string>
+    <string name="ms_engine_ai">Engine: AI Translate</string>
+    <string name="ms_fallback_on">AI Fallback: On (local on failure)</string>
+    <string name="ms_fallback_off">AI Fallback: Off (error on failure)</string>
+    <string name="ms_float_hidden">Float ball hidden (re-enable in App settings)</string>
+    <string name="ms_busy_recovered">Previous request was stuck, auto-recovered</string>
+    <string name="ms_translating">Translating, please wait…</string>
+    <string name="ms_no_input">Input box not found, tap into a chat input first</string>
+    <string name="ms_input_empty">Input box is empty</string>
+    <string name="ms_need_key">API mode requires a Key first</string>
+    <string name="ms_processing">Processing…</string>
+    <string name="ms_local_error">Local translation error, logged</string>
+    <string name="ms_trigger_need_key">Trigger translation needs an API Key first</string>
+    <string name="ms_trigger_on">Trigger mode enabled</string>
+    <string name="ms_trigger_off">Trigger mode disabled</string>
+    <string name="ms_trigger_set_fmt">Trigger word set: %1$s</string>
+    <string name="ms_dialog_fail">Cannot show dialog, check overlay permission</string>
+    <string name="ms_no_undo_trigger">No undoable trigger translation</string>
+    <string name="ms_restored_trigger">Restored original text</string>
+    <string name="ms_no_input_copied">Input box not found, original copied to clipboard</string>
+    <string name="ms_no_input_copy_fail">Input box not found, copy failed, copy manually</string>
+    <string name="ms_no_undo_style">No undoable stylization</string>
+    <string name="ms_restored">Original text restored</string>
+    <string name="ms_strictness_fmt">Judge strictness: %1$s</string>
+    <string name="ms_processing2">Processing, please wait…</string>
+    <string name="ms_reply_need_key">Reply needs AI, set an API Key in settings first</string>
+    <string name="ms_generating_reply">Generating reply…</string>
+    <string name="ms_focus_reply_copied">Focus changed, reply copied to clipboard</string>
+    <string name="ms_focus_copy_fail">Focus changed, copy failed, copy manually</string>
+    <string name="ms_focus_trans_copied">Focus changed, translation copied to clipboard</string>
+    <string name="ms_ai_offtrack">AI output off-track, retry</string>
+    <string name="ms_ai_error">AI output error, retry</string>
+    <string name="ms_ai_dialog_error">AI output error (dialog-like reply), retry</string>
+    <string name="ms_cancelled">Cancelled, input unchanged</string>
+    <string name="ms_write_rejected_copied">Input write rejected, copied to clipboard</string>
+    <string name="ms_write_fail">Input write failed, copy manually</string>
+    <string name="trigger_title">Set Trigger Word</string>
+    <string name="trigger_msg">Type "trigger+content" to translate; repeat the first char twice for literal output</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">OK</string>
+    <string name="judge_title">AI Judge Strictness</string>
+    <string name="judge_level_fmt">%1$s (%2$d/5)</string>
+    <string name="reply_title">Generate Reply</string>
+    <string name="reply">Generate Reply</string>
+    <string name="reply_hint">Long-press here to paste the other side\'s message, or type…</string>
+    <string name="reply_empty">Please type or paste their message first</string>
+    <string name="ma_exp_trigger">Trigger Word Mode (prefix translate)</string>
+    <string name="ma_trigger_current_fmt">Set Trigger Word (current: %1$s)</string>
+    <string name="ma_trigger_default">\?tr</string>
+    <string name="ma_exp_undo_trigger">Undo Trigger Translation</string>
+    <string name="ma_danger">DON\'T TOUCH</string>
+    <string name="ma_notice_again">The notice will show again next time</string>
+    <string name="ma_float_title">Float Window Adjust</string>
+    <string name="ma_size_fmt">Size: %1$d dp</string>
+    <string name="ma_opacity_fmt">Opacity: %1$d%%</string>
+    <string name="ma_done">Done</string>
+
+    <!-- 裁判严格度档位 -->
+    <string-array name="judge_levels">
+        <item>Most Lenient</item>
+        <item>Somewhat Lenient</item>
+        <item>Balanced (Default)</item>
+        <item>Somewhat Strict</item>
+        <item>Most Strict</item>
+    </string-array>
+    <string-array name="judge_descs">
+        <item>Almost no blocking; stylized expansion always counts as faithful</item>
+        <item>Allows bold stylization; only blocks clear off-track output</item>
+        <item>Balanced: normal stylization passes, added drama/dialogue blocked</item>
+        <item>Somewhat strict: expansion discouraged, added emotion may count as off-track</item>
+        <item>Strictest: only self-title and catchphrase swaps allowed; any addition may be off-track</item>
+    </string-array>
+
+    <string name="trigger_hint_default">Default: ?tr</string>
+
+    <string name="api_force_https_fmt">HTTPS enforced: %1$s</string>
+    <string name="api_edit_key">Edit API Key</string>
+    <string name="api_key_empty">Please fill in the API Key first</string>
+    <string name="api_testing">Testing…</string>
+    <string name="api_test_conn">Test Connection</string>
+    <string name="api_test_ok_fmt">Success: %1$s</string>
+    <string name="api_test_fail_fmt">Failed: %1$s</string>
+    <string name="api_fetching_models">Fetching model list…</string>
+    <string name="api_models_title_fmt">Available models (%1$d), tap to use</string>
+    <string name="api_selected_fmt">Selected: %1$s</string>
+    <string name="api_cache_cleared">Cache cleared</string>
+    <string name="api_json_url_empty">Please fill in the version JSON URL first</string>
+    <string name="api_checking">Checking…</string>
+    <string name="api_check_update">Check Update</string>
+    <string name="api_new_version_fmt">New version found: %1$s
+
+%2$s</string>
+    <string name="api_update_available">Update Available</string>
+    <string name="api_go_download">Go to Download</string>
+    <string name="api_download_fail">Cannot open download link</string>
+    <string name="api_later">Later</string>
+    <string name="api_latest">Already the latest version</string>
+    <string name="api_check_fail_fmt">Check failed: %1$s</string>
+    <string name="api_refresh_models">Refresh models (fetch from server, then tap to select)</string>
+    <string name="api_cache_stats_fmt">Cache hits: %1$d | Total requests: %2$d | Disk usage: %3$s MB / %4$d MB</string>
+    <string name="api_ttl_fmt">Cache TTL: %1$s</string>
+    <string name="api_loglevel_fmt">Log level: %1$s</string>
+    <string name="api_backup_count_fmt">%1$d backup engine(s)</string>
+    <string name="api_add_backup">＋ Add New Backup Engine</string>
+    <string name="api_backup_manage">Backup Engine Manager (tap to edit, long-press to delete)</string>
+    <string name="api_close">Close</string>
+    <string name="api_backup_name_hint">Engine name (e.g. Backup 1)</string>
+    <string name="api_backup_url_hint">Endpoint URL (https://...)</string>
+    <string name="api_backup_model_hint">Model name</string>
+    <string name="api_edit_backup">Edit Backup Engine</string>
+    <string name="api_add_backup_title">Add Backup Engine</string>
+    <string name="api_backup_empty">Name and URL cannot be empty</string>
+    <string name="api_saved_fmt">Saved: %1$s</string>
+    <string name="api_delete">Delete</string>
+    <string name="api_deleted">Deleted</string>
+    <string-array name="ttl_labels">
+        <item>1 hour</item>
+        <item>6 hours</item>
+        <item>12 hours</item>
+        <item>24 hours</item>
+        <item>7 days</item>
+        <item>Forever</item>
+    </string-array>
+    <string-array name="log_level_labels">
+        <item>DEBUG (Verbose)</item>
+        <item>INFO (Default)</item>
+        <item>WARN (Warnings only)</item>
+        <item>ERROR (Errors only)</item>
+    </string-array>
+    <string name="fb_dedup_skip">No change in the original text, skipped duplicate translation</string>
+    <string name="fb_key_invalid">Invalid API Key, please check or re-enter it in Settings</string>
+    <string name="fb_network_retry">Network timeout, auto-retried, please try again later</string>
+    <string name="his_all">All records</string>
+    <string name="his_clear">Clear</string>
+    <string name="his_clear_msg">Clear all translation history? This cannot be undone.</string>
+    <string name="his_clear_title">Clear History</string>
+    <string name="his_cleared">Cleared</string>
+    <string name="his_copied">Translation copied</string>
+    <string name="his_copy_trans">Copy Translation</string>
+    <string name="his_del_title">Delete this record?</string>
+    <string name="his_delete">Delete</string>
+    <string name="his_detail">Record Detail</string>
+    <string name="his_diff_hint_fmt">AI rewrote these words from the original. Edit the replacements on the right. Saving writes them into the "%1$s" custom lexicon, applied by the local engine next time.</string>
+    <string name="his_diff_title_fmt">Replacement Detail · %1$s</string>
+    <string name="his_empty">No history</string>
+    <string name="his_fav">Favorite</string>
+    <string name="his_fav_only">Favorites only</string>
+    <string name="his_hr_ago_fmt">%1$s h ago</string>
+    <string name="his_just_now">Just now</string>
+    <string name="his_min_ago_fmt">%1$s min ago</string>
+    <string name="his_new">+ New</string>
+    <string name="his_no_diff">No word-level differences were extracted from this replacement.</string>
+    <string name="his_no_export">Nothing to export</string>
+    <string name="his_no_history">No translation history yet
+Try typing in another app</string>
+    <string name="his_no_saveable">Nothing to save (pure additions cannot be saved as rules)</string>
+    <string name="his_nomatch">No matching records
+Try another keyword or clear the favorite filter</string>
+    <string name="his_orig_fmt">Original: %1$s</string>
+    <string name="his_save_rule">Save as Custom Rule</string>
+    <string name="his_saved_rules_fmt">Saved %1$s replacements to the "%2$s" lexicon</string>
+    <string name="his_trans_fmt">Translation: %1$s</string>
+    <string name="his_unfav">Unfavorite</string>
+    <string name="lab_again">Re-merge</string>
+    <string name="lab_api_done">API merge</string>
+    <string name="lab_copied_fmt">Copied the "%1$s" merge result</string>
+    <string name="lab_copy">Copy</string>
+    <string name="lab_local_fail_fmt">Local merge (API failed: %1$s)</string>
+    <string name="lab_local_no_key">Local merge (no API Key configured)</string>
+    <string name="lab_synth_fail">Online merge failed, keeping local result</string>
+    <string name="lab_synth_ing">Local merge · merging online…</string>
+    <string name="lab_two_langs">Please fill in both languages</string>
+    <string name="log_all">View all</string>
+    <string name="log_cleared">Log cleared</string>
+    <string name="log_copied">Log copied</string>
+    <string name="log_file_section">===== File Log =====</string>
+    <string name="log_fresh_section">===== This Session (not saved) =====</string>
+    <string name="log_none">(no logs yet)</string>
+    <string name="log_nothing_save">No logs to save</string>
+    <string name="log_read_fail_fmt">Failed to read log file: %1$s</string>
+    <string name="log_recent">Recent 50</string>
+    <string name="log_save_fail_fmt">Save failed: %1$s</string>
+    <string name="log_saved_fmt">Saved to Downloads: %1$s</string>
+    <string name="log_saved_path_fmt">Saved: %1$s</string>
+    <string name="log_share">Share log</string>
+    <string name="log_subject">MiaoHelper Error Log</string>
+    <string name="nav_copy_mail">Copy Email</string>
+    <string name="nav_feedback_msg_fmt">Found a problem or have a suggestion? Email us:
+
+%1$s</string>
+    <string name="nav_feedback_title">Feedback</string>
+    <string name="nav_mail_copied_fmt">Email copied: %1$s</string>
+    <string name="nav_no_mailer">No email app found, please copy the address and send it yourself</string>
+    <string name="nav_write_mail">Write Email</string>
+    <string name="nov_add">Add</string>
+    <string name="nov_add_char">Add Character</string>
+    <string name="nov_add_char2">Add Character</string>
+    <string name="nov_add_event">Add Event</string>
+    <string name="nov_add_event_title">Add Event (Unforeshadowed)</string>
+    <string name="nov_ai_char">AI Character</string>
+    <string name="nov_ai_char_hint">Character description, e.g. "a quiet retired soldier who runs an old bookstore"</string>
+    <string name="nov_ai_char_title">AI Generate Character</string>
+    <string name="nov_ai_ing">AI is generating the character…</string>
+    <string name="nov_all_done">Outline finished and event pool is empty. Start a new story in Setup</string>
+    <string name="nov_cancel_auto">Cancel (auto-advance outline)</string>
+    <string name="nov_char_desc">Persona: personality, identity, background (one line)</string>
+    <string name="nov_char_done_fmt">Character "%1$s" created</string>
+    <string name="nov_char_list">Characters (tap to edit/delete)</string>
+    <string name="nov_char_name">Character name</string>
+    <string name="nov_char_name_empty">Character name cannot be empty</string>
+    <string name="nov_char_voice">Voice: speech style (e.g. "calls herself I, loves ellipses, stammers when nervous")</string>
+    <string name="nov_chars_empty">None (add one or use AI)</string>
+    <string name="nov_chars_none">Characters: none</string>
+    <string name="nov_chars_prefix">Characters: </string>
+    <string name="nov_copied">Chapter copied</string>
+    <string name="nov_copy">Copy Chapter</string>
+    <string name="nov_current">  &lt;- current</string>
+    <string name="nov_default_char">Character </string>
+    <string name="nov_del">Delete</string>
+    <string name="nov_desc_empty">Please describe the character</string>
+    <string name="nov_edit_char">Edit Character</string>
+    <string name="nov_event_hint">Event description, e.g. someone knocks on the studio door at midnight</string>
+    <string name="nov_events_empty">No unforshadowed events</string>
+    <string name="nov_events_none">Events: none</string>
+    <string name="nov_events_prefix">Events: </string>
+    <string name="nov_evt_ing_fmt">Advancing event: %1$s …</string>
+    <string name="nov_evt_picked">Event selected, tap Generate to advance</string>
+    <string name="nov_fail_fmt">Generation failed: %1$s</string>
+    <string name="nov_gen">Generate Next Chapter</string>
+    <string name="nov_gen_btn">Generate</string>
+    <string name="nov_gen_done_fmt">Generated "%1$s"</string>
+    <string name="nov_gen_ing">Generating the next chapter…</string>
+    <string name="nov_hint">Enter a story premise → auto-generate outline and event pool → advance through the outline with events. Character voices and foreshadowing are tracked automatically.</string>
+    <string name="nov_need_key">No API Key configured, please set it in API Settings</string>
+    <string name="nov_need_key2">No API Key configured</string>
+    <string name="nov_need_premise">Please enter a story premise first</string>
+    <string name="nov_need_setup">Generate the outline and event pool first</string>
+    <string name="nov_no_unused">No unforshadowed events</string>
+    <string name="nov_nothing_copy">Nothing to copy yet</string>
+    <string name="nov_outline">Outline</string>
+    <string name="nov_outline_empty">None (generate the outline and event pool first)</string>
+    <string name="nov_outline_empty2">Outline is empty, please regenerate</string>
+    <string name="nov_outline_none">Outline: none</string>
+    <string name="nov_outline_prefix">Outline: </string>
+    <string name="nov_pick_event">Outline finished. Pick an event from the pool to continue</string>
+    <string name="nov_pick_evt_title">Pick an Event (for the next segment)</string>
+    <string name="nov_premise_hint">Story premise: protagonist, world, what kind of story you want…</string>
+    <string name="nov_save">Save</string>
+    <string name="nov_sec_chars">Characters (voice auto-learned)</string>
+    <string name="nov_sec_events">Event Pool (tap to select -&gt; generate from it)</string>
+    <string name="nov_selected"> (selected)</string>
+    <string name="nov_setup">Generate Outline &amp; Events</string>
+    <string name="nov_setup_done_fmt">Outline: %1$s chapters / %2$s events. Ready to write</string>
+    <string name="nov_setup_ing">Generating outline and event pool…</string>
+    <string name="nov_status_fmt">Story: %1$s (%2$s)  Chapters %3$s/%4$s  Events %5$s (unused %6$s / used %7$s)</string>
+    <string name="nov_status_none">Current story: none (fill in the setup to generate)</string>
+    <string name="nov_summary_fmt">Summary:
+%1$s</string>
+    <string name="nov_title">Story Generator</string>
+    <string name="nov_title_hint">Story title (optional)</string>
+    <string name="nov_voice_pre"> (voice: </string>
+    <string name="nov_voice_suf">)</string>
+    <string name="pb_apply">Apply</string>
+    <string name="pb_title">Translation Preview</string>
+    <string name="pb_title_chg_fmt">Translation Preview · %1$s%% changed</string>
+    <string name="pg_custom">Custom Persona</string>
+    <string name="pg_done">Generated! You can edit it and save</string>
+    <string name="pg_fail_fmt">Generation failed: %1$s</string>
+    <string name="pg_generate">Generate Persona</string>
+    <string name="pg_generating">Generating…</string>
+    <string name="pg_list_prefix">Saved custom personas: </string>
+    <string name="pg_need_desc">Please describe the persona first</string>
+    <string name="pg_need_key">Configure the API Key on the home screen first</string>
+    <string name="pg_need_name">Please enter a persona name</string>
+    <string name="pg_need_prompt">Generate or fill in a persona prompt first</string>
+    <string name="pg_none">Saved custom personas: none</string>
+    <string name="pg_saved_fmt">Saved "%1$s". Pick it from the style list on the home screen</string>
+    <string name="pp_fail_fmt">Preview failed: %1$s</string>
+    <string name="pp_hint">Type a sentence to preview</string>
+    <string name="pp_need_input">Type a sentence first</string>
+    <string name="pp_no_key">No API Key: preview unavailable.
+Configure the API Key on the home screen and retry.</string>
+    <string name="pp_title_fmt">%1$s · Preview</string>
+    <string name="pp_try">Preview</string>
+    <string name="pp_trying">Previewing…</string>
+    <string name="privacy_fail">Failed to load the privacy policy, please try again later.</string>
+    <string name="privacy_title">Privacy Policy</string>
+
+    <string name="privacy_dialog_title">Privacy Policy Confirmation</string>
+    <string name="privacy_dialog_accept">Agree and Continue</string>
+    <string name="privacy_dialog_reject">Disagree and Exit</string>
+    <string name="privacy_dialog_hint">Please read and agree to the privacy policy before using this app. If you do not agree, the app will exit.</string>
+    <string name="rule_add">Add</string>
+    <string name="rule_add_title">Add Replacement Rule</string>
+    <string name="rule_backup_fail">Failed to create backup</string>
+    <string name="rule_backup_prefix">MiaoHelper backup_%1$s</string>
+    <string name="rule_clear">Clear</string>
+    <string name="rule_clear_all">Clear All</string>
+    <string name="rule_clear_all_msg">Delete all custom rules? You can always load the sample rules to restore them.</string>
+    <string name="rule_clear_all_title">Clear All Rules</string>
+    <string name="rule_clear_lex_msg">Clear all AI-expanded words? You will need to expand again.</string>
+    <string name="rule_clear_lex_title">Clear AI Lexicon</string>
+    <string name="rule_count_mid"> words, showing first </string>
+    <string name="rule_count_prefix">
+…</string>
+    <string name="rule_count_suffix"> entries</string>
+    <string name="rule_cur_style_fmt">Current persona: %1$s (tap to switch)</string>
+    <string name="rule_expand">AI Expand Persona</string>
+    <string name="rule_expand_done_fmt">Expanded: %1$s words / %2$s variants (%3$s), auto-enabled</string>
+    <string name="rule_expand_fail_fmt">Expansion failed: %1$s</string>
+    <string name="rule_expand_inc">Expand incrementally (new words won\'t overwrite existing ones)</string>
+    <string name="rule_expand_lib">AI Expand Lexicon</string>
+    <string name="rule_expand_prog_fmt">Expanding %1$s/%2$s (%3$s words)</string>
+    <string name="rule_expanding">Expanding…</string>
+    <string name="rule_export_cancel">Export cancelled</string>
+    <string name="rule_export_fail_fmt">Export failed: %1$s</string>
+    <string name="rule_export_io">Export failed: cannot write</string>
+    <string name="rule_exported">Backup exported (rules / AI lexicon / personas)</string>
+    <string name="rule_from_empty">Original text cannot be empty</string>
+    <string name="rule_from_hint">Original (the word to replace)</string>
+    <string name="rule_import">Import</string>
+    <string name="rule_import_fail_fmt">Import failed: %1$s</string>
+    <string name="rule_import_msg">Importing will overwrite:
+• Custom replacement rules
+• AI-expanded lexicon
+• Custom personas
+
+Continue?</string>
+    <string name="rule_import_title">Import Backup</string>
+    <string name="rule_imported">Backup imported</string>
+    <string name="rule_importing">Importing…</string>
+    <string name="rule_lex_cleared">AI lexicon cleared</string>
+    <string name="rule_lexicon_empty">This persona\'s AI lexicon is already empty</string>
+    <string name="rule_lexicon_hint">Not expanded: tap the button below to let the API generate variants for 100+ common words for this persona</string>
+    <string name="rule_lexicon_off_fmt">Expanded but off: %1$s words / %2$s variants (%3$s). Enable the switch to activate</string>
+    <string name="rule_lexicon_on_fmt">Enabled: %1$s words / %2$s variants (%3$s)</string>
+    <string name="rule_lexicon_title_fmt">AI Lexicon (%1$s)</string>
+    <string name="rule_list_empty">The list is already empty</string>
+    <string name="rule_more_prefix"> …</string>
+    <string name="rule_no_lexicon">No AI-expanded words for this persona yet.
+
+Tap "AI Expand Persona" to generate, then check here again.</string>
+    <string name="rule_pick_persona">Pick Persona (lexicon is per-persona)</string>
+    <string name="rule_read_fail">Failed to read file</string>
+    <string name="rule_regex_err_fmt">Regex syntax error: %1$s</string>
+    <string name="rule_regex_label">Regex (e.g. \\d+ matches digits; $1 not supported in replacement)</string>
+    <string name="rule_regex_tag">  [Regex]</string>
+    <string name="rule_samples_added_fmt">Added %1$s sample rules</string>
+    <string name="rule_samples_exist">Sample rules are already in the list</string>
+    <string name="rule_samples_filled">Sample rules filled in</string>
+    <string name="rule_switched_fmt">Switched to persona: %1$s</string>
+    <string name="rule_to_hint">Replace with</string>
+    <string name="rule_variants"> variants</string>
+    <string name="style_app_default_fmt">Default style for %1$s</string>
+    <string name="style_current_fmt">Current: %1$s</string>
+    <string name="style_delete">Delete</string>
+    <string name="style_deleted_fmt">Deleted "%1$s". Restorable within 24 hours below</string>
+    <string name="style_expired">Over 24 hours, cannot restore</string>
+    <string name="style_follow">Follow current</string>
+    <string name="style_hr_ago_fmt"> (%1$s h ago)</string>
+    <string name="style_lexicon_off">Off: no pre-processing, straight to AI</string>
+    <string name="style_lexicon_on">On: AI-expanded words pre-process before AI translation</string>
+    <string name="style_min_ago_fmt"> (%1$s min ago)</string>
+    <string name="style_no_persona">No custom personas yet (add via "AI Generate Persona" or "Lexicon Manager")</string>
+    <string name="style_off">Styling off</string>
+    <string name="style_restore">Restore</string>
+    <string name="style_restored_fmt">Restored "%1$s"</string>
+    <string name="style_unnamed">Unnamed</string>
+    <string name="sw_api">AI API</string>
+    <string name="sw_full">Full Replace</string>
+    <string name="sw_local">Local lexicon</string>
+    <string name="sw_off">OFF</string>
+    <string name="sw_on">ON</string>
+    <string name="tm_applied">Applied (can generate a copy again)</string>
+    <string name="tm_applied_fmt">Applied "%1$s". Edit it further in Style Settings</string>
+    <string name="tm_apply">Apply Template</string>
+    <string name="tm_example">Example</string>
+    <string name="tm_example_fmt">Original: %1$s
+Translation: %2$s</string>
+    <string name="tm_fail_fmt">Preview failed: %1$s</string>
+    <string name="tm_need_input">Type a sentence first</string>
+    <string name="tm_no_key">No API Key: online preview unavailable.
+Configure the API Key on the home screen and retry.</string>
+    <string name="tm_preview">Preview</string>
+    <string name="tm_scenes">Use Cases</string>
+    <string name="tm_suitable_fmt">Best for: %1$s</string>
+    <string name="tm_test_hint">Type a sentence to try this template</string>
+    <string name="tm_try">Preview</string>
+    <string name="tm_trying">Previewing…</string>
+    <string name="tt_add">Add</string>
+    <string name="tt_busy">Translating, please wait</string>
+    <string name="tt_clip_label">Translation</string>
+    <string name="tt_confirm_msg">File translation may involve adult content.
+
+This app keeps nothing on the cloud and shares nothing. The confirmation is stored locally only and can be revoked anytime.</string>
+    <string name="tt_confirm_no">Not now</string>
+    <string name="tt_confirm_ok">Confirm &amp; Continue</string>
+    <string name="tt_confirm_title">Content Confirmation</string>
+    <string name="tt_copied">Copied to clipboard</string>
+    <string name="tt_del_term">Delete Term</string>
+    <string name="tt_del_term_msg_fmt">Delete "%1$s = %2$s"?</string>
+    <string name="tt_delete">Delete</string>
+    <string name="tt_done">Done</string>
+    <string name="tt_done_fmt">Done, %1$s segments total%2$s</string>
+    <string name="tt_draft_discard">Discard Draft</string>
+    <string name="tt_draft_msg_fmt">Last translation stopped at segment %1$s/%2$s. Continue?</string>
+    <string name="tt_draft_resume">Resume</string>
+    <string name="tt_draft_title">Unfinished Draft Found</string>
+    <string name="tt_empty_file">File is empty or unreadable</string>
+    <string name="tt_empty_terms">No entries. Add with "original=translation"</string>
+    <string name="tt_epub_chapters_fmt">EPUB, %1$s chapters</string>
+    <string name="tt_filename_prefix">Translation_</string>
+    <string name="tt_glossary_fmt">Glossary: %1$s</string>
+    <string name="tt_imported_fmt">Imported: %1$s, %2$s characters</string>
+    <string name="tt_need_book">Enter the glossary book name above first</string>
+    <string name="tt_need_key">Configure your API Key in API Settings first</string>
+    <string name="tt_need_text">Enter or import some text</string>
+    <string name="tt_no_copy">Nothing to copy</string>
+    <string name="tt_no_save">Nothing to save</string>
+    <string name="tt_notice_msg">This app only provides a translation framework.
+
+Translations are initiated by you and used only by you. Please ensure your usage is lawful and take full responsibility for the content and its use.
+
+Do not use it for illegal purposes.</string>
+    <string name="tt_notice_no">Not now</string>
+    <string name="tt_notice_ok">I understand, continue</string>
+    <string name="tt_notice_title">Translation Notice</string>
+    <string name="tt_open_fail">Cannot open file</string>
+    <string name="tt_pick_file">Pick a text/EPUB file</string>
+    <string name="tt_progress_fmt">Translating... %1$s/%2$s</string>
+    <string name="tt_read_fail_fmt">Failed to read file: %1$s</string>
+    <string name="tt_retry_timeout">Retry timed out (90s)</string>
+    <string name="tt_save_fail_fmt">Save failed: %1$s</string>
+    <string name="tt_saved_epub_fmt">EPUB saved to Downloads: %1$s</string>
+    <string name="tt_saved_fmt">Saved to Downloads: %1$s</string>
+    <string name="tt_seg_blocked_fmt">[Segment %1$s not translated (content review)]
+
+</string>
+    <string name="tt_seg_blocked_prog_fmt">Segment %1$s blocked, marked as untranslated, continuing...</string>
+    <string name="tt_seg_failed_fmt">[Segment %1$s failed, skipped]
+
+</string>
+    <string name="tt_seg_skip_fmt">Segment %1$s failed and was skipped, continuing...</string>
+    <string name="tt_seg_timeout">Segment timed out (90s)</string>
+    <string name="tt_term_fmt_err">Format: original=translation</string>
+    <string name="tt_term_fmt_hint">original=translation</string>
+    <string name="tt_translating">Translating, please wait</string>
+    <string name="ms_full_fail_fmt">Full replacement failed: %1$s</string>
+    <string name="ms_reply_fail_fmt">Reply generation failed: %1$s</string>
+    <string name="ms_style_fail_fmt">Styling failed: %1$s</string>
+    <string name="miao_fb_stop">Stop</string>
+    <string name="miao_menu_persona">Persona</string>
+    <string name="miao_menu_engine">Engine</string>
+    <string name="miao_menu_engine_local">Local Rules</string>
+    <string name="miao_menu_engine_api">AI Translate</string>
+    <string name="miao_menu_engine_replace">AI Rewrite</string>
+    <string name="miao_menu_ai_fallback">AI Fallback</string>
+    <string name="miao_menu_gen_reply">Generate Reply (from their words)</string>
+    <string name="miao_menu_judge_strength">Judge Strictness (currently %1$d/5)</string>
+    <string name="miao_menu_undo">Undo Last Styling</string>
+    <string name="miao_menu_hide_float">Hide Float Ball</string>
+    <string name="miao_hist_reply_prefix">Reply·%1$s</string>
+    <string name="miao_clip_label">Stylized Text</string>
+    <string name="miao_err_unknown">Unknown Error</string>
+    <string name="miao_engine_backup">Backup %1$d</string>
+    <string name="miao_engine_main">Main Engine</string>
+    <string name="tm_field_selfref">Self-ref: %1$s</string>
+    <string name="tm_field_addr">Address: %1$s</string>
+    <string name="tm_field_tail">Verbal tic: %1$s</string>
+    <string name="tm_field_words">Common words: %1$s</string>
+    <string name="tm_field_avoid">Avoid: %1$s</string>
+    <string name="tm_name_default">Untitled</string>
+    <string name="tm_default_me">Me</string>
+    <string name="tm_default_you">You</string>
+    <string name="err_file_create">Failed to create file</string>
+    <string name="err_file_readback">Read-back failed: cannot open the file</string>
+    <string name="err_file_empty">Read-back failed: the file is empty</string>
+    <string name="title_rule_editor">Dictionary Manager</string>
+    <string name="title_app_style">Per-App Style Switch</string>
+    <string name="title_history">Translation History</string>
+    <string name="title_persona">AI Persona Generator</string>
+    <string name="title_style_settings">Style Settings</string>
+    <string name="title_api_settings">API Settings</string>
+    <string name="title_log">Error Log</string>
+    <string name="title_text_translator">Text Translator</string>
+    <string name="title_novel">Novel Generator</string>
+    <string name="ui_tile_float">Floating Ball</string>
+    <string name="ui_tile_realtime">Realtime</string>
+    <string name="ui_tile_tail">Tail Habit</string>
+    <string name="ui_tile_verify">AI Verify</string>
+    <string name="ui_tile_replace">Full Rewrite</string>
+    <string name="ui_tile_localpre">AI + Local</string>
+    <string name="ui_tile_stream">Stream</string>
+    <string name="ui_tile_preview">Preview</string>
+    <string name="ui_engine_title">Engine</string>
+    <string name="ui_nav_style">Style Settings</string>
+    <string name="ui_nav_api">API Settings</string>
+    <string name="ui_nav_dict">Dictionary</string>
+    <string name="ui_nav_persona">AI Persona</string>
+    <string name="ui_nav_feedback">Feedback</string>
+    <string name="ui_nav_adjust">Adjust</string>
+    <string name="ui_nav_judge">Judge Strictness</string>
+    <string name="ui_nav_gen_count">Candidates</string>
+    <string name="ui_nav_judge_count">Judges</string>
+    <string name="ui_nav_temp">Temperature</string>
+    <string name="ui_nav_style_strength">Style Strength</string>
+    <string name="ui_nav_expand">Expand Level</string>
+    <string name="ui_nav_auto">Auto</string>
+    <string name="ui_nav_a11y">Accessibility</string>
+    <string name="ui_nav_overlay">Overlay Permission</string>
+    <string name="ui_balance">Balanced</string>
+    <string name="ui_standard">Standard</string>
+    <string name="ui_float_style">Style</string>
+    <string name="ui_float_persona">Persona</string>
+    <string name="ui_float_input">Style Input</string>
+    <string name="ui_float_gen">Generate</string>
+    <string name="ui_float_undo">Undo</string>
+    <string name="ui_float_judge">Judge</string>
+    <string name="ui_float_dict">Local Dict</string>
+    <string name="ui_float_hide">Hide</string>
+    <string name="ui_float_settings">Settings</string>
+    <string name="ui_float_localpre">AI+Local</string>
+    <string name="ui_float_collapse">Collapse</string>
+    <string name="ui_float_local">Local</string>
+    <string name="ui_menu">Menu</string>
+    <string name="ui_api_vendor">Vendor</string>
+    <string name="ui_api_baseurl">Base URL</string>
+    <string name="ui_api_model">Model</string>
+    <string name="ui_api_model_long">Long-text Model</string>
+    <string name="ui_api_model_hint">Leave empty to use above</string>
+    <string name="ui_api_refresh">Refresh Models</string>
+    <string name="ui_api_verify">AI Verify</string>
+    <string name="ui_api_audit">Audit Preview</string>
+    <string name="ui_api_edit">Edit</string>
+    <string name="ui_api_test">Test</string>
+    <string name="ui_api_clear_cache">Clear Cache</string>
+    <string name="ui_api_cache_stat">Cache: %1$d hits | %2$d total</string>
+    <string name="ui_api_advanced">Advanced</string>
+    <string name="ui_api_cache_ttl">Cache TTL</string>
+    <string name="ui_api_log_level">Log Level</string>
+    <string name="ui_api_fallback">Fallback Engine</string>
+    <string name="ui_api_fallback_count">%1$d fallback(s)</string>
+    <string name="ui_api_manage">Manage</string>
+    <string name="ui_api_update">Update</string>
+    <string name="ui_api_update_url">Update JSON URL</string>
+    <string name="ui_api_check_update">Check Update</string>
+    <string name="ui_history_search">Search source/target/persona</string>
+    <string name="ui_history_recent">Recent 100 records</string>
+    <string name="ui_history_export">Export</string>
+    <string name="ui_history_fav_only">Favorites only</string>
+    <string name="ui_history_clear">Clear</string>
+    <string name="ui_history_empty">No records yet.
+Try typing in another app.</string>
+    <string name="ui_log_refresh">Refresh</string>
+    <string name="ui_log_copy">Copy</string>
+    <string name="ui_log_share">Share</string>
+    <string name="ui_log_clear">Clear</string>
+    <string name="ui_log_save">Save TXT</string>
+    <string name="ui_log_view_all">View All</string>
+    <string name="ui_persona_desc">Describe the persona you want; AI will generate a full prompt.</string>
+    <string name="ui_persona_hint">e.g. A gamer catgirl who speaks lazily</string>
+    <string name="ui_persona_gen">Generate</string>
+    <string name="ui_persona_result">Result</string>
+    <string name="ui_persona_name_hint">Persona name (auto-filled, editable)</string>
+    <string name="ui_persona_result_hint">Generated prompt appears here, editable</string>
+    <string name="ui_persona_preview">Preview</string>
+    <string name="ui_persona_save">Save</string>
+    <string name="ui_persona_saved_none">Saved personas: none</string>
+    <string name="ui_rule_current">Current style: </string>
+    <string name="ui_rule_ai_dict">AI Extended Dict</string>
+    <string name="ui_rule_not_extended">Not extended: tap button below</string>
+    <string name="ui_rule_extend">Extend Current</string>
+    <string name="ui_rule_clear">Clear</string>
+    <string name="ui_rule_hint">Source text is replaced by target; check Regex for regex match</string>
+    <string name="ui_rule_empty">No custom rules yet</string>
+    <string name="ui_rule_add">Add Rule</string>
+    <string name="ui_rule_example">Load Example</string>
+    <string name="ui_rule_clear_all">Clear All</string>
+    <string name="ui_rule_export">Export</string>
+    <string name="ui_rule_import">Import</string>
+    <string name="ui_style_localpre">Local Pre-fill (AI Dict)</string>
+    <string name="ui_style_localpre_desc">When on: AI translation/rewrite uses only the current persona\'s AI-extended dictionary as style reference (no built-in presets); original text remains semantic base.</string>
+    <string name="ui_style_persona">Persona</string>
+    <string name="ui_style_preview">Preview</string>
+    <string name="ui_style_custom_prompt">Custom Prompt (active when persona = Custom)</string>
+    <string name="ui_style_custom_hint">e.g. You are tsundere, slightly grumpy...</string>
+    <string name="ui_style_manage">Manage Personas</string>
+    <string name="ui_style_deleted">Deleted (recoverable within 24h)</string>
+    <string name="ui_trans_back">Back</string>
+    <string name="ui_trans_book_hint">Glossary book name (optional)</string>
+    <string name="ui_trans_glossary">Glossary</string>
+    <string name="ui_trans_source">Source</string>
+    <string name="ui_trans_source_hint">Paste text, or import file below...</string>
+    <string name="ui_trans_import">Import File</string>
+    <string name="ui_trans_translate">Translate</string>
+    <string name="ui_trans_clear">Clear</string>
+    <string name="ui_trans_result">Result</string>
+    <string name="ui_trans_copy">Copy</string>
+    <string name="ui_trans_save_txt">Save TXT</string>
+    <string name="ui_trans_save_epub">Save EPUB</string>
+    <string name="ui_template_desc">12 curated persona templates, apply as custom persona with one tap.</string>
+    <string name="ui_template_applied">Applied</string>
+    <string name="ui_item_source">Source</string>
+    <string name="ui_item_target">Target</string>
+    <string name="ui_item_view_replace">View Replace</string>
+    <string name="ui_item_copy">Copy</string>
+    <string name="ui_item_delete">Delete</string>
+    <string name="ui_item_just_now">just now</string>
+    <string name="ui_item_delete_desc">Delete</string>
+    <string name="ui_synth_lang_a">Lang A</string>
+    <string name="ui_synth_lang_a_hint">e.g. Chinese: nice weather today</string>
+    <string name="ui_synth_lang_b">Lang B</string>
+    <string name="ui_synth_lang_b_hint">e.g. English: the weather is really nice</string>
+    <string name="ui_synth_make">Synthesize</string>
+    <string name="ui_synth_output">Output</string>
+    <string name="ui_synth_desc">Combine two languages into one sentence in the selected persona tone</string>
+    <string name="ui_appstyle_title">Per-App Style</string>
+    <string name="ui_appstyle_desc">Set default style per app, auto-switch on open</string>
+    <string name="ui_a11y_go_enable">Enable Accessibility</string>
+    <string name="ui_float_ai_mode">AI Mode · Judge Lv3</string>
+    <string name="persona_tsundere">Tsundere</string>
+    <string name="persona_catgirl">Catgirl</string>
+    <string name="err_no_api_key">API Key not configured</string>
+    <string name="err_model_empty">Model returned empty, please retry</string>
+    <string name="err_network_timeout">Network failed, timed out after retry, please check connection</string>
+    <string name="err_empty_text">Input text is empty</string>
+    <string name="err_candidate_schedule">Candidate generation scheduling failed</string>
+    <string name="err_no_api_key_fill">API Key not set, please fill in API settings</string>
+    <string name="err_no_persona_prompt">This persona has no prompt, cannot expand</string>
+    <string name="err_stream_no_data">No streaming data, fell back to non-streaming</string>
+    <string name="err_stream_empty">Stream returned empty, fell back to non-streaming</string>
+    <string name="err_stream_error">Stream translation error, fell back to non-streaming</string>
+    <string name="err_no_models">No models returned, you may enter model ID manually.</string>
+    <string name="err_all_engines_fail">All engines failed, please retry later</string>
+    <string name="err_too_many_requests">Too many requests, please try again later</string>
+    <string name="err_api_content_bad">API returned abnormal content, using local fallback</string>
+</resources>

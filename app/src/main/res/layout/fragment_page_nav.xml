@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
-                android:text="风格设置"
+                android:text="@string/ui_nav_style"
                 android:textSize="14sp"
                 android:textColor="#3E2723"
                 android:layout_width="0dp"
@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
-                android:text="API 设置"
+                android:text="@string/ui_nav_api"
                 android:textSize="14sp"
                 android:textColor="#3E2723"
                 android:layout_width="0dp"
@@ -76,7 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
-                android:text="词库管理"
+                android:text="@string/ui_nav_dict"
                 android:textSize="14sp"
                 android:textColor="#3E2723"
                 android:layout_width="0dp"
@@ -102,7 +102,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
-                android:text="AI 生成人设"
+                android:text="@string/ui_nav_persona"
                 android:textSize="14sp"
                 android:textColor="#3E2723"
                 android:layout_width="0dp"
@@ -129,7 +129,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
-                android:text="意见反馈"
+                android:text="@string/ui_nav_feedback"
                 android:textSize="14sp"
                 android:textColor="#3E2723"
                 android:layout_width="0dp"
@@ -159,7 +159,7 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:text="翻译调节"
+                    android:text="@string/ui_nav_adjust"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#E65100"
@@ -175,7 +175,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="AI 裁判严格度"
+                        android:text="@string/ui_nav_judge"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -183,7 +183,7 @@
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvJudgeLevel"
-                        android:text="3/5 平衡"
+                        android:text="@string/ui_balance"
                         android:textSize="13sp"
                         android:textColor="#E65100"
                         android:textStyle="bold"
@@ -206,7 +206,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="生成数量"
+                        android:text="@string/ui_nav_gen_count"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -237,7 +237,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="裁判数量"
+                        android:text="@string/ui_nav_judge_count"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -268,7 +268,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="随机性 Temperature"
+                        android:text="@string/ui_nav_temp"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -299,7 +299,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="风格强度"
+                        android:text="@string/ui_nav_style_strength"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -307,7 +307,7 @@
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvIntensityLevel"
-                        android:text="3/5 标准"
+                        android:text="@string/ui_standard"
                         android:textSize="13sp"
                         android:textColor="#E65100"
                         android:textStyle="bold"
@@ -330,7 +330,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:text="扩写等级"
+                        android:text="@string/ui_nav_expand"
                         android:textSize="13sp"
                         android:textColor="#8D6E63"
                         android:layout_width="0dp"
@@ -338,7 +338,7 @@
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvExpandLevel"
-                        android:text="自动"
+                        android:text="@string/ui_nav_auto"
                         android:textSize="13sp"
                         android:textColor="#E65100"
                         android:textStyle="bold"
@@ -363,7 +363,9 @@
             android:layout_height="wrap_content">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnService"
-                android:text="无障碍设置"
+                android:text="@string/ui_nav_a11y"
+            android:drawableStart="@drawable/ic_a11y"
+            android:drawablePadding="8dp"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:textColor="#E65100"
                 android:layout_width="0dp"
@@ -371,7 +373,9 @@
                 android:layout_height="wrap_content" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOverlay"
-                android:text="悬浮窗权限"
+                android:text="@string/ui_nav_overlay"
+            android:drawableStart="@drawable/ic_overlay"
+            android:drawablePadding="8dp"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:textColor="#E65100"
                 android:layout_width="0dp"

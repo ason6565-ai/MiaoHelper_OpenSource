@@ -204,25 +204,25 @@ public class NavPageFragment extends Fragment {
     private void showFeedbackDialog() {
         final String email = "cn228590550@gmail.com";
         new AlertDialog.Builder(requireContext())
-                .setTitle("意见反馈")
-                .setMessage("使用中遇到问题或想提建议，欢迎发邮件告诉我们：\n\n" + email)
-                .setPositiveButton("写邮件", (d, w) -> {
+                .setTitle(requireContext().getString(R.string.nav_feedback_title))
+                .setMessage(requireContext().getString(R.string.nav_feedback_msg_fmt, email))
+                .setPositiveButton(requireContext().getString(R.string.nav_write_mail), (d, w) -> {
                     try {
                         startActivity(new Intent(Intent.ACTION_SENDTO,
                                 Uri.parse("mailto:" + email)));
                     } catch (Exception e) {
-                        Toast.makeText(requireContext(), "未找到邮件客户端，请复制邮箱后自行发送", Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireContext(), requireContext().getString(R.string.nav_no_mailer), Toast.LENGTH_LONG).show();
                     }
                 })
-                .setNeutralButton("复制邮箱", (d, w) -> {
+                .setNeutralButton(requireContext().getString(R.string.nav_copy_mail), (d, w) -> {
                     ClipboardManager cm = (ClipboardManager) requireContext()
                             .getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                     if (cm != null) {
                         cm.setPrimaryClip(ClipData.newPlainText("feedback_email", email));
-                        Toast.makeText(requireContext(), "邮箱已复制：" + email, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), requireContext().getString(R.string.nav_mail_copied_fmt, email), Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("关闭", null)
+                .setNegativeButton(getString(R.string.api_close), null)
                 .show();
     }
 

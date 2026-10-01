@@ -23,9 +23,9 @@ import java.util.Comparator;
 public class FileCacheStore implements TranslationCache.Store {
 
     public static final int DEFAULT_MAX_DISK = 512;
-    /** 鉴 P0-4：磁盘缓存容量上限 50MB，超出按最近读取时间淘汰最旧文件 */
+    /** P0-4：磁盘缓存容量上限 50MB，超出按最近读取时间淘汰最旧文件 */
     public static final long DEFAULT_MAX_BYTES = 50L * 1024 * 1024;
-    /** 鉴 P0-4：单文件上限 10MB——超大翻译结果不入磁盘缓存，避免一个文件撑爆容量上限 */
+    /** P0-4：单文件上限 10MB——超大翻译结果不入磁盘缓存，避免一个文件撑爆容量上限 */
     public static final long MAX_SINGLE_BYTES = 10L * 1024 * 1024;
     private static final String SUFFIX = ".tc";
     private static final String TMP_SUFFIX = ".tmp";
@@ -78,7 +78,7 @@ public class FileCacheStore implements TranslationCache.Store {
             byte[] buf = new byte[8192];
             int n;
             while ((n = in.read(buf)) != -1) bos.write(buf, 0, n);
-            // 鉴 P0-4：命中即刷新访问时间——淘汰按「最近读取时间」而非写入时间，
+            // P0-4：命中即刷新访问时间——淘汰按「最近读取时间」而非写入时间，
             // 避免用户改系统时间或批量写入时间戳相同时淘汰逻辑失效
             try {
                 long now = System.currentTimeMillis();
@@ -99,7 +99,7 @@ public class FileCacheStore implements TranslationCache.Store {
     @Override
     public void save(String key, String encoded) {
         if (key == null || encoded == null || dir == null) return;
-        // 鉴 P0-4：单文件超过 10MB 直接跳过磁盘缓存，防止一个巨型文件撑爆容量上限
+        // P0-4：单文件超过 10MB 直接跳过磁盘缓存，防止一个巨型文件撑爆容量上限
         if (encoded.getBytes(StandardCharsets.UTF_8).length > MAX_SINGLE_BYTES) {
             lastError = "单文件超 10MB，跳过磁盘缓存";
             return;

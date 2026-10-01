@@ -43,7 +43,7 @@ public class StyleSettingsActivity extends AppCompatActivity {
         swLocal.setOnCheckedChangeListener((btn, isChecked) -> {
             Prefs.set("localPreStyle", isChecked);
             android.widget.Toast.makeText(this,
-                    isChecked ? "已开启：AI 翻译前用 AI 扩展词打底" : "已关闭：不打底，直接交给 AI",
+                    isChecked ? getString(R.string.style_lexicon_on) : getString(R.string.style_lexicon_off),
                     android.widget.Toast.LENGTH_SHORT).show();
         });
         com.google.android.material.button.MaterialButton btnPreviewStyle = findViewById(R.id.btnPreviewStyle);
@@ -119,10 +119,10 @@ public class StyleSettingsActivity extends AppCompatActivity {
         for (int i = 0; i < custom.size(); i++) {
             final int idx = i;
             final String name = (custom.get(i)[0] == null || custom.get(i)[0].isEmpty())
-                    ? "未命名" : custom.get(i)[0];
-            LinearLayout row = makeRow(name, "删除", v -> {
+                    ? getString(R.string.style_unnamed) : custom.get(i)[0];
+            LinearLayout row = makeRow(name, getString(R.string.style_delete), v -> {
                 Prefs.removeCustomPersona(idx);
-                Toast.makeText(this, "已删除「" + name + "」，24 小时内可在下方恢复", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.style_deleted_fmt, name), Toast.LENGTH_SHORT).show();
                 refreshPersonaMgmt();
                 refreshStyleSpinner();
             });
@@ -130,7 +130,7 @@ public class StyleSettingsActivity extends AppCompatActivity {
         }
         if (custom.isEmpty()) {
             TextView empty = new TextView(this);
-            empty.setText("暂无自定义人设（可在「AI 生成人设」或「词库管理」添加）");
+            empty.setText(getString(R.string.style_no_persona));
             empty.setTextSize(12);
             empty.setTextColor(0xFFA1887F);
             empty.setPadding(0, 4, 0, 0);
@@ -144,21 +144,21 @@ public class StyleSettingsActivity extends AppCompatActivity {
         for (int i = 0; i < trash.size(); i++) {
             final int idx = i;
             String[] e = trash.get(i);
-            String name = (e[0] == null || e[0].isEmpty()) ? "未命名" : e[0];
+            String name = (e[0] == null || e[0].isEmpty()) ? getString(R.string.style_unnamed) : e[0];
             String when = "";
             try {
                 long ts = Long.parseLong(e[2]);
                 long diff = System.currentTimeMillis() - ts;
-                if (diff < 3600_000) when = "（" + (diff / 60_000) + " 分钟前）";
-                else when = "（" + (diff / 3600_000) + " 小时前）";
+                if (diff < 3600_000) when = getString(R.string.style_min_ago_fmt, (diff / 60_000));
+                else when = getString(R.string.style_hr_ago_fmt, (diff / 3600_000));
             } catch (Exception ignored) {}
-            LinearLayout row = makeRow(name + when, "恢复", v -> {
+            LinearLayout row = makeRow(name + when, getString(R.string.style_restore), v -> {
                 if (Prefs.restoreTrashPersona(idx)) {
-                    Toast.makeText(this, "已恢复「" + name + "」", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.style_restored_fmt, name), Toast.LENGTH_SHORT).show();
                     refreshPersonaMgmt();
                     refreshStyleSpinner();
                 } else {
-                    Toast.makeText(this, "已超过 24 小时无法恢复", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.style_expired), Toast.LENGTH_SHORT).show();
                     refreshPersonaMgmt();
                 }
             });

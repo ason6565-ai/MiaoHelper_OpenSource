@@ -83,25 +83,25 @@ public class FloatPanel {
         int eng = Prefs.engineMode();
         boolean api = eng == Prefs.ENGINE_CLOUD_API;
         boolean replace = api && Prefs.replaceMode();
-        String badge = replace ? "替换" : (api ? "AI" : "本地");
+        String badge = replace ? root.getContext().getString(R.string.float_replace) : (api ? root.getContext().getString(R.string.float_engine_ai) : root.getContext().getString(R.string.float_engine_local));
         int engColor = replace ? 0xFFE65100 : (api ? 0xFF1E88E5 : 0xFF43A047);
         engineBadge.setText(badge);
         engineBadge.setTextColor(engColor);
         // 收纳按钮：显示当前所选人设
-        btnPickPersona.setText("人设：" + StyleManager.currentName());
+        btnPickPersona.setText(root.getContext().getString(R.string.float_persona_fmt, StyleManager.currentName()));
         btnPickPersona.setBackgroundResource(R.drawable.bg_chip_selected);
         btnPickPersona.setTextColor(0xFFFFFFFF);
         // 引擎按钮文字/颜色随当前引擎切换（本地词库 / AI 翻译 / 彻底替换）
-        String engName = replace ? "彻底替换" : (api ? "AI 翻译" : "本地词库");
+        String engName = replace ? root.getContext().getString(R.string.float_engine_full) : (api ? root.getContext().getString(R.string.float_engine_ai) : root.getContext().getString(R.string.float_engine_lex));
         btnEngine.setText(engName);
         btnEngine.setTextColor(engColor);
         // AI 并联本地：开=深橙强调 + “：开”后缀，关=普通橙底
         boolean localPre = Prefs.localPreStyle();
-        btnLocalPre.setText(localPre ? "AI 并联本地：开" : "AI 并联本地");
+        btnLocalPre.setText(localPre ? root.getContext().getString(R.string.float_localpre_on) : root.getContext().getString(R.string.float_localpre));
         btnLocalPre.setBackgroundResource(localPre ? R.drawable.bg_chip_selected : R.drawable.bg_btn_orange);
         btnLocalPre.setTextColor(0xFFFFFFFF);
         int strict = Prefs.judgeStrictness();
-        panelDesc.setText(engName + " · 裁判 " + strict + " 级");
+        panelDesc.setText(root.getContext().getString(R.string.float_desc_fmt, engName, strict));
     }
 
     private void bindActions() {

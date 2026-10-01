@@ -118,11 +118,11 @@ public class TextTranslatorActivity extends Activity {
             intent.setType("*/*");
             String[] mimeTypes = {"text/plain", "text/*", "application/octet-stream", "application/epub+zip"};
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-            startActivityForResult(Intent.createChooser(intent, "选择文本/EPUB 文件"), REQUEST_IMPORT);
+            startActivityForResult(Intent.createChooser(intent, getString(R.string.tt_pick_file)), REQUEST_IMPORT);
         });
 
         btnClear.setOnClickListener(v -> {
-            if (translating) { Toast.makeText(this, "翻译中，请先等待完成", Toast.LENGTH_SHORT).show(); return; }
+            if (translating) { Toast.makeText(this, getString(R.string.tt_busy), Toast.LENGTH_SHORT).show(); return; }
             etInput.setText("");
             tvOutput.setText("");
             deleteDraft();
@@ -133,12 +133,12 @@ public class TextTranslatorActivity extends Activity {
         btnCopy.setOnClickListener(v -> {
             String text = tvOutput.getText().toString();
             if (text.isEmpty()) {
-                Toast.makeText(this, "没有可复制的译文", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.tt_no_copy), Toast.LENGTH_SHORT).show();
                 return;
             }
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            cm.setPrimaryClip(ClipData.newPlainText("译文", text));
-            Toast.makeText(this, "已复制到剪贴板", Toast.LENGTH_SHORT).show();
+            cm.setPrimaryClip(ClipData.newPlainText(getString(R.string.tt_clip_label), text));
+            Toast.makeText(this, getString(R.string.tt_copied), Toast.LENGTH_SHORT).show();
         });
 
         btnSave.setOnClickListener(v -> saveAsTxt());
@@ -160,7 +160,7 @@ public class TextTranslatorActivity extends Activity {
     private void showGlossaryDialog() {
         final String book = etBookName.getText().toString().trim();
         if (book.isEmpty()) {
-            Toast.makeText(this, "请先在上方输入术语档书名", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.tt_need_book), Toast.LENGTH_SHORT).show();
             return;
         }
         final Map<String, String> map = new LinkedHashMap<>(BookGlossaryStore.load(this, book));
@@ -175,11 +175,11 @@ public class TextTranslatorActivity extends Activity {
         scroll.addView(list);
 
         final EditText etNew = new EditText(this);
-        etNew.setHint("原文=译名");
+        etNew.setHint(getString(R.string.tt_term_fmt_hint));
         etNew.setTextSize(14);
         etNew.setSingleLine(true);
         Button btnAdd = new Button(this);
-        btnAdd.setText("添加");
+        btnAdd.setText(getString(R.string.tt_add));
         btnAdd.setTextSize(13);
         LinearLayout addRow = new LinearLayout(this);
         addRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -193,7 +193,7 @@ public class TextTranslatorActivity extends Activity {
             list.removeAllViews();
             if (map.isEmpty()) {
                 TextView empty = new TextView(TextTranslatorActivity.this);
-                empty.setText("暂无条目，输入「原文=译名」添加");
+                empty.setText(getString(R.string.tt_empty_terms));
                 empty.setTextSize(13);
                 empty.setTextColor(0xFF8D6E63);
                 empty.setPadding(0, dp(8), 0, dp(8));
@@ -206,15 +206,15 @@ public class TextTranslatorActivity extends Activity {
                 tv.setTextColor(0xFF1A1A1A);
                 tv.setPadding(0, dp(6), 0, dp(6));
                 tv.setOnClickListener(v -> new AlertDialog.Builder(TextTranslatorActivity.this)
-                        .setTitle("删除术语")
-                        .setMessage("删除「" + e.getKey() + " = " + e.getValue() + "」？")
-                        .setPositiveButton("删除", (d, w) -> {
+                        .setTitle(getString(R.string.tt_del_term))
+                        .setMessage(getString(R.string.tt_del_term_msg_fmt, e.getKey(), e.getValue()))
+                        .setPositiveButton(getString(R.string.tt_delete), (d, w) -> {
                             map.remove(e.getKey());
                             rebuildHolder[0].run();
                             BookGlossaryStore.save(TextTranslatorActivity.this, book, map);
                             AppLog.i("Glossary", "删除术语：" + e.getKey());
                         })
-                        .setNegativeButton("取消", null)
+                        .setNegativeButton(getString(R.string.cancel), null)
                         .show());
                 list.addView(tv);
             }
@@ -225,7 +225,7 @@ public class TextTranslatorActivity extends Activity {
             String line = etNew.getText().toString().trim();
             int eq = line.indexOf('=');
             if (eq <= 0 || eq == line.length() - 1) {
-                Toast.makeText(this, "格式：原文=译名", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.tt_term_fmt_err), Toast.LENGTH_SHORT).show();
                 return;
             }
             map.put(line.substring(0, eq).trim(), line.substring(eq + 1).trim());
@@ -240,9 +240,9 @@ public class TextTranslatorActivity extends Activity {
         root.addView(addRow);
 
         new AlertDialog.Builder(this)
-                .setTitle("术语表：" + book)
+                .setTitle(getString(R.string.tt_glossary_fmt, book))
                 .setView(root)
-                .setPositiveButton("完成", null)
+                .setPositiveButton(getString(R.string.tt_done), null)
                 .show();
     }
 
@@ -251,13 +251,13 @@ public class TextTranslatorActivity extends Activity {
     private void maybeShowTranslateNotice() {
         if (Prefs.noticeShown()) return;
         new AlertDialog.Builder(this)
-                .setTitle("翻译功能使用须知")
-                .setMessage("本应用仅提供翻译功能框架。\n\n翻译内容由你发起并仅由你使用，请确保使用行为合法合规，并对翻译内容及其使用负全部责任。\n\n请勿用于违法用途。")
-                .setPositiveButton("我知道了，继续使用", (d, w) -> {
+                .setTitle(getString(R.string.tt_notice_title))
+                .setMessage(getString(R.string.tt_notice_msg))
+                .setPositiveButton(getString(R.string.tt_notice_ok), (d, w) -> {
                     Prefs.setNoticeShown(true);
                     d.dismiss();
                 })
-                .setNegativeButton("暂不使用", (d, w) -> {
+                .setNegativeButton(getString(R.string.tt_notice_no), (d, w) -> {
                     Prefs.setNoticeShown(true);
                     d.dismiss();
                 })
@@ -270,14 +270,14 @@ public class TextTranslatorActivity extends Activity {
     private void maybeShowR18Confirm(Runnable onOk) {
         if (Prefs.r18Confirmed()) { onOk.run(); return; }
         new AlertDialog.Builder(this)
-                .setTitle("内容确认")
-                .setMessage("文件翻译可能涉及成人内容。\n\n本应用不做云端留存、不做社区分享，确认状态仅保存在本地，可随时撤回。")
-                .setPositiveButton("确认并继续", (d, w) -> {
+                .setTitle(getString(R.string.tt_confirm_title))
+                .setMessage(getString(R.string.tt_confirm_msg))
+                .setPositiveButton(getString(R.string.tt_confirm_ok), (d, w) -> {
                     Prefs.setR18Confirmed(true);
                     d.dismiss();
                     onOk.run();
                 })
-                .setNegativeButton("暂不翻译", (d, w) -> d.dismiss())
+                .setNegativeButton(getString(R.string.tt_confirm_no), (d, w) -> d.dismiss())
                 .setCancelable(false)
                 .show();
     }
@@ -297,7 +297,7 @@ public class TextTranslatorActivity extends Activity {
         try {
             InputStream is = getContentResolver().openInputStream(uri);
             if (is == null) {
-                Toast.makeText(this, "无法打开文件", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.tt_open_fail), Toast.LENGTH_SHORT).show();
                 return;
             }
             byte[] bytes = readAll(is);
@@ -309,14 +309,14 @@ public class TextTranslatorActivity extends Activity {
             if (isEpub) {
                 BookDocument doc = EpubBookParser.parse(bytes);
                 content = doc.fullText();
-                how = "EPUB " + doc.chapterCount() + " 章";
+                how = getString(R.string.tt_epub_chapters_fmt, doc.chapterCount());
             } else {
                 // P1-2-1 编码探测：BOM / UTF-8 严格 / GBK 兜底（解决老 TXT 乱码）
                 content = TxtBookParser.decode(bytes, null);
                 how = "TXT " + (bytes.length / 1024) + " KB";
             }
             if (content == null || content.trim().isEmpty()) {
-                Toast.makeText(this, "文件内容为空或无法解析", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.tt_empty_file), Toast.LENGTH_LONG).show();
                 return;
             }
             etInput.setText(content);
@@ -324,12 +324,12 @@ public class TextTranslatorActivity extends Activity {
                 String bookName = name.replaceFirst("(?i)\\.[a-z0-9]+$", "");
                 if (!bookName.isEmpty()) etBookName.setText(bookName);
             }
-            Toast.makeText(this, "已导入：" + how + "，" + content.length() + " 字", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_imported_fmt, how, content.length()), Toast.LENGTH_LONG).show();
             AppLog.i("TextTranslate", "导入成功 " + how + " 字=" + content.length());
         } catch (Throwable e) {
             // P1-13 修复：OutOfMemoryError 不是 Exception 子类，原 catch(Exception) 接不住大文件 OOM 导致崩溃
             AppLog.e("TextTranslate", "读取文件失败", e);
-            Toast.makeText(this, "读取文件失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_read_fail_fmt, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -353,17 +353,17 @@ public class TextTranslatorActivity extends Activity {
 
     private void startTranslate() {
         if (translating) {
-            Toast.makeText(this, "正在翻译中，请稍候", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.tt_translating), Toast.LENGTH_SHORT).show();
             return;
         }
         String text = smartDeWrap(etInput.getText().toString()).trim();
         if (text.isEmpty()) {
-            Toast.makeText(this, "请输入或导入文本", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.tt_need_text), Toast.LENGTH_SHORT).show();
             return;
         }
         String key = Prefs.apiKey().trim();
         if (key.isEmpty()) {
-            Toast.makeText(this, "请先在 API 设置中配置 Key", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_need_key), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -432,9 +432,10 @@ public class TextTranslatorActivity extends Activity {
             final int idx = i;
             final String seg = segments.get(i);
             main.post(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 int pct = (int) ((idx / (float) total) * 100);
                 progressBar.setProgress(pct);
-                tvProgress.setText("翻译中... " + (idx + 1) + "/" + total + " 段");
+                tvProgress.setText(getString(R.string.tt_progress_fmt, (idx + 1), total));
             });
 
             final String[] translated = new String[1];
@@ -449,7 +450,7 @@ public class TextTranslatorActivity extends Activity {
             long ws1 = System.currentTimeMillis();
             while (!done[0] && !cancelled && System.currentTimeMillis() - ws1 < 90000) { sleep(50); }
             if (cancelled) break;
-            if (!done[0]) { err[0] = "单段翻译超时(90s)"; }
+            if (!done[0]) { err[0] = getString(R.string.tt_seg_timeout); }
 
             // 4.6.4 单段失败自动重试 1 次；仍失败跳过
             if (err[0] != null) {
@@ -468,14 +469,14 @@ public class TextTranslatorActivity extends Activity {
                 long ws2 = System.currentTimeMillis();
                 while (!done[0] && !cancelled && System.currentTimeMillis() - ws2 < 90000) { sleep(50); }
                 if (cancelled) break;
-                if (!done[0]) { err[0] = "重试超时(90s)"; }
+                if (!done[0]) { err[0] = getString(R.string.tt_retry_timeout); }
             }
             if (err[0] != null) {
                 failCount[0]++;
                 final String emsg = err[0];
-                main.post(() -> tvProgress.setText("第 " + (idx + 1) + " 段翻译失败已跳过，继续翻译后续段落..."));
+                main.post(() -> tvProgress.setText(getString(R.string.tt_seg_skip_fmt, (idx + 1))));
                 AppLog.w("TextTranslate", "第 " + (idx + 1) + " 段重试仍失败，跳过：" + emsg);
-                result.append("〔第 " + (idx + 1) + " 段翻译失败，已跳过〕\n\n");
+                result.append(getString(R.string.tt_seg_failed_fmt, (idx + 1)));
                 updateDraft(segments, total, idx + 1, failCount[0], result);
                 continue;
             }
@@ -483,18 +484,20 @@ public class TextTranslatorActivity extends Activity {
             // v4.7.1 术语一致性：吸收模型登记的术语行，归一漂移译名后再写回
             glossary.absorb(translated[0]);
             translated[0] = glossary.normalize(translated[0]);
+            // v5.0.1 译文后处理（译文审阅反馈）：过滤程序分页标记 [newpage]，不进入最终译文
+            translated[0] = translated[0].replaceAll("(?i)\\[newpage\\]", "");
 
-            // P0-5-1 + 鉴审阅（09-13 第1轮）：段落级 ContentGuard 命中 → 该段不写回、
+            // 段落级 ContentGuard 命中 → 该段不写回、
             // 标记"未翻译"并继续后续段；不弹窗不打断（文件翻译段落级拦截不应阻塞流程，也无重试死循环）
             if (ContentGuard.isBlocked(translated[0])) {
                 failCount[0]++;
                 AppLog.w("TextTranslate", "第 " + (idx + 1) + " 段被内容审核拦截，标记未翻译跳过");
-                result.append("〔第 " + (idx + 1) + " 段未翻译（内容审核）〕\n\n");
+                result.append(getString(R.string.tt_seg_blocked_fmt, (idx + 1)));
                 updateDraft(segments, total, idx + 1, failCount[0], result);
                 final String partialB = result.toString();
                 main.post(() -> {
                     tvOutput.setText(partialB);
-                    tvProgress.setText("第 " + (idx + 1) + " 段被拦截，已标记未翻译，继续...");
+                    tvProgress.setText(getString(R.string.tt_seg_blocked_prog_fmt, (idx + 1)));
                 });
                 continue;
             }
@@ -508,8 +511,9 @@ public class TextTranslatorActivity extends Activity {
         }
 
         main.post(() -> {
+            if (isFinishing() || isDestroyed()) return;
             progressBar.setProgress(100);
-            tvProgress.setText("翻译完成，共 " + total + " 段" + (failCount[0] > 0 ? "，" + failCount[0] + " 段失败/拦截已跳过" : ""));
+            tvProgress.setText(getString(R.string.tt_done_fmt, total, failCount[0], failCount[0] > 0));
             btnTranslate.setEnabled(true);
             btnClear.setEnabled(true);
             translating = false;
@@ -584,10 +588,10 @@ public class TextTranslatorActivity extends Activity {
             draftResult.setLength(0);
             draftResult.append(o.optString("result", ""));
             new AlertDialog.Builder(this)
-                    .setTitle("检测到未完成的翻译草稿")
-                    .setMessage("上次翻译进行到第 " + done + "/" + total + " 段，是否继续？")
-                    .setPositiveButton("继续翻译", (d, w) -> resumeFromDraft())
-                    .setNegativeButton("放弃草稿", (d, w) -> { f.delete(); draftTotal = 0; draftDone = 0; })
+                    .setTitle(getString(R.string.tt_draft_title))
+                    .setMessage(getString(R.string.tt_draft_msg_fmt, done, total))
+                    .setPositiveButton(getString(R.string.tt_draft_resume), (d, w) -> resumeFromDraft())
+                    .setNegativeButton(getString(R.string.tt_draft_discard), (d, w) -> { f.delete(); draftTotal = 0; draftDone = 0; })
                     .setCancelable(false)
                     .show();
         } catch (Exception e) {
@@ -683,13 +687,13 @@ public class TextTranslatorActivity extends Activity {
     private void saveAsTxt() {
         String text = tvOutput.getText().toString();
         if (text.isEmpty()) {
-            Toast.makeText(this, "没有可保存的译文", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.tt_no_save), Toast.LENGTH_SHORT).show();
             return;
         }
         // v5.0：默认输出名=导入 TXT 文件名（etBookName 导入时自动回填文件名去扩展名）；未导入则回退 译文_时间戳
         String baseName = etBookName.getText().toString().trim();
         if (baseName.isEmpty()) {
-            baseName = "译文_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
+            baseName = getString(R.string.tt_filename_prefix) + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
                     java.util.Locale.getDefault()).format(new java.util.Date());
         }
         String fileName = baseName.replaceAll("[\\\\/:*?\"<>|]", "_") + ".txt";
@@ -700,15 +704,16 @@ public class TextTranslatorActivity extends Activity {
                 values.put(MediaStore.Downloads.MIME_TYPE, "text/plain");
                 values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
                 Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (uri == null) throw new Exception("创建文件失败");
+                if (uri == null) throw new Exception(getString(R.string.err_file_create));
                 try (OutputStream os = getContentResolver().openOutputStream(uri)) {
                     os.write(text.getBytes(StandardCharsets.UTF_8));
                     os.flush();
                 }
                 verifySaved(uri);
             } else {
-                // P0-5 修复：API 26-28 无 MediaStore.Downloads，用传统公共下载目录
-                java.io.File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                // API 26-28：用应用私有外部目录（getExternalFilesDir），无需 WRITE_EXTERNAL_STORAGE 运行时权限
+                java.io.File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null) dir = getFilesDir();
                 if (!dir.exists()) dir.mkdirs();
                 java.io.File file = new java.io.File(dir, fileName);
                 try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
@@ -716,9 +721,9 @@ public class TextTranslatorActivity extends Activity {
                     fos.flush();
                 }
             }
-            Toast.makeText(this, "已保存到下载：" + fileName, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_saved_fmt, fileName), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "保存失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_save_fail_fmt, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -726,10 +731,10 @@ public class TextTranslatorActivity extends Activity {
     private void saveAsEpub() {
         String text = tvOutput.getText().toString();
         if (text.isEmpty()) {
-            Toast.makeText(this, "没有可保存的译文", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.tt_no_save), Toast.LENGTH_SHORT).show();
             return;
         }
-        String fileName = "译文_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
+        String fileName = getString(R.string.tt_filename_prefix) + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
                 java.util.Locale.getDefault()).format(new java.util.Date()) + ".epub";
         try {
             if (android.os.Build.VERSION.SDK_INT >= 29) {
@@ -738,7 +743,7 @@ public class TextTranslatorActivity extends Activity {
                 values.put(MediaStore.Downloads.MIME_TYPE, "application/epub+zip");
                 values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
                 Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (uri == null) throw new Exception("创建文件失败");
+                if (uri == null) throw new Exception(getString(R.string.err_file_create));
                 try (OutputStream os = getContentResolver().openOutputStream(uri)) {
                     writeEpub(os, text);
                     os.flush();
@@ -754,9 +759,9 @@ public class TextTranslatorActivity extends Activity {
                     fos.flush();
                 }
             }
-            Toast.makeText(this, "已保存 EPUB 到下载：" + fileName, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_saved_epub_fmt, fileName), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "保存失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tt_save_fail_fmt, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -770,7 +775,7 @@ public class TextTranslatorActivity extends Activity {
         String xhtml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
                 + "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n"
-                + "<title>译文</title>\n"
+                + "<title>" + getString(R.string.tt_clip_label) + "</title>\n"
                 + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n"
                 + "</head>\n<body>\n" + body + "</body>\n</html>\n";
         String container = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -781,7 +786,7 @@ public class TextTranslatorActivity extends Activity {
         String opf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"2.0\" unique-identifier=\"uid\">\n"
                 + "<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
-                + "<dc:title>译文</dc:title>\n"
+                + "<dc:title>" + getString(R.string.tt_clip_label) + "</dc:title>\n"
                 + "<dc:language>zh</dc:language>\n"
                 + "<dc:identifier id=\"uid\">miao-helper-translation</dc:identifier>\n"
                 + "</metadata>\n"
@@ -819,11 +824,11 @@ public class TextTranslatorActivity extends Activity {
     private void verifySaved(Uri uri) throws Exception {
         int total = 0;
         try (InputStream in = getContentResolver().openInputStream(uri)) {
-            if (in == null) throw new Exception("回读失败：无法打开文件");
+            if (in == null) throw new Exception(getString(R.string.err_file_readback));
             byte[] buf = new byte[1024];
             int n;
             while ((n = in.read(buf)) > 0) total += n;
         }
-        if (total == 0) throw new Exception("回读校验失败：文件为空");
+        if (total == 0) throw new Exception(getString(R.string.err_file_empty));
     }
 }

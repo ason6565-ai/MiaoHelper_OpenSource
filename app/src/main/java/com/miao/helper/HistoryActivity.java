@@ -65,14 +65,14 @@ public class HistoryActivity extends AppCompatActivity {
         // P2-4 只看收藏：切换过滤
         btnFavFilter.setOnClickListener(v -> {
             favOnly = !favOnly;
-            btnFavFilter.setText(favOnly ? "全部记录" : "只看收藏");
+            btnFavFilter.setText(favOnly ? getString(R.string.his_all) : getString(R.string.his_fav_only));
             applyFilter();
         });
 
         // P2-4 导出：全部历史 → TXT → 下载目录
         btnExport.setOnClickListener(v -> {
             if (data == null || data.isEmpty()) {
-                Toast.makeText(this, "没有可导出的记录", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.his_no_export), Toast.LENGTH_SHORT).show();
                 return;
             }
             String msg = HistoryManager.exportToDownloads(this);
@@ -81,18 +81,18 @@ public class HistoryActivity extends AppCompatActivity {
 
         btnClear.setOnClickListener(v -> {
             if (data == null || data.isEmpty()) {
-                Toast.makeText(this, "没有历史记录", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.his_empty), Toast.LENGTH_SHORT).show();
                 return;
             }
             new AlertDialog.Builder(this)
-                    .setTitle("清空历史记录")
-                    .setMessage("确定要清空全部翻译历史吗？此操作不可恢复。")
-                    .setPositiveButton("清空", (d, w) -> {
+                    .setTitle(getString(R.string.his_clear_title))
+                    .setMessage(getString(R.string.his_clear_msg))
+                    .setPositiveButton(getString(R.string.his_clear), (d, w) -> {
                         HistoryManager.clear();
                         reload();
-                        Toast.makeText(this, "已清空", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.his_cleared), Toast.LENGTH_SHORT).show();
                     })
-                    .setNegativeButton("取消", null)
+                    .setNegativeButton(getString(R.string.cancel), null)
                     .show();
         });
 
@@ -135,8 +135,8 @@ public class HistoryActivity extends AppCompatActivity {
         boolean empty = (shown == null || shown.isEmpty());
         tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
         tvEmpty.setText(empty && data != null && !data.isEmpty()
-                ? "没有匹配的记录\n换个关键词或取消收藏筛选试试"
-                : "还没有翻译记录\n去别的 App 里输入文字试试吧");
+                ? getString(R.string.his_nomatch)
+                : getString(R.string.his_no_history));
     }
 
     /** P2-4 详情：完整原文+译文+人设+时间，可复制/收藏 */
@@ -150,13 +150,13 @@ public class HistoryActivity extends AppCompatActivity {
         st.setTextSize(12);
         col.addView(st);
         TextView o = new TextView(this);
-        o.setText("原文：\n" + e.original);
+        o.setText(getString(R.string.his_orig_fmt, e.original));
         o.setTextSize(14);
         o.setTextColor(0xFF3E2723);
         o.setPadding(0, dp(8), 0, 0);
         col.addView(o);
         TextView t = new TextView(this);
-        t.setText("译文：\n" + e.translated);
+        t.setText(getString(R.string.his_trans_fmt, e.translated));
         t.setTextSize(15);
         t.setTextColor(0xFF6D4C41);
         t.setPadding(0, dp(8), 0, 0);
@@ -164,18 +164,18 @@ public class HistoryActivity extends AppCompatActivity {
         ScrollView sv = new ScrollView(this);
         sv.addView(col);
         new AlertDialog.Builder(this)
-                .setTitle("记录详情")
+                .setTitle(getString(R.string.his_detail))
                 .setView(sv)
-                .setPositiveButton("复制译文", (d, w) -> {
+                .setPositiveButton(getString(R.string.his_copy_trans), (d, w) -> {
                     ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setPrimaryClip(ClipData.newPlainText("风格化结果", e.translated));
-                    Toast.makeText(this, "已复制译文", Toast.LENGTH_SHORT).show();
+                    cm.setPrimaryClip(ClipData.newPlainText(getString(R.string.tt_clip_label), e.translated));
+                    Toast.makeText(this, getString(R.string.his_copied), Toast.LENGTH_SHORT).show();
                 })
-                .setNeutralButton(e.favorite ? "取消收藏" : "收藏", (d, w) -> {
+                .setNeutralButton(e.favorite ? getString(R.string.his_unfav) : getString(R.string.his_fav), (d, w) -> {
                     HistoryManager.setFavorite(data.indexOf(e), !e.favorite);
                     reload();
                 })
-                .setNegativeButton("关闭", null)
+                .setNegativeButton(getString(R.string.api_close), null)
                 .show();
     }
 
@@ -187,13 +187,13 @@ public class HistoryActivity extends AppCompatActivity {
         col.setPadding(dp(16), dp(8), dp(16), dp(8));
         if (map.isEmpty()) {
             TextView tv = new TextView(this);
-            tv.setText("该次替换没有可提取的词级差异。");
+            tv.setText(getString(R.string.his_no_diff));
             tv.setTextColor(0xFF8D6E63);
             tv.setTextSize(13);
             col.addView(tv);
         } else {
             TextView hint = new TextView(this);
-            hint.setText("AI 把原文片段改成了这些词，可直接修改右侧替换词。保存后将写入「" + e.style + "」自定义词库，下次本地引擎按新词生效。");
+            hint.setText(getString(R.string.his_diff_hint_fmt, e.style));
             hint.setTextColor(0xFF795548);
             hint.setTextSize(12);
             col.addView(hint);
@@ -203,7 +203,7 @@ public class HistoryActivity extends AppCompatActivity {
                 row.setGravity(Gravity.CENTER_VERTICAL);
                 row.setPadding(0, dp(4), 0, dp(4));
                 TextView from = new TextView(this);
-                from.setText(pair[0].isEmpty() ? "＋新增" : pair[0]);
+                from.setText(pair[0].isEmpty() ? getString(R.string.his_new) : pair[0]);
                 from.setTextColor(pair[0].isEmpty() ? 0xFF4CAF50 : 0xFF8D6E63);
                 from.setTextSize(13);
                 from.setMaxLines(2);
@@ -226,10 +226,10 @@ public class HistoryActivity extends AppCompatActivity {
         ScrollView sv = new ScrollView(this);
         sv.addView(col);
         new AlertDialog.Builder(this)
-                .setTitle("替换明细 · " + e.style)
+                .setTitle(getString(R.string.his_diff_title_fmt, e.style))
                 .setView(sv)
-                .setPositiveButton("保存为自定义规则", (d, w) -> saveMappings(e.style, col))
-                .setNegativeButton("关闭", null)
+                .setPositiveButton(getString(R.string.his_save_rule), (d, w) -> saveMappings(e.style, col))
+                .setNegativeButton(getString(R.string.api_close), null)
                 .show();
     }
 
@@ -246,12 +246,12 @@ public class HistoryActivity extends AppCompatActivity {
             if (!(fv instanceof TextView) || !(ev instanceof EditText)) continue;
             String from = ((TextView) fv).getText().toString().trim();
             String to = ((EditText) ev).getText().toString();
-            if (from.isEmpty() || "＋新增".equals(from)) continue;   // 纯新增无原文锚点，不能做规则
+            if (from.isEmpty() || getString(R.string.his_new).equals(from)) continue;   // 纯新增无原文锚点，不能做规则
             if (from.equals(to.trim())) continue;
             rules.add(new String[]{from, to, "0"});
         }
         if (rules.isEmpty()) {
-            Toast.makeText(this, "没有可保存的替换项（纯新增内容无法作为规则保存）", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.his_no_saveable), Toast.LENGTH_SHORT).show();
             return;
         }
         java.util.List<String[]> existing = Prefs.customRulesFor(styleName);
@@ -259,16 +259,16 @@ public class HistoryActivity extends AppCompatActivity {
         for (String[] r : existing) byFrom.put(r[0], r);
         for (String[] r : rules) byFrom.put(r[0], r);
         Prefs.setCustomRulesFor(styleName, new java.util.ArrayList<>(byFrom.values()));
-        Toast.makeText(this, "已保存 " + rules.size() + " 条替换到「" + styleName + "」词库", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.his_saved_rules_fmt, rules.size(), styleName), Toast.LENGTH_LONG).show();
     }
 
     private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
     private String formatTime(long ms) {
         long diff = System.currentTimeMillis() - ms;
-        if (diff < 60_000) return "刚刚";
-        if (diff < 3600_000) return (diff / 60_000) + " 分钟前";
-        if (diff < 86400_000) return (diff / 3600_000) + " 小时前";
+        if (diff < 60_000) return getString(R.string.his_just_now);
+        if (diff < 3600_000) return getString(R.string.his_min_ago_fmt, (diff / 60_000));
+        if (diff < 86400_000) return getString(R.string.his_hr_ago_fmt, (diff / 3600_000));
         return new SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(new Date(ms));
     }
 
@@ -286,8 +286,8 @@ public class HistoryActivity extends AppCompatActivity {
             final HistoryManager.Entry e = shown.get(position);
             ((TextView) convertView.findViewById(R.id.tvStyle)).setText(e.style);
             ((TextView) convertView.findViewById(R.id.tvTime)).setText(formatTime(e.time));
-            ((TextView) convertView.findViewById(R.id.tvOriginal)).setText("原文：" + e.original);
-            ((TextView) convertView.findViewById(R.id.tvTranslated)).setText("译文：" + e.translated);
+            ((TextView) convertView.findViewById(R.id.tvOriginal)).setText(getString(R.string.his_orig_fmt, e.original));
+            ((TextView) convertView.findViewById(R.id.tvTranslated)).setText(getString(R.string.his_trans_fmt, e.translated));
 
             MaterialButton btnFav = convertView.findViewById(R.id.btnFav);
             MaterialButton btnMappings = convertView.findViewById(R.id.btnMappings);
@@ -307,18 +307,18 @@ public class HistoryActivity extends AppCompatActivity {
             btnMappings.setOnClickListener(v -> showMappingsDialog(e));
             btnCopy.setOnClickListener(v -> {
                 ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                cm.setPrimaryClip(ClipData.newPlainText("风格化结果", e.translated));
-                Toast.makeText(HistoryActivity.this, "已复制译文", Toast.LENGTH_SHORT).show();
+                cm.setPrimaryClip(ClipData.newPlainText(getString(R.string.tt_clip_label), e.translated));
+                Toast.makeText(HistoryActivity.this, getString(R.string.his_copied), Toast.LENGTH_SHORT).show();
             });
             btnDelete.setOnClickListener(v -> {
                 new AlertDialog.Builder(HistoryActivity.this)
-                        .setTitle("删除这条记录？")
-                        .setMessage("原文：" + e.original)
-                        .setPositiveButton("删除", (d, w) -> {
+                        .setTitle(getString(R.string.his_del_title))
+                        .setMessage(getString(R.string.his_orig_fmt, e.original))
+                        .setPositiveButton(getString(R.string.his_delete), (d, w) -> {
                             HistoryManager.remove(data.indexOf(e));
                             reload();
                         })
-                        .setNegativeButton("取消", null)
+                        .setNegativeButton(getString(R.string.cancel), null)
                         .show();
             });
             return convertView;

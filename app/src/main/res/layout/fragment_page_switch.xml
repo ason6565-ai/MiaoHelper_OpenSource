@@ -12,8 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- 开关网格：悬浮球/实时翻译/句尾口癖/AI二次校验/彻底替换/流式输出/结果预览 -->
-        <!-- 行1 -->
+        <!-- 行1：悬浮球 / 实时翻译 -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -22,10 +21,10 @@
                 android:id="@+id/tileFloat"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginEnd="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -35,18 +34,25 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivFloat"
+                        android:src="@drawable/ic_tile_float"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="悬浮球"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_float"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvFloatState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
@@ -55,10 +61,10 @@
                 android:id="@+id/tileRealtime"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginStart="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -68,25 +74,32 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivRealtime"
+                        android:src="@drawable/ic_tile_realtime"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="实时翻译"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_realtime"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvRealtimeState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- 行2 -->
+        <!-- 行2：句尾口癖 / AI 二次校验 -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_marginTop="10dp"
@@ -96,10 +109,10 @@
                 android:id="@+id/tileTail"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginEnd="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -109,18 +122,25 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivTail"
+                        android:src="@drawable/ic_tile_tail"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="句尾口癖"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_tail"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvTailState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
@@ -129,10 +149,10 @@
                 android:id="@+id/tileVerify"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginStart="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -142,25 +162,32 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivVerify"
+                        android:src="@drawable/ic_tile_verify"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="AI 二次校验"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_verify"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvVerifyState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- 行3：彻底替换 + AI 并联本地（2×4 网格） -->
+        <!-- 行3：彻底替换 / AI 并联本地（AI 功能组） -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_marginTop="10dp"
@@ -170,10 +197,10 @@
                 android:id="@+id/tileReplace"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginEnd="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -183,18 +210,25 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivReplace"
+                        android:src="@drawable/ic_tile_replace"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="彻底替换"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_replace"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvReplaceState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
@@ -203,10 +237,10 @@
                 android:id="@+id/tileLocalPre"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
+                android:layout_height="92dp"
                 android:layout_marginStart="6dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -216,71 +250,45 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivLocalPre"
+                        android:src="@drawable/ic_tile_localpre"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="AI 并联本地"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_localpre"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvLocalPreState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- 行4 -->
+        <!-- 结果预览（AI 翻译已隐藏，预览保留为通用投递确认） -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/tileStream"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="84dp"
-                android:layout_marginEnd="6dp"
-                app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
-                app:strokeWidth="1dp"
-                app:cornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:rippleColor="#22E65100">
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                    <TextView
-                        android:text="流式输出"
-                        android:textSize="14sp"
-                        android:textColor="#3E2723"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                    <TextView
-                        android:id="@+id/tvStreamState"
-                        android:text="关"
-                        android:textSize="13sp"
-                        android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/tilePreview"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="84dp"
-                android:layout_marginStart="6dp"
+                android:layout_height="92dp"
+                android:layout_marginStart="0dp"
                 app:cardBackgroundColor="#00FFFFFF"
-                app:strokeColor="#22E65100"
+                app:strokeColor="#40E65100"
                 app:strokeWidth="1dp"
                 app:cornerRadius="16dp"
                 app:cardElevation="0dp"
@@ -290,18 +298,25 @@
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
+                    <ImageView
+                        android:id="@+id/ivPreview"
+                        android:src="@drawable/ic_tile_preview"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@null" />
                     <TextView
-                        android:text="结果预览"
-                        android:textSize="14sp"
+                        android:text="@string/ui_tile_preview"
+                        android:textSize="13sp"
                         android:textColor="#3E2723"
+                        android:layout_marginTop="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/tvPreviewState"
-                        android:text="关"
-                        android:textSize="13sp"
+                        android:text="@string/sw_off"
+                        android:textSize="11sp"
                         android:textColor="#A1887F"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="2dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
@@ -327,7 +342,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <TextView
-                    android:text="翻译引擎"
+                    android:text="@string/ui_engine_title"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="#E65100"

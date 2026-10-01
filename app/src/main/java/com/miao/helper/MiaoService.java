@@ -87,7 +87,7 @@ public class MiaoService extends AccessibilityService {
             AppLog.w("Service", "动态设置 serviceInfo 失败：" + t);
         }
         resetBusy();        // 服务（重新）连接时清掉可能残留的忙状态
-        // 鉴复核 P0-2：线程池拒绝时通过 UiFeedback 统一出口提示，不静默丢请求
+        // 复核 P0-2：线程池拒绝时通过 UiFeedback 统一出口提示，不静默丢请求
         ApiMiaoifier.setRejectNotifier(msg -> main.post(() -> toast(msg)));
         AppLog.i("Service", "无障碍服务已连接 onServiceConnected");
         refreshFloat();
@@ -98,28 +98,27 @@ public class MiaoService extends AccessibilityService {
     // ============================================================
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
-        // 窗口变化：按 App 自动切换风格（放在 enabled 检查前，因为需要从"关闭"切回"开启"）
-        if (e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            CharSequence pkg = e.getPackageName();
-            if (pkg != null) {
-                String pkgName = pkg.toString();
-                if (!pkgName.equals(lastAutoPkg)) {
-                    String prevPkg = lastAutoPkg;
-                    lastAutoPkg = pkgName;
-                    String style = Prefs.appStyle(pkgName);
-                    if (!style.equals("-1")) {
-                        if (style.equals("off")) lastOffPkg = pkgName;   // 记录"因按 App 关闭而禁用"的包
-                        applyAutoStyle(style);
-                    } else if (!Prefs.enabled() && !lastOffPkg.isEmpty() && !lastOffPkg.equals(pkgName)) {
-                        // 离开"按 App 关闭"的 App，且新 App 无规则 → 恢复全局启用（单向门修复）
-                        Prefs.set("enabled", true);
-                        lastOffPkg = "";
-                        if (floatBall != null) floatBall.setStatus(statusText());
-                        AppLog.i("Service", "离开按App关闭的 " + prevPkg + "，恢复风格化启用");
-                    }
-                }
-            }
-        }
+        // 按 App 自动切换风格：海外包已隐藏该功能（菜单入口+运行逻辑停用），此处保留代码便于后续恢复
+        // if (e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        //     CharSequence pkg = e.getPackageName();
+        //     if (pkg != null) {
+        //         String pkgName = pkg.toString();
+        //         if (!pkgName.equals(lastAutoPkg)) {
+        //             String prevPkg = lastAutoPkg;
+        //             lastAutoPkg = pkgName;
+        //             String style = Prefs.appStyle(pkgName);
+        //             if (!style.equals("-1")) {
+        //                 if (style.equals("off")) lastOffPkg = pkgName;
+        //                 applyAutoStyle(style);
+        //             } else if (!Prefs.enabled() && !lastOffPkg.isEmpty() && !lastOffPkg.equals(pkgName)) {
+        //                 Prefs.set("enabled", true);
+        //                 lastOffPkg = "";
+        //                 if (floatBall != null) floatBall.setStatus(statusText());
+        //                 AppLog.i("Service", "离开按App关闭的 " + prevPkg + "，恢复风格化启用");
+        //             }
+        //         }
+        //     }
+        // }
         if (!Prefs.enabled()) return;
         // 触发词模式：前缀触发（独立于实时模式；默认关闭，防误伤）
         if (Prefs.triggerEnabled()
@@ -193,6 +192,7 @@ public class MiaoService extends AccessibilityService {
     @Override
     public boolean onUnbind(Intent intent) {
         AppLog.w("Service", "无障碍服务 onUnbind（可能被系统临时回收）");
+        ApiMiaoifier.setRejectNotifier(null);  // 断开回调引用，防止服务解绑后仍持有 Activity/Service 引用
         return super.onUnbind(intent);
     }
 
@@ -204,7 +204,7 @@ public class MiaoService extends AccessibilityService {
         if (style.equals("off")) {
             if (!Prefs.enabled()) return;   // 已是关闭状态，跳过，避免重复写入
             Prefs.set("enabled", false);
-            if (floatBall != null) floatBall.setStatus("停");
+            if (floatBall != null) floatBall.setStatus(getString(R.string.miao_fb_stop));
             return;
         }
         int idx;
@@ -227,6 +227,7 @@ public class MiaoService extends AccessibilityService {
     @Override
     public void onDestroy() {
         AppLog.w("Service", "无障碍服务 onDestroy");
+        ApiMiaoifier.setRejectNotifier(null);
         resetBusy();
         if (floatBall != null) {
             floatBall.hide();
@@ -260,7 +261,7 @@ public class MiaoService extends AccessibilityService {
             busy = false;
             busySince = 0L;
             if (floatBall != null) floatBall.cancelProgress();
-            main.post(() -> Toast.makeText(this, "请求超时，已自动恢复，可重试", Toast.LENGTH_LONG).show());
+            main.post(() -> Toast.makeText(this, getString(R.string.ms_timeout), Toast.LENGTH_LONG).show());
         }
     }
 
@@ -287,17 +288,37 @@ public class MiaoService extends AccessibilityService {
             boolean show = Prefs.showFloat() && Settings.canDrawOverlays(this);
             if (show) {
                 if (floatBall == null) {
-                    floatBall = new FloatBall(this, this::miaoifyCurrentInput, () -> {});
-                    floatPanel = new FloatPanel(this, panelListener);
-                    floatBall.setPanel(floatPanel);
-                    floatBall.setEngine(Prefs.useApi());
-                    floatBall.setStatus(statusText());
+                    createFloats();
                 }
                 floatBall.show();
             } else if (floatBall != null) {
                 floatBall.hide();
                 if (floatPanel != null) { floatPanel.hide(); floatPanel = null; }
                 floatBall = null;
+            }
+        });
+    }
+
+    /** 以当前界面语言创建悬浮球/面板：浮窗是 Service 常驻 View，语言只在此刻固定，切语言后必须重建 */
+    private void createFloats() {
+        android.content.Context l10n = L10n.wrap(this);
+        floatBall = new FloatBall(l10n, this::miaoifyCurrentInput, () -> {});
+        floatPanel = new FloatPanel(l10n, panelListener);
+        floatBall.setPanel(floatPanel);
+        floatBall.setEngine(Prefs.useApi());
+        floatBall.setStatus(statusText());
+    }
+
+    /** 界面语言切换后由 MainActivity 调用：销毁并重建浮窗，让按钮/菜单文案跟随新语言 */
+    public void recreateFloatForLanguage() {
+        main.post(() -> {
+            if (floatBall == null) return;
+            floatBall.hide();
+            if (floatPanel != null) { floatPanel.hide(); floatPanel = null; }
+            floatBall = null;
+            if (Prefs.showFloat() && Settings.canDrawOverlays(this)) {
+                createFloats();
+                floatBall.show();
             }
         });
     }
@@ -347,7 +368,7 @@ public class MiaoService extends AccessibilityService {
         @Override public void onLocalPreToggle() {
             Prefs.set("localPreStyle", !Prefs.localPreStyle());
             if (floatPanel != null) floatPanel.refreshSelection();
-            toast(Prefs.localPreStyle() ? "已开启：AI 前用扩展词打底" : "已关闭：不打底，直接交给 AI");
+            toast(Prefs.localPreStyle() ? getString(R.string.ms_localpre_on) : getString(R.string.ms_localpre_off));
         }
     };
 
@@ -359,7 +380,7 @@ public class MiaoService extends AccessibilityService {
             startActivity(i);
         } catch (Throwable t) {
             AppLog.e("Service", "打开设置失败", t);
-            toast("无法打开设置");
+            toast(getString(R.string.ms_open_settings_fail));
         }
     }
 
@@ -371,26 +392,25 @@ public class MiaoService extends AccessibilityService {
 
         // 人设风格子菜单（group 1）
         String[] personaNames = StyleManager.personaNames();
-        SubMenu personaSub = pm.getMenu().addSubMenu("人设风格");
+        SubMenu personaSub = pm.getMenu().addSubMenu(getString(R.string.miao_menu_persona));
         for (int i = 0; i < personaNames.length; i++) {
             boolean checked = Prefs.styleIndex() == i;
             personaSub.add(1, i, 0, personaNames[i]).setChecked(checked);
         }
         personaSub.setGroupCheckable(1, true, true);
 
-        // 引擎子菜单（group 3）
-        SubMenu engSub = pm.getMenu().addSubMenu("引擎");
+        // 引擎子菜单（group 3）v5.1: AI 翻译已隐藏（报废功能），仅保留 本地翻译 / 彻底替换
+        SubMenu engSub = pm.getMenu().addSubMenu(getString(R.string.miao_menu_engine));
         int engMode = Prefs.engineMode();
-        engSub.add(3, MENU_ENGINE_LOCAL, 0, "本地词库").setChecked(engMode == Prefs.ENGINE_LOCAL_RULES);
-        engSub.add(3, MENU_ENGINE_API, 0, "AI 翻译").setChecked(engMode == Prefs.ENGINE_CLOUD_API && !Prefs.replaceMode());
-        engSub.add(3, MENU_ENGINE_REPLACE, 0, "AI 彻底替换").setChecked(engMode == Prefs.ENGINE_CLOUD_API && Prefs.replaceMode());
+        engSub.add(3, MENU_ENGINE_LOCAL, 0, getString(R.string.miao_menu_engine_local)).setChecked(engMode == Prefs.ENGINE_LOCAL_RULES);
+        engSub.add(3, MENU_ENGINE_REPLACE, 0, getString(R.string.miao_menu_engine_replace)).setChecked(engMode == Prefs.ENGINE_CLOUD_API);
         engSub.setGroupCheckable(3, true, true);
 
-        pm.getMenu().add(0, MENU_AI_FALLBACK, 0, "AI 失败本地兜底").setChecked(Prefs.aiFallbackLocal());
-        pm.getMenu().add(0, MENU_GEN_REPLY, 0, "生成回复（输入对方的话）");
-        pm.getMenu().add(0, MENU_JUDGE_STRENGTH, 0, "裁判严格度（当前 " + Prefs.judgeStrictness() + "/5）");
-        pm.getMenu().add(0, MENU_UNDO, 0, "撤销上次风格化");
-        pm.getMenu().add(0, MENU_HIDE_FLOAT, 0, "隐藏悬浮球");
+        pm.getMenu().add(0, MENU_AI_FALLBACK, 0, getString(R.string.miao_menu_ai_fallback)).setChecked(Prefs.aiFallbackLocal());
+        pm.getMenu().add(0, MENU_GEN_REPLY, 0, getString(R.string.miao_menu_gen_reply));
+        pm.getMenu().add(0, MENU_JUDGE_STRENGTH, 0, getString(R.string.miao_menu_judge_strength, Prefs.judgeStrictness()));
+        pm.getMenu().add(0, MENU_UNDO, 0, getString(R.string.miao_menu_undo));
+        pm.getMenu().add(0, MENU_HIDE_FLOAT, 0, getString(R.string.miao_menu_hide_float));
 
         pm.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
@@ -428,7 +448,7 @@ public class MiaoService extends AccessibilityService {
         if (__n <= 0) return;
         if (idx < 0 || idx >= __n) idx = Math.max(0, Math.min(idx, __n - 1));   // ★v4 修复：补 clamp（同文件 446 行有护栏，此处漏了）
         Prefs.set("styleIndex", idx);
-        toast("人设：" + StyleManager.personaNames()[idx]);
+        toast(getString(R.string.ms_persona_fmt, StyleManager.personaNames()[idx]));
         updateFloatStatus();
     }
 
@@ -437,7 +457,7 @@ public class MiaoService extends AccessibilityService {
         if (DangerLock.isLocked()) return;   // 「千万别点」锁定期，悬浮球也不得切换引擎/替换
         Prefs.setEngineMode(api ? Prefs.ENGINE_CLOUD_API : Prefs.ENGINE_LOCAL_RULES);
         Prefs.set("replaceMode", api && replace);
-        String label = !api ? "引擎：本地词库" : (replace ? "引擎：AI 彻底替换" : "引擎：AI 翻译");
+        String label = !api ? getString(R.string.ms_engine_local) : (replace ? getString(R.string.ms_engine_full) : getString(R.string.ms_engine_ai));
         toast(label);
         updateFloatStatus();
         if (floatPanel != null) floatPanel.refreshSelection();
@@ -448,7 +468,7 @@ public class MiaoService extends AccessibilityService {
         if (DangerLock.isLocked()) return;
         Prefs.setEngineMode(mode);
         if (mode != Prefs.ENGINE_CLOUD_API) Prefs.set("replaceMode", false);
-        String label = mode == Prefs.ENGINE_LOCAL_RULES ? "引擎：本地词库" : "引擎：AI 翻译";
+        String label = mode == Prefs.ENGINE_LOCAL_RULES ? getString(R.string.ms_engine_local) : getString(R.string.ms_engine_full);
         toast(label);
         updateFloatStatus();
         if (floatPanel != null) floatPanel.refreshSelection();
@@ -458,7 +478,7 @@ public class MiaoService extends AccessibilityService {
     private void toggleAiFallback() {
         boolean on = !Prefs.aiFallbackLocal();
         Prefs.set("aiFallbackLocal", on);
-        toast(on ? "AI 失败本地兜底：开（异常时转本地词库）" : "AI 失败本地兜底：关（异常直接报错）");
+        toast(on ? getString(R.string.ms_fallback_on) : getString(R.string.ms_fallback_off));
         updateFloatStatus();
     }
 
@@ -490,7 +510,7 @@ public class MiaoService extends AccessibilityService {
             floatBall = null;
         }
         if (floatPanel != null) { floatPanel.hide(); floatPanel = null; }
-        toast("悬浮球已隐藏（可在 App 设置重新开启）");
+        toast(getString(R.string.ms_float_hidden));
     }
 
     // ============================================================
@@ -505,22 +525,22 @@ public class MiaoService extends AccessibilityService {
                 AppLog.w("Service", "检测到 busy 卡死(>" + BUSY_STALE_MS + "ms)，自动复位");
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();
-                toast("上次请求卡住，已自动恢复");
+                toast(getString(R.string.ms_busy_recovered));
             } else {
                 AppLog.d("Service", "正忙，忽略本次点击");
-                toast("正在翻译中，请稍候…");
+                toast(getString(R.string.ms_translating));
                 return;
             }
         }
         AccessibilityNodeInfo edit = findInput();
         if (edit == null) {
             AppLog.w("Service", "未找到可编辑输入框");
-            toast("没找到输入框，请先点进聊天输入框");
+            toast(getString(R.string.ms_no_input));
             return;
         }
         CharSequence cs = edit.getText();
         if (cs == null || cs.toString().trim().isEmpty()) {
-            toast("输入框是空的");
+            toast(getString(R.string.ms_input_empty));
             AccessibilityNodes.safeRecycle(edit);
             return;
         }
@@ -549,7 +569,7 @@ public class MiaoService extends AccessibilityService {
             }
             String key = Prefs.apiKey().trim();
             if (key.isEmpty()) {
-                toast("API 模式需要先填写 Key");
+                toast(getString(R.string.ms_need_key));
                 AccessibilityNodes.safeRecycle(edit);
                 return;
             }
@@ -563,7 +583,7 @@ public class MiaoService extends AccessibilityService {
                 return;
             }
             markBusy();
-            toast("处理中…");
+            toast(getString(R.string.ms_processing));
             if (floatBall != null) floatBall.startProgress(text.length());
             AccessibilityNodes.safeRecycle(edit);   // 文本已读取，节点不再使用；回调里重新找输入框
             final String reqText = text;
@@ -610,7 +630,7 @@ public class MiaoService extends AccessibilityService {
                         resetBusy();
                         if (floatBall != null) floatBall.cancelProgress();
                         AppLog.w("Service", "彻底替换失败：" + m);
-                        toastError("彻底替换失败：" + m);
+                        toastError(getString(R.string.ms_full_fail_fmt, m));
                     }
                 });
                 return;
@@ -653,7 +673,7 @@ public class MiaoService extends AccessibilityService {
                 setText(edit, out);
             } catch (Throwable t) {
                 AppLog.e("Local", "本地翻译异常", t);
-                toast("本地翻译出错，已记录日志");
+                toast(getString(R.string.ms_local_error));
                 try { AccessibilityNodes.safeRecycle(edit); } catch (Throwable ignored) {}
             }
         }
@@ -668,7 +688,7 @@ public class MiaoService extends AccessibilityService {
         if (Prefs.engineMode() == Prefs.ENGINE_CLOUD_API) {
             String key = Prefs.apiKey().trim();
             if (key.isEmpty()) {
-                main.post(() -> toast("触发词翻译需要 API Key，请先填写"));
+                main.post(() -> toast(getString(R.string.ms_trigger_need_key)));
                 return;
             }
             AppLog.i("Service", "触发词 AI 翻译 内容=" + briefLog(content));
@@ -690,7 +710,7 @@ public class MiaoService extends AccessibilityService {
     public void toggleTrigger() {
         boolean on = !Prefs.triggerEnabled();
         Prefs.set("triggerEnabled", on);
-        toast(on ? "触发词模式已开启" : "触发词模式已关闭");
+        toast(on ? getString(R.string.ms_trigger_on) : getString(R.string.ms_trigger_off));
         AppLog.i("Service", "触发词模式 -> " + on);
     }
 
@@ -701,26 +721,26 @@ public class MiaoService extends AccessibilityService {
                 Context themed = new ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault_Light_Dialog);
                 final EditText et = new EditText(themed);
                 et.setText(Prefs.triggerWord());
-                et.setHint("默认：?翻");
+                et.setHint(getString(R.string.trigger_hint_default));
                 int pad = dp(16);
                 et.setPadding(pad, pad, pad, pad);
                 AlertDialog.Builder b = new AlertDialog.Builder(themed);
-                b.setTitle("设置触发词");
-                b.setMessage("输入「触发词+内容」即翻译；触发词首字符写两遍可输出字面");
+                b.setTitle(getString(R.string.trigger_title));
+                b.setMessage(getString(R.string.trigger_msg));
                 b.setView(et);
-                b.setPositiveButton("保存", (d, w) -> {
+                b.setPositiveButton(getString(R.string.save), (d, w) -> {
                     String v = et.getText().toString().trim();
                     if (v.isEmpty()) v = "?翻";
                     Prefs.set("triggerWord", v);
-                    toast("触发词已设为：" + v);
+                    toast(getString(R.string.ms_trigger_set_fmt, v));
                     d.dismiss();
                 });
-                b.setNegativeButton("取消", (d, w) -> d.dismiss());
+                b.setNegativeButton(getString(R.string.cancel), (d, w) -> d.dismiss());
                 AlertDialog dlg = b.create();
                 dlg.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
                 try { dlg.show(); } catch (Throwable t) {
                     AppLog.e("Service", "弹出触发词设置对话框失败", t);
-                    toast("无法弹出对话框，请检查悬浮窗权限");
+                    toast(getString(R.string.ms_dialog_fail));
                 }
             } catch (Throwable t) {
                 AppLog.e("Service", "触发词设置异常", t);
@@ -731,7 +751,7 @@ public class MiaoService extends AccessibilityService {
     /** 撤销最近一次触发词翻译：恢复触发前全文 */
     public void undoTrigger() {
         if (triggerUndoText == null || triggerUndoText.isEmpty()) {
-            toast("没有可撤销的触发词翻译");
+            toast(getString(R.string.ms_no_undo_trigger));
             return;
         }
         final String origin = triggerUndoText;
@@ -740,20 +760,20 @@ public class MiaoService extends AccessibilityService {
             setText(edit, origin);
             triggerUndoText = "";
             AppLog.i("Service", "已撤销触发词翻译，恢复原文：" + briefLog(origin));
-            toast("已恢复触发前原文");
+            toast(getString(R.string.ms_restored_trigger));
         } else {
             triggerUndoText = "";
             if (copyToClipboard(origin)) {
-                toast("未找到输入框，原文已复制到剪贴板");
+                toast(getString(R.string.ms_no_input_copied));
             } else {
-                toast("未找到输入框，复制失败，请手动复制");
+                toast(getString(R.string.ms_no_input_copy_fail));
             }
         }
     }
     /** 撤销上一次风格化：把缓存的原文写回当前输入框（只能撤销最近一次） */
     public void undoLast() {
         if (lastOriginal == null || lastOriginal.isEmpty()) {
-            toast("没有可撤销的风格化记录");
+            toast(getString(R.string.ms_no_undo_style));
             return;
         }
         final String origin = lastOriginal;
@@ -762,13 +782,13 @@ public class MiaoService extends AccessibilityService {
             setText(edit, origin);
             lastOriginal = "";
             AppLog.i("Service", "已撤销上次风格化，恢复原文：" + briefLog(origin));
-            toast("已恢复原文");
+            toast(getString(R.string.ms_restored));
         } else {
             lastOriginal = "";
             if (copyToClipboard(origin)) {
-                toast("未找到输入框，原文已复制到剪贴板");
+                toast(getString(R.string.ms_no_input_copied));
             } else {
-                toast("未找到输入框，复制失败，请手动复制");
+                toast(getString(R.string.ms_no_input_copy_fail));
             }
         }
     }
@@ -783,15 +803,9 @@ public class MiaoService extends AccessibilityService {
         main.post(() -> {
             Context themed = new ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault_Light_Dialog);
             AlertDialog.Builder b = new AlertDialog.Builder(themed);
-            b.setTitle("AI 裁判严格度");
-            final String[] levels = {"最宽松", "偏宽松", "平衡(默认)", "偏严格", "最严格"};
-            final String[] descs = {
-                "几乎不拦截，风格化扩写一律算忠实",
-                "允许较大幅度风格化，只拦明确跑偏",
-                "平衡：正常风格化放行，加戏/对话拦截",
-                "偏严格：不鼓励扩写，添加情绪可能判跑偏",
-                "最严格：只允许换自称+口癖，任何添加都可能跑偏"
-            };
+            b.setTitle(getString(R.string.judge_title));
+            final String[] levels = getResources().getStringArray(R.array.judge_levels);
+            final String[] descs = getResources().getStringArray(R.array.judge_descs);
             LinearLayout box = new LinearLayout(themed);
             box.setOrientation(LinearLayout.VERTICAL);
             int pad = dp(16);
@@ -800,7 +814,7 @@ public class MiaoService extends AccessibilityService {
             tvLevel.setTextSize(16);
             tvLevel.setTypeface(null, android.graphics.Typeface.BOLD);
             int cur = Prefs.judgeStrictness();
-            tvLevel.setText(levels[cur - 1] + "（" + cur + "/5）");
+            tvLevel.setText(getString(R.string.judge_level_fmt, levels[cur - 1], cur));
             box.addView(tvLevel);
             final TextView tvDesc = new TextView(themed);
             tvDesc.setTextSize(13);
@@ -813,7 +827,7 @@ public class MiaoService extends AccessibilityService {
             sb.setProgress(cur - 1);
             sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    tvLevel.setText(levels[progress] + "（" + (progress + 1) + "/5）");
+                    tvLevel.setText(getString(R.string.judge_level_fmt, levels[progress], (progress + 1)));
                     tvDesc.setText(descs[progress]);
                 }
                 @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -821,18 +835,18 @@ public class MiaoService extends AccessibilityService {
             });
             box.addView(sb);
             b.setView(box);
-            b.setPositiveButton("确定", (d, w) -> {
+            b.setPositiveButton(getString(R.string.confirm), (d, w) -> {
                 int level = sb.getProgress() + 1;
                 Prefs.set("judgeStrictness", level);
-                toast("裁判严格度：" + levels[sb.getProgress()]);
+                toast(getString(R.string.ms_strictness_fmt, levels[sb.getProgress()]));
                 d.dismiss();
             });
-            b.setNegativeButton("取消", (d, w) -> d.dismiss());
+            b.setNegativeButton(getString(R.string.cancel), (d, w) -> d.dismiss());
             AlertDialog dlg = b.create();
             dlg.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
             try { dlg.show(); } catch (Throwable t) {
                 AppLog.e("Service", "弹出裁判严格度对话框失败", t);
-                toast("无法弹出对话框，请检查悬浮窗权限");
+                toast(getString(R.string.ms_dialog_fail));
             }
         });
     }
@@ -843,24 +857,24 @@ public class MiaoService extends AccessibilityService {
                 AppLog.w("Service", "回复：检测到 busy 卡死，自动复位");
                 resetBusy();
             } else {
-                toast("正在处理中，请稍候…");
+                toast(getString(R.string.ms_processing2));
                 return;
             }
         }
         final String key = Prefs.apiKey().trim();
         if (key.isEmpty()) {
-            toast("生成回复需要调用 AI，请先在设置里填写 API Key");
+            toast(getString(R.string.ms_reply_need_key));
             return;
         }
 
         main.post(() -> {
             Context themed = new ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault_Light_Dialog);
             AlertDialog.Builder b = new AlertDialog.Builder(themed);
-            b.setTitle("生成回复");
+            b.setTitle(getString(R.string.reply_title));
 
             // 输入框
             final EditText input = new EditText(themed);
-            input.setHint("长按这里粘贴对方发来的话，或手动输入…");
+            input.setHint(getString(R.string.reply_hint));
             input.setInputType(android.text.InputType.TYPE_CLASS_TEXT
                     | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
                     | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
@@ -877,8 +891,8 @@ public class MiaoService extends AccessibilityService {
             box.addView(input);
             b.setView(box);
 
-            b.setPositiveButton("生成回复", null);  // 自定义点击，不自动关闭
-            b.setNegativeButton("取消", (d, w) -> d.dismiss());
+            b.setPositiveButton(getString(R.string.reply), null);  // 自定义点击，不自动关闭
+            b.setNegativeButton(getString(R.string.cancel), (d, w) -> d.dismiss());
 
             final AlertDialog dlg = b.create();
             dlg.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
@@ -886,7 +900,7 @@ public class MiaoService extends AccessibilityService {
                 dlg.show();
             } catch (Throwable t) {
                 AppLog.e("Service", "弹出生成回复对话框失败", t);
-                toast("无法弹出对话框，请检查悬浮窗权限");
+                toast(getString(R.string.ms_dialog_fail));
                 return;
             }
             // 弹起键盘
@@ -898,7 +912,7 @@ public class MiaoService extends AccessibilityService {
             dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 String otherText = input.getText().toString().trim();
                 if (otherText.isEmpty()) {
-                    input.setError("请先输入或粘贴对方的话");
+                    input.setError(getString(R.string.reply_empty));
                     return;
                 }
                 if (otherText.length() > 2000) otherText = otherText.substring(0, 2000);
@@ -915,7 +929,7 @@ public class MiaoService extends AccessibilityService {
 
 private void callReplyApi(final String otherText, String key) {
         markBusy();
-        toast("正在生成回复…");
+        toast(getString(R.string.ms_generating_reply));
         if (floatBall != null) floatBall.startProgress(Math.max(otherText.length(), 20));
         AppLog.i("Service", "AI 生成回复开始 风格=" + StyleManager.currentName()
                 + " 对方=" + briefLog(otherText));
@@ -924,7 +938,7 @@ private void callReplyApi(final String otherText, String key) {
                 resetBusy();
                 if (floatBall != null) { floatBall.completeProgress(); floatBall.flashSuccess(); }
                 final String out = ApiMiaoifier.sanitize(s);
-                HistoryManager.add(otherText, out, "回复·" + StyleManager.currentName());
+                HistoryManager.add(otherText, out, getString(R.string.miao_hist_reply_prefix, StyleManager.currentName()));
                 AppLog.i("Service", "AI 生成回复成功：" + briefLog(out));
                 main.post(() -> {
                     AccessibilityNodeInfo target = findInput();
@@ -933,9 +947,9 @@ private void callReplyApi(final String otherText, String key) {
                     } else {
                         AppLog.w("Service", "回复回调时输入框焦点丢失，复制到剪贴板");
                         if (copyToClipboard(out)) {
-                            toast("输入框焦点已变化，回复已复制到剪贴板");
+                            toast(getString(R.string.ms_focus_reply_copied));
                         } else {
-                            toast("输入框焦点已变化，复制失败，请手动复制");
+                            toast(getString(R.string.ms_focus_copy_fail));
                         }
                     }
                 });
@@ -944,7 +958,7 @@ private void callReplyApi(final String otherText, String key) {
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();
                 AppLog.w("Service", "AI 生成回复失败：" + m);
-                toastError("生成回复失败：" + m);
+                toastError(getString(R.string.ms_reply_fail_fmt, m));
             }
         });
     }
@@ -990,9 +1004,9 @@ private void callReplyApi(final String otherText, String key) {
             } else {
                 AppLog.w("Service", "回调时输入框焦点已丢失，复制到剪贴板");
                 if (copyToClipboard(out)) {
-                    toast("输入框焦点已变化，译文已复制到剪贴板");
+                    toast(getString(R.string.ms_focus_trans_copied));
                 } else {
-                    toast("输入框焦点已变化，复制失败，请手动复制");
+                    toast(getString(R.string.ms_focus_copy_fail));
                 }
             }
         });
@@ -1081,11 +1095,30 @@ private void callReplyApi(final String otherText, String key) {
         return Math.min(Math.max(base, 1 + boost), 6);
     }
 
+    /** 长文本自动降级：文本越长，候选数/裁判数越少（防止长文本超时、爆 token、候选乱码/未闭合）。
+     *  只减不增；尊重 1×1 一对一档；封底 N≥2（1 AI 候选 + 1 原文保底）、K≥1。 */
+    private static int[] degradeByLength(int N, int K, String text) {
+        if (text == null || text.trim().isEmpty()) return new int[]{N, K};
+        if (Prefs.candidateCount() == 1 && Prefs.judgeCount() == 1) return new int[]{1, 1};
+        int len = text.trim().length();
+        int n2 = N, k2 = K;
+        if (len >= 600)      { n2 = Math.min(n2, 2); k2 = Math.min(k2, 1); }
+        else if (len >= 200) { n2 = Math.min(n2, 4); k2 = Math.min(k2, 1); }
+        else if (len >= 60)  { n2 = Math.min(n2, 8); k2 = Math.min(k2, 2); }
+        n2 = Math.max(n2, 2);
+        k2 = Math.max(k2, 1);
+        if (n2 != N || k2 != K) {
+            AppLog.i("Service", "长文本降级 len=" + len + " N=" + N + "→" + n2 + " K=" + K + "→" + k2);
+        }
+        return new int[]{n2, k2};
+    }
+
     /** 彻底替换多选一：候选池 → L0 → K 裁判 → 输出；全不合格带理由重生成一轮，二次落保底；兜底本地 */
     private void runReworkSelect(final String reqText, final String key, final String styleKeyNow, final int strict,
                                  final String firstCandidate) {
-        final int N = effCandidateCount();
-        final int K = effJudgeCount();
+        final int[] dg = degradeByLength(effCandidateCount(), effJudgeCount(), reqText);
+        final int N = dg[0];
+        final int K = dg[1];
         final String persona = StyleManager.currentPersonaBase();
         final String[][] shots = StyleManager.fewShotExamples();
         final boolean[] second = {false};
@@ -1096,8 +1129,9 @@ private void callReplyApi(final String otherText, String key) {
     /** 纯翻译多选一：同上，但 P0-4-4 绝不本地兜底——保底候选是 API 零风格转述，允许；无保底则报错 */
     private void runTranslateSelect(final String reqText, final String key, final String styleKey,
                                     final String firstCandidate) {
-        final int N = effCandidateCount();
-        final int K = effJudgeCount();
+        final int[] dg = degradeByLength(effCandidateCount(), effJudgeCount(), reqText);
+        final int N = dg[0];
+        final int K = dg[1];
         final String promptNow = StyleManager.currentPrompt();
         final String[][] shotsNow = StyleManager.fewShotExamples();
         final boolean[] second = {false};
@@ -1140,7 +1174,7 @@ private void callReplyApi(final String otherText, String key) {
                             } else {
                                 resetBusy();
                                 if (floatBall != null) floatBall.cancelProgress();
-                                main.post(() -> toast("AI 输出跑偏，请重试"));
+                                main.post(() -> toast(getString(R.string.ms_ai_offtrack)));
                             }
                         }
                         return;
@@ -1180,7 +1214,7 @@ private void callReplyApi(final String otherText, String key) {
                                 } else {
                                     resetBusy();
                                     if (floatBall != null) floatBall.cancelProgress();
-                                    main.post(() -> toast("AI 输出跑偏，请重试"));
+                                    main.post(() -> toast(getString(R.string.ms_ai_offtrack)));
                                 }
                             }
                         } else {
@@ -1196,7 +1230,7 @@ private void callReplyApi(final String otherText, String key) {
                             } else {
                                 resetBusy();
                                 if (floatBall != null) floatBall.cancelProgress();
-                                main.post(() -> toast("AI 输出异常，请重试"));
+                                main.post(() -> toast(getString(R.string.ms_ai_error)));
                             }
                         }
                     });
@@ -1214,7 +1248,7 @@ private void callReplyApi(final String otherText, String key) {
                 } else {
                     resetBusy();
                     if (floatBall != null) floatBall.cancelProgress();
-                    main.post(() -> toast("AI 输出异常，请重试"));
+                    main.post(() -> toast(getString(R.string.ms_ai_error)));
                 }
             }
         });
@@ -1229,7 +1263,7 @@ private void callReplyApi(final String otherText, String key) {
                 AppLog.w("Service", "规则判定对话式回应，纯翻译不本地兜底。API=" + briefLog(s));
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();
-                main.post(() -> toast("AI 输出异常（对话式回应），请重试"));
+                main.post(() -> toast(getString(R.string.ms_ai_dialog_error)));
                 return;
             }
             // 关闭校验 → 直接输出；开启校验 → 4.6 多选一每次都走（快筛只用于 L0 过滤，不短路）
@@ -1251,7 +1285,7 @@ private void callReplyApi(final String otherText, String key) {
         if (floatBall != null) floatBall.cancelProgress();
         AppLog.w("Service", "AI 翻译失败：" + m);
         // P0-4-4 纯翻译绝不本地兜底：直接报错，不偷偷用本地词库顶替
-        toastError("风格化失败：" + m);
+        toastError(getString(R.string.ms_style_fail_fmt, m));
     }
 
     /** 结果投递：开启预览模式先弹确认条（点采用才真正写入），否则直接写入输入框 */
@@ -1272,7 +1306,7 @@ private void callReplyApi(final String otherText, String key) {
             @Override public void onCancel() {
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();
-                toast("已取消，输入框保持原文");
+                toast(getString(R.string.ms_cancelled));
             }
         });
     }
@@ -1323,11 +1357,11 @@ private void callReplyApi(final String otherText, String key) {
         // 长度倍数：再创作允许扩写，阈值比翻译宽松，严格度越高越紧
         double lenMult;
         switch (strictness) {
-            case 1:  lenMult = 6.0; break;   // 最宽松：几乎不限篇幅
-            case 2:  lenMult = 4.0; break;
-            case 4:  lenMult = 2.2; break;
-            case 5:  lenMult = 1.6; break;
-            default: lenMult = 3.0;
+            case 1:  lenMult = 8.0; break;   // 最宽松：几乎不限篇幅
+            case 2:  lenMult = 6.0; break;
+            case 4:  lenMult = 4.0; break;
+            case 5:  lenMult = 3.0; break;
+            default: lenMult = 5.0;
         }
         if (orig != null && orig.length() > 0 && trans.length() > orig.length() * lenMult + 10) return true;
         // 反问/求助用户：再创作也不允许把"要说出去的话"变成向用户提问或提供帮助
@@ -1339,8 +1373,8 @@ private void callReplyApi(final String otherText, String key) {
         boolean tq = trans.indexOf('？') >= 0 || trans.indexOf('?') >= 0;
         if (oq && !tq && startsWithPersonaSelf(trans)) return true;
         if (trans.matches(".*(主人|你).{0,5}(问|说).{0,8}(本喵|人家|吾|本小姐|本大爷|本系统|我).*")) return true;
-        // 高严格度：新增句子数过多视为可疑
-        if (strictness >= 4 && countSentences(trans) >= countSentences(orig) + 3) return true;
+        // 高严格度：新增句子数过多视为可疑（用户显式拉高扩写等级=授权加戏，不再以此剔除）
+        if (strictness >= 4 && Prefs.expandLevel() <= 2 && countSentences(trans) >= countSentences(orig) + 3) return true;
         return false;
     }
 
@@ -1607,9 +1641,9 @@ private void callReplyApi(final String otherText, String key) {
                 // ★5.0 P0-2-1/2-2：剪贴板兜底也做回读校验，不承诺未验证的"已复制"
                 AppLog.w("Service", "ACTION_SET_TEXT 被拒（节点不可写或已失效），改走剪贴板兜底");
                 if (copyToClipboard(text)) {
-                    toast("输入框写入被拒，已复制到剪贴板");
+                    toast(getString(R.string.ms_write_rejected_copied));
                 } else {
-                    toast("输入框写入失败，请手动复制");
+                    toast(getString(R.string.ms_write_fail));
                 }
             }
         } finally {
@@ -1632,7 +1666,7 @@ private void callReplyApi(final String otherText, String key) {
                 AppLog.w("Service", "剪贴板服务不可用");
                 return false;
             }
-            cm.setPrimaryClip(android.content.ClipData.newPlainText("风格化译文", text));
+            cm.setPrimaryClip(android.content.ClipData.newPlainText(getString(R.string.miao_clip_label), text));
             // 回读校验：Android 10+ 后台无法写入时 setPrimaryClip 可能静默失败
             android.content.ClipData clip = cm.getPrimaryClip();
             if (clip == null || clip.getItemCount() == 0) {
@@ -1652,11 +1686,11 @@ private void callReplyApi(final String otherText, String key) {
     }
 
     private void toast(String msg) {
-        // 鉴信息化模块一：所有提示统一走 UiFeedback 出口
+        // 信息化模块一：所有提示统一走 UiFeedback 出口
         main.post(() -> UiFeedback.toast(this, msg));
     }
 
-    /** 鉴信息化模块一：错误提示统一出口——Key 无效/网络错误走带操作建议的专用提示 */
+    /** 信息化模块一：错误提示统一出口——Key 无效/网络错误走带操作建议的专用提示 */
     private void toastError(String msg) {
         if (msg != null && msg.contains("API Key 无效")) {
             main.post(() -> UiFeedback.apiKeyInvalid(this));
@@ -1666,6 +1700,6 @@ private void callReplyApi(final String otherText, String key) {
             main.post(() -> UiFeedback.networkRetry(this));
             return;
         }
-        main.post(() -> UiFeedback.error(this, msg == null ? "未知错误" : msg));
+        main.post(() -> UiFeedback.error(this, msg == null ? getString(R.string.miao_err_unknown) : msg));
     }
 }

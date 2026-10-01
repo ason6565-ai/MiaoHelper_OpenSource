@@ -7,33 +7,31 @@ android {
         // minSdk 26：TYPE_APPLICATION_OVERLAY 需要 Android 8.0+，避免悬浮球在 7.x 崩溃
         minSdk 26
         targetSdk 34
-        versionCode 131
-        versionName "5.0.0"
+        versionCode 133
+        versionName "5.2.0"
         // 只打 arm64-v8a，避免 x86/x86_64/armeabi 重复打包膨胀体积（ML Kit OCR 已退役，仍保留 arm64 过滤）
         ndk { abiFilters 'arm64-v8a' }
     }
     // 签名密码不写死：统一从根目录 keystore.properties 读取（已被 .gitignore 忽略，防止密码入库）
-    // 开源版：keystore.properties 缺失时 release 构建出未签名包并告警，debug/测试不受影响
-    def ksProps = new Properties()
-    def ksFile = rootProject.file('keystore.properties')
-    if (ksFile.exists()) {
-        ksFile.withInputStream { ksProps.load(it) }
-    }
     signingConfigs {
+        def ksProps = new Properties()
+        def ksFile = rootProject.file('keystore.properties')
+        if (ksFile.exists()) {
+            ksFile.withInputStream { ksProps.load(it) }
+        }
         release {
-            if (ksProps['MIAO_STORE_PASS'] != null) {
-                storeFile file(ksProps['MIAO_STORE_FILE'])
-                storePassword ksProps['MIAO_STORE_PASS']
-                keyAlias ksProps['MIAO_KEY_ALIAS']
-                keyPassword ksProps['MIAO_KEY_PASS']
+            if (ksProps['MIAO_STORE_PASS'] == null) {
+                throw new GradleException("keystore.properties 缺失，无法签名 release；日常开发请用 debug 构建")
             }
+            storeFile file(ksProps['MIAO_STORE_FILE'])
+            storePassword ksProps['MIAO_STORE_PASS']
+            keyAlias ksProps['MIAO_KEY_ALIAS']
+            keyPassword ksProps['MIAO_KEY_PASS']
         }
     }
     buildTypes {
         release {
-            if (ksProps['MIAO_STORE_PASS'] != null) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -53,7 +51,7 @@ dependencies {
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.google.android.material:material:1.11.0'
 
-    // ===== 开源能力引入（许可证均宽松，可闭源商用）=====
+    // ===== v3.3 开源能力引入（许可证均宽松，可闭源商用）=====
     // TinyPinyin（Apache-2.0，<30KB，纯 Java，Android 原生兼容）：汉字转拼音，用于脏词谐音变体识别
     implementation 'io.github.biezhi:TinyPinyin:2.0.3.RELEASE'  // promeg TinyPinyin 的 mavenCentral 正规复刻，包名不变
     // OkHttp（Apache-2.0）：主翻译链路 SSE 逐字流式，替代该链路上的 HttpURLConnection
@@ -61,7 +59,15 @@ dependencies {
     // diff-match-patch（Apache-2.0，Google，纯 Java）：原文/译文差异与改动率，支撑预览-确认/撤销
     implementation 'org.bitbucket.cowwoc:diff-match-patch:1.2'
 
-    // ===== 单元测试基线 =====
+
+    // ML Kit OCR 依赖已按老板/鉴决议注释（屏幕翻译功能退役，保留代码作未来技术验证，不参与构建）
+    // implementation 'com.google.mlkit:text-recognition:16.0.1'
+    // implementation 'com.google.mlkit:text-recognition-chinese:16.0.1'
+    // implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+    // implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
+    // implementation 'com.google.mlkit:text-recognition-devanagari:16.0.1'
+
+    // ===== 5.0 单元测试基线（P0-1-1）=====
     // JUnit 4（EPL-1.0，标准单元测试框架）
     testImplementation 'junit:junit:4.13.2'
     // Mockito（MIT，mock 依赖，隔离 Android 框架）

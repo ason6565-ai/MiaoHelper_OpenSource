@@ -16,7 +16,7 @@
             android:layout_height="wrap_content">
             <TextView
                 android:id="@+id/tvStyle"
-                android:text="猫娘"
+                android:text="@string/persona_catgirl"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimary"
@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/tvTime"
-                android:text="刚刚"
+                android:text="@string/ui_item_just_now"
                 android:textSize="11sp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginStart="8dp"
@@ -45,7 +45,7 @@
         </LinearLayout>
         <TextView
             android:id="@+id/tvOriginal"
-            android:text="原文"
+            android:text="@string/ui_item_source"
             android:textSize="13sp"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginTop="6dp"
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/tvTranslated"
-            android:text="译文"
+            android:text="@string/ui_item_target"
             android:textSize="14sp"
             android:textColor="?attr/colorOnSurface"
             android:layout_marginTop="4dp"
@@ -68,14 +68,14 @@
             android:layout_height="wrap_content">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMappings"
-                android:text="查看替换"
+                android:text="@string/ui_item_view_replace"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCopy"
-                android:text="复制"
+                android:text="@string/ui_item_copy"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_marginStart="4dp"
                 android:layout_width="0dp"
@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
-                android:text="删除"
+                android:text="@string/ui_item_delete"
                 style="@style/Widget.Material3.Button.TextButton"
                 android:layout_marginStart="4dp"
                 android:layout_width="wrap_content"

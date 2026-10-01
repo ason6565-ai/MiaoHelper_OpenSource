@@ -42,16 +42,16 @@ public final class UiFeedback {
 
     /** API Key 无效：提示 + 可操作建议 */
     public static void apiKeyInvalid(Context ctx) {
-        toastLong(ctx, "API Key 无效，请在设置里检查或重新填写");
+        toastLong(ctx, ctx.getString(R.string.fb_key_invalid));
     }
 
     /** 网络错误：自动重试提示 */
     public static void networkRetry(Context ctx) {
-        toast(ctx, "网络超时，已自动重试，请稍后再试");
+        toast(ctx, ctx.getString(R.string.fb_network_retry));
     }
 
     /** 防重翻短路：原文没变化时提示，避免用户以为没反应 */
     public static void dedupSkip(Context ctx) {
-        toast(ctx, "原文没变化，已跳过重复翻译");
+        toast(ctx, ctx.getString(R.string.fb_dedup_skip));
     }
 }

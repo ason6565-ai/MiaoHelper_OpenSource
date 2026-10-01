@@ -25,7 +25,7 @@
             android:id="@+id/tvTplApplied"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="已应用"
+            android:text="@string/ui_template_applied"
             android:textColor="#FFF"
             android:textSize="11sp"
             android:background="#8BC34A"

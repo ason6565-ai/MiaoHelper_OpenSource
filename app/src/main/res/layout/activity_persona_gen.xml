@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="AI 生成人设"
+        android:title="@string/title_persona"
         app:navigationIcon="?attr/homeAsUpIndicator"
         xmlns:app="http://schemas.android.com/apk/res-auto" />
 
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="描述你想要的人设风格，AI 会自动生成完整的人设 prompt。"
+                android:text="@string/ui_persona_desc"
                 android:textSize="13sp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_width="match_parent"
@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etDesc"
-                    android:hint="例如：一个喜欢打游戏的宅女猫娘，说话带点慵懒"
+                    android:hint="@string/ui_persona_hint"
                     android:minLines="3"
                     android:gravity="top"
                     android:layout_width="match_parent"
@@ -45,7 +45,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGenerate"
-                android:text="生成人设"
+                android:text="@string/ui_persona_gen"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
@@ -57,7 +57,7 @@
                 android:layout_height="1dp" />
 
             <TextView
-                android:text="生成结果"
+                android:text="@string/ui_persona_result"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimary"
@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etName"
-                    android:hint="人设名称（生成后自动填入，可修改）"
+                    android:hint="@string/ui_persona_name_hint"
                     android:maxLines="1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPrompt"
-                    android:hint="生成的人设 prompt 会显示在这里，可以手动修改"
+                    android:hint="@string/ui_persona_result_hint"
                     android:minLines="6"
                     android:gravity="top"
                     android:layout_width="match_parent"
@@ -94,21 +94,21 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPreview"
-                android:text="预览效果"
+                android:text="@string/ui_persona_preview"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
-                android:text="保存人设"
+                android:text="@string/ui_persona_save"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/tvSavedList"
-                android:text="已保存的自定义人设：无"
+                android:text="@string/ui_persona_saved_none"
                 android:textSize="12sp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginTop="12dp"

@@ -17,13 +17,13 @@ import java.util.Map;
  *  3. 中文词自动生成的拼音索引要求长度 &gt;=5，避开 made 这类正常英文词；短脏词走显式字母表；
  *  4. 词表宁少勿误，不收存在正常义项的词（如“放屁/去死/几把”）。
  */
-/** 安全说明：完整脏词表因规避滥用风险不随源码公开；下方为等价机制的示例词表，实际词表可通过私有实现扩展。 */
 public final class BadWordFilter {
 
     private static final class Node {
         Map<Character, Node> next;
         boolean end;
-        boolean ascii;
+        /** true=严格边界（左右不能邻字母，用于缩写/拼音）；false=宽松边界（只需英文词边界，用于完整英文脏词） */
+        boolean strictBoundary;
     }
 
     /** 归一化后的紧凑文本及其到原文的位置映射 */
@@ -33,11 +33,21 @@ public final class BadWordFilter {
         Compact(char[] c, int[] pos) { this.c = c; this.pos = pos; }
     }
 
-    /** 明确的中文多字脏词 / 辱骂词 */
+    /** 明确的中文多字脏词 / 辱骂词（开源版：完整中文词表不随源码公开，此处为中性示例） */
     private static final String[] CN = {"垃圾", "废物", "蠢货", "白痴", "滚开", "闭嘴"};
 
-    /** 显式字母 / 拼音脏词（缩写、短词，确定无歧义；仍受字母词边界保护） */
-    private static final String[] ASCII = {"idiot", "stupid", "jerk", "dumb"};
+    /** 显式英文完整脏词（多字词，确定无歧义）。英文脏词为通用词汇、公开无泄露风险，
+     *  为保证英文用户过滤功能完整，此处保留完整词表；匹配时只要求英文词边界（不要求独立成词），
+     *  避免 "holy shit" 里的 shit 因前邻字母被漏掉。 */
+    private static final String[] ASCII_WORD = {
+            "fuck", "fucker", "fucking", "fucked", "motherfucker", "motherfucking",
+            "shit", "shitting", "bullshit", "bitch", "bitching", "bastard", "asshole",
+            "dick", "pussy", "cock", "cunt", "whore", "slut", "goddamn", "douchebag",
+            "jackass", "piss", "pissed", "crap", "retard", "damn"
+    };
+
+    /** 英文缩写 / 拼音类脏词（短词，必须独立成词才命中，避免 usb 含 sb、class 含 ass） */
+    private static final String[] ASCII_ABBR = {"wtf", "stfu", "omfg", "fml", "ass", "fag", "nigger"};
 
     private static volatile Node root;
     private static volatile boolean inited = false;
@@ -51,17 +61,18 @@ public final class BadWordFilter {
         if (inited) return;
         Node r = new Node();
         for (String w : CN) {
-            insert(r, compact(w), false);
+            insert(r, compact(w), true);
             String py = PinyinUtil.wordPinyin(w);
             if (py.length() >= 5) insert(r, py, true); // 长拼音几乎只可能是脏话拼音
         }
-        for (String w : ASCII) insert(r, compact(w), true);
+        for (String w : ASCII_WORD) insert(r, compact(w), false);
+        for (String w : ASCII_ABBR) insert(r, compact(w), true);
         root = r;
         inited = true;
         AppLog.i("BadWord", "DFA 脏词表构建完成");
     }
 
-    private static void insert(Node r, String word, boolean ascii) {
+    private static void insert(Node r, String word, boolean strictBoundary) {
         if (word == null || word.isEmpty()) return;
         Node cur = r;
         for (int i = 0; i < word.length(); i++) {
@@ -72,7 +83,7 @@ public final class BadWordFilter {
             cur = nx;
         }
         cur.end = true;
-        cur.ascii = ascii;
+        cur.strictBoundary = strictBoundary;
     }
 
     /** 是否含脏词 */
@@ -108,7 +119,7 @@ public final class BadWordFilter {
     // 内部：归一化 + DFA 扫描
     // ------------------------------------------------------------
 
-    /** 在紧凑串上扫描命中区间 [start,end)，已做最长匹配、字母词边界、跳过重叠 */
+    /** 在紧凑串上扫描命中区间 [start,end)，已做最长匹配、跳过重叠；边界检查仅用于严格类（缩写/拼音） */
     private static List<int[]> scan(char[] comp) {
         List<int[]> hits = new ArrayList<>();
         Node r = root;
@@ -117,18 +128,18 @@ public final class BadWordFilter {
         while (i < n) {
             Node cur = r;
             int j = i, lastEnd = -1;
-            boolean lastAscii = false;
+            boolean lastStrict = false;
             while (j < n) {
                 if (cur.next == null) break;
                 Node nx = cur.next.get(comp[j]);
                 if (nx == null) break;
                 cur = nx;
                 j++;
-                if (cur.end) { lastEnd = j; lastAscii = cur.ascii; }
+                if (cur.end) { lastEnd = j; lastStrict = cur.strictBoundary; }
             }
             if (lastEnd > 0) {
                 boolean boundaryOk = true;
-                if (lastAscii) {
+                if (lastStrict) {
                     char left = i > 0 ? comp[i - 1] : 0;
                     char right = lastEnd < n ? comp[lastEnd] : 0;
                     if (isLetter(left) || isLetter(right)) boundaryOk = false;

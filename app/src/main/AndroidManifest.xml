@@ -10,6 +10,7 @@
         android:usesCleartextTraffic="false"
         android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.MiaoHelper">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -18,32 +19,35 @@
             </intent-filter>
         </activity>
         <activity android:name=".RuleEditorActivity"
-            android:label="本地词库管理"
+            android:label="@string/title_rule_editor"
             android:exported="false" />
         <activity android:name=".AppStyleActivity"
-            android:label="按 App 自动切换风格"
+            android:label="@string/title_app_style"
             android:exported="false" />
         <activity android:name=".HistoryActivity"
-            android:label="翻译历史"
+            android:label="@string/title_history"
             android:exported="false" />
         <activity android:name=".PersonaGenActivity"
-            android:label="AI 生成人设"
+            android:label="@string/title_persona"
             android:exported="false" />
         <activity android:name=".StyleSettingsActivity"
-            android:label="风格设置"
+            android:label="@string/title_style_settings"
             android:exported="false" />
         <activity android:name=".ApiSettingsActivity"
-            android:label="API 设置"
+            android:label="@string/title_api_settings"
             android:exported="false" />
         <activity android:name=".LogActivity"
-            android:label="错误日志"
+            android:label="@string/title_log"
             android:exported="false" />
         <activity android:name=".TextTranslatorActivity"
-            android:label="文本翻译"
+            android:label="@string/title_text_translator"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".NovelGenActivity"
-            android:label="小说生成"
+            android:label="@string/title_novel"
+            android:exported="false" />
+        <activity android:name=".PrivacyPolicyActivity"
+            android:label="@string/menu_privacy"
             android:exported="false" />
         <service
             android:name=".MiaoService"

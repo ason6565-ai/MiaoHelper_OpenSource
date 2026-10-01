@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="翻译历史"
+        android:title="@string/title_history"
         app:navigationIcon="?attr/homeAsUpIndicator"
         xmlns:app="http://schemas.android.com/apk/res-auto" />
 
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
-            android:hint="搜索原文 / 译文 / 人设"
+            android:hint="@string/ui_history_search"
             android:maxLines="1"
             android:inputType="text"
             android:layout_width="match_parent"
@@ -36,7 +36,7 @@
         android:layout_height="wrap_content">
         <TextView
             android:id="@+id/tvHint"
-            android:text="最近 100 条翻译记录"
+            android:text="@string/ui_history_recent"
             android:textSize="13sp"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_width="0dp"
@@ -45,19 +45,19 @@
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExport"
-            android:text="导出"
+            android:text="@string/ui_history_export"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFavFilter"
-            android:text="只看收藏"
+            android:text="@string/ui_history_fav_only"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnClear"
-            android:text="清空"
+            android:text="@string/ui_history_clear"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -75,7 +75,7 @@
             android:layout_height="match_parent" />
         <TextView
             android:id="@+id/tvEmpty"
-            android:text="还没有翻译记录\n去别的 App 里输入文字试试吧"
+            android:text="@string/ui_history_empty"
             android:textSize="14sp"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:gravity="center"

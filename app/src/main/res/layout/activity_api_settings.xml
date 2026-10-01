@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="API 设置"
+        android:title="@string/title_api_settings"
         android:background="#FB8C00"
         app:titleTextColor="#3E2723"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -25,7 +25,7 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="API 厂商"
+                android:text="@string/ui_api_vendor"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_width="wrap_content"
@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="接口地址（base_url）"
+                android:text="@string/ui_api_baseurl"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -59,7 +59,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
-                android:text="模型名称"
+                android:text="@string/ui_api_model"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -81,7 +81,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
-                android:text="长文本/文件翻译模型（可选，留空用默认）"
+                android:text="@string/ui_api_model_long"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -95,7 +95,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etModelLong"
                     android:inputType="text"
-                    android:hint="留空则与上方模型一致"
+                    android:hint="@string/ui_api_model_hint"
                     android:textColor="#3E2723"
                     android:textColorHint="#D9A7B8"
                     android:layout_width="match_parent"
@@ -104,14 +104,14 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnFetchModels"
-                android:text="刷新可用模型"
+                android:text="@string/ui_api_refresh"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/swAiVerify"
-                android:text="AI 二次校验"
+                android:text="@string/ui_api_verify"
                 android:textSize="13sp"
                 android:textColor="#8D6E63"
                 android:checked="true"
@@ -121,7 +121,7 @@
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/swGuardPreview"
-                android:text="审核拦截预览（开发包强制开启审核）"
+                android:text="@string/ui_api_audit"
                 android:textSize="13sp"
                 android:textColor="#8D6E63"
                 android:checked="false"
@@ -160,7 +160,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnEditKey"
-                    android:text="编辑"
+                    android:text="@string/ui_api_edit"
                     android:layout_marginStart="8dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
@@ -173,14 +173,14 @@
                 android:layout_height="wrap_content">
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnTest"
-                    android:text="测试连接"
+                    android:text="@string/ui_api_test"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnClearCache"
-                    android:text="清除缓存"
+                    android:text="@string/ui_api_clear_cache"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_marginStart="8dp"
                     android:layout_width="0dp"
@@ -190,7 +190,7 @@
 
             <TextView
                 android:id="@+id/tvCacheStats"
-                android:text="缓存命中：0 次  |  总请求：0 次"
+                android:text="@string/ui_api_cache_stat"
                 android:textSize="12sp"
                 android:textColor="#A1887F"
                 android:gravity="center"
@@ -199,7 +199,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="高级设置"
+                android:text="@string/ui_api_advanced"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#E65100"
@@ -208,7 +208,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="缓存有效期"
+                android:text="@string/ui_api_cache_ttl"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="12dp"
@@ -221,7 +221,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="日志级别"
+                android:text="@string/ui_api_log_level"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="12dp"
@@ -234,7 +234,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="备用引擎（API 故障时自动切换）"
+                android:text="@string/ui_api_fallback"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="12dp"
@@ -247,7 +247,7 @@
                 android:layout_height="wrap_content">
                 <TextView
                     android:id="@+id/tvBackupCount"
-                    android:text="当前 0 个备用引擎"
+                    android:text="@string/ui_api_fallback_count"
                     android:textSize="13sp"
                     android:textColor="#A1887F"
                     android:gravity="center_vertical"
@@ -256,14 +256,14 @@
                     android:layout_height="wrap_content" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnManageEngines"
-                    android:text="管理"
+                    android:text="@string/ui_api_manage"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
             <TextView
-                android:text="应用更新"
+                android:text="@string/ui_api_update"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#E65100"
@@ -278,7 +278,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etUpdateUrl"
                     android:inputType="textUri"
-                    android:hint="版本 JSON 地址（留空则不检查更新）"
+                    android:hint="@string/ui_api_update_url"
                     android:textColor="#3E2723"
                     android:textColorHint="#D9A7B8"
                     android:layout_width="match_parent"
@@ -286,7 +286,7 @@
             </com.google.android.material.textfield.TextInputLayout>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCheckUpdate"
-                android:text="检查更新"
+                android:text="@string/ui_api_check_update"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"

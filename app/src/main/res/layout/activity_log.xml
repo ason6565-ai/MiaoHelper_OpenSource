@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="错误日志"
+        android:title="@string/title_log"
         android:background="#FB8C00"
         app:titleTextColor="#3E2723"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -22,14 +22,14 @@
         android:layout_height="wrap_content">
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRefresh"
-            android:text="刷新"
+            android:text="@string/ui_log_refresh"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCopy"
-            android:text="复制"
+            android:text="@string/ui_log_copy"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginStart="8dp"
             android:layout_width="0dp"
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShare"
-            android:text="分享"
+            android:text="@string/ui_log_share"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginStart="8dp"
             android:layout_width="0dp"
@@ -52,14 +52,14 @@
         android:layout_height="wrap_content">
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnClear"
-            android:text="清空"
+            android:text="@string/ui_log_clear"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
-            android:text="保存为 TXT"
+            android:text="@string/ui_log_save"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginStart="8dp"
             android:layout_width="0dp"
@@ -67,7 +67,7 @@
             android:layout_height="wrap_content" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToggle"
-            android:text="查看全部"
+            android:text="@string/ui_log_view_all"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_marginStart="8dp"
             android:layout_width="0dp"

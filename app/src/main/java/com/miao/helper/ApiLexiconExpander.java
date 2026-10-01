@@ -195,7 +195,7 @@ public class ApiLexiconExpander {
     public static void expandFor(final String styleId, final ExpandCallback cb) {
         String key = Prefs.apiKey();
         if (key == null || key.isEmpty()) {
-            cb.onError("未配置 API Key，请先在 API 设置中填写");
+            cb.onError(Prefs.getContext().getString(R.string.err_no_api_key_fill));
             return;
         }
         final String sid = (styleId == null || styleId.isEmpty()) ? StyleManager.currentId() : styleId;
@@ -206,7 +206,7 @@ public class ApiLexiconExpander {
         }
         final String stylePrompt = (pIdx >= 0) ? StyleManager.personaPrompt(pIdx) : StyleManager.currentPrompt();
         if (stylePrompt == null || stylePrompt.isEmpty()) {
-            cb.onError("该人设无 prompt，无法扩展");
+            cb.onError(Prefs.getContext().getString(R.string.err_no_persona_prompt));
             return;
         }
 

@@ -4,16 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/bg_wallpaper" />
-
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E6FFF8F2" />
+        android:background="#FFF8F2" />
 
     <LinearLayout
         android:orientation="vertical"
@@ -39,7 +33,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content">
                 <TextView
-                    android:text="拟言助手"
+                    android:text="@string/app_name"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="#3E2723"
@@ -47,7 +41,7 @@
                     android:layout_height="wrap_content" />
                 <TextView
                     android:id="@+id/tvStatus"
-                    android:text="服务状态"
+                    android:text="@string/status_default"
                     android:textSize="12sp"
                     android:textColor="#8D6E63"
                     android:layout_marginTop="2dp"
@@ -58,13 +52,30 @@
                 android:id="@+id/btnMenu"
                 android:src="@drawable/ic_menu"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="菜单"
+                android:contentDescription="@string/ui_menu"
                 android:padding="10dp"
                 android:layout_width="44dp"
                 android:layout_height="44dp" />
         </LinearLayout>
 
         <!-- 左右滑动分页：第1页开关 / 第2页跳转 -->
+        <!-- 无障碍未开启时的引导按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnA11yGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/ui_a11y_go_enable"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:backgroundTint="#E65100"
+            app:cornerRadius="20dp"
+            app:icon="@drawable/ic_a11y"
+            app:iconTint="#FFFFFF"
+            app:iconPadding="6dp" />
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"

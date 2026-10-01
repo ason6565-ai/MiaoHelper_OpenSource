@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="风格设置"
+        android:title="@string/title_style_settings"
         android:background="#FB8C00"
         app:titleTextColor="#3E2723"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -34,13 +34,13 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1">
                     <TextView
-                        android:text="本地前置打底（AI 扩展词）"
+                        android:text="@string/ui_style_localpre"
                         android:textSize="14sp"
                         android:textColor="#8D6E63"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
-                        android:text="开启后：AI 翻译/彻底替换前，仅用当前人设的 AI 扩展词库做一次打底作为风格参考（不跑任何内置预设词），原文仍作语义基准。"
+                        android:text="@string/ui_style_localpre_desc"
                         android:textSize="12sp"
                         android:textColor="#B08968"
                         android:layout_marginTop="2dp"
@@ -56,7 +56,7 @@
             </LinearLayout>
 
             <TextView
-                android:text="人设风格"
+                android:text="@string/ui_style_persona"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -69,13 +69,13 @@
                 android:layout_height="wrap_content" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPreviewStyle"
-                android:text="预览效果"
+                android:text="@string/ui_style_preview"
                 android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:text="自定义 Prompt（人设选「自定义」时生效）"
+                android:text="@string/ui_style_custom_prompt"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -88,7 +88,7 @@
                 android:layout_height="wrap_content">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCustom"
-                    android:hint="例如：你是傲娇，说话带点小脾气…"
+                    android:hint="@string/ui_style_custom_hint"
                     android:minLines="3"
                     android:gravity="top"
                     android:textColor="#3E2723"
@@ -98,7 +98,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
-                android:text="自定义人设管理"
+                android:text="@string/ui_style_manage"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"
@@ -113,7 +113,7 @@
 
             <TextView
                 android:id="@+id/tvTrashTitle"
-                android:text="已删除（24 小时内可恢复）"
+                android:text="@string/ui_style_deleted"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="16dp"

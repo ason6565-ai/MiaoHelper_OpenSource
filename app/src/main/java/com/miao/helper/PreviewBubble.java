@@ -29,6 +29,7 @@ public class PreviewBubble {
     private static final long AUTO_HIDE_MS = 30000;
 
     private final WindowManager wm;
+    private final Context appCtx;
     private final View root;
     private final TextView title;
     private final TextView body;
@@ -39,6 +40,7 @@ public class PreviewBubble {
     private final Runnable autoHide = this::hide;
 
     public PreviewBubble(Context ctx) {
+        appCtx = ctx;
         wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
         float d = ctx.getResources().getDisplayMetrics().density;
         int pad = dp(d, 12);
@@ -66,8 +68,8 @@ public class PreviewBubble {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.END);
 
-        Button cancel = mkButton(ctx, false, "取消", d);
-        Button accept = mkButton(ctx, true, "采用", d);
+        Button cancel = mkButton(ctx, false, ctx.getString(R.string.cancel), d);
+        Button accept = mkButton(ctx, true, ctx.getString(R.string.pb_apply), d);
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         clp.rightMargin = dp(d, 10);
@@ -132,7 +134,7 @@ public class PreviewBubble {
     public void show(String translated, int changePercent, Listener l) {
         main.post(() -> {
             this.listener = l;
-            title.setText(changePercent >= 0 ? "译文预览 · 改动 " + changePercent + "%" : "译文预览");
+            title.setText(changePercent >= 0 ? appCtx.getString(R.string.pb_title_chg_fmt, changePercent) : appCtx.getString(R.string.pb_title));
             body.setText(translated == null ? "" : translated);
             try {
                 if (showing) wm.updateViewLayout(root, lp);

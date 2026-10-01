@@ -108,7 +108,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
             JSONObject o = new JSONObject(bos.toString("UTF-8"));
             Template t = new Template();
             t.id = o.optString("id", file);
-            t.name = o.optString("name", "未命名");
+            t.name = o.optString("name", getString(R.string.tm_name_default));
             t.description = o.optString("description", "");
             t.corePrompt = o.optString("core_prompt", "");
             JSONArray ex = o.optJSONArray("examples");
@@ -135,9 +135,9 @@ public class TemplateMarketActivity extends AppCompatActivity {
             // v4.7 文体指纹：把结构化字段拼成「人设画像」段（stylometric fingerprint），组装进翻译 prompt
             StringBuilder fp = new StringBuilder();
             String selfRef = o.optString("self_reference", "我");
-            if (!selfRef.isEmpty()) fp.append("自称：").append(selfRef);
+            if (!selfRef.isEmpty()) fp.append(getString(R.string.tm_field_selfref, selfRef));
             String addr = o.optString("address_other", "");
-            if (!addr.isEmpty()) { if (fp.length() > 0) fp.append("\n"); fp.append("称呼对方：").append(addr); }
+            if (!addr.isEmpty()) { if (fp.length() > 0) fp.append("\n"); fp.append(getString(R.string.tm_field_addr, addr)); }
             JSONObject sh = o.optJSONObject("speech_habit");
             StringBuilder tails = new StringBuilder();
             if (sh != null) {
@@ -146,7 +146,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
                 JSONArray fw = sh.optJSONArray("filler_words");
                 if (fw != null) for (int i = 0; i < fw.length(); i++) tails.append(fw.optString(i, ""));
             }
-            if (tails.length() > 0) { if (fp.length() > 0) fp.append("\n"); fp.append("句尾口癖/语气词：").append(tails); }
+            if (tails.length() > 0) { if (fp.length() > 0) fp.append("\n"); fp.append(getString(R.string.tm_field_tail, tails)); }
             JSONObject vc = o.optJSONObject("vocabulary");
             if (vc != null) {
                 JSONArray pre = vc.optJSONArray("preferred");
@@ -154,14 +154,14 @@ public class TemplateMarketActivity extends AppCompatActivity {
                     StringBuilder ps = new StringBuilder();
                     for (int i = 0; i < pre.length(); i++) { if (i > 0) ps.append("、"); ps.append(pre.optString(i, "")); }
                     if (fp.length() > 0) fp.append("\n");
-                    fp.append("常用词：").append(ps);
+                    fp.append(getString(R.string.tm_field_words, ps));
                 }
                 JSONArray av = vc.optJSONArray("avoid");
                 if (av != null && av.length() > 0) {
                     StringBuilder avs = new StringBuilder();
                     for (int i = 0; i < av.length(); i++) { if (i > 0) avs.append("、"); avs.append(av.optString(i, "")); }
                     if (fp.length() > 0) fp.append("\n");
-                    fp.append("禁用词/回避：").append(avs);
+                    fp.append(getString(R.string.tm_field_avoid, avs));
                 }
             }
             t.fingerprint = fp.toString();
@@ -169,8 +169,8 @@ public class TemplateMarketActivity extends AppCompatActivity {
             // 应用模板后本地引擎也能用这套人设，不再原样返回（本地引擎离线可用）
             try {
                 JSONObject lr = new JSONObject();
-                lr.put("me", selfRef == null || selfRef.isEmpty() ? "我" : selfRef);
-                lr.put("you", addr == null || addr.isEmpty() ? "你" : addr);
+                lr.put("me", selfRef == null || selfRef.isEmpty() ? getString(R.string.tm_default_me) : selfRef);
+                lr.put("you", addr == null || addr.isEmpty() ? getString(R.string.tm_default_you) : addr);
                 StringBuilder tailSpec = new StringBuilder();
                 if (sh != null) {
                     JSONArray se = sh.optJSONArray("sentence_end");
@@ -235,7 +235,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
             tvName.setText(t.name);
             tvDesc.setText(t.description);
             tvScene.setText(t.scenarios != null && t.scenarios.length > 0
-                    ? "适合：" + t.scenarios[0] : "");
+                    ? getString(R.string.tm_suitable_fmt, t.scenarios[0]) : "");
             boolean applied = alreadyApplied(t.name);
             tvApplied.setVisibility(applied ? View.VISIBLE : View.GONE);
             return convertView;
@@ -265,12 +265,12 @@ public class TemplateMarketActivity extends AppCompatActivity {
         body.addView(tvDesc);
 
         if (t.examples != null && t.examples.length > 0) {
-            TextView tvExTitle = sectionTitle("示例");
+            TextView tvExTitle = sectionTitle(getString(R.string.tm_example));
             body.addView(tvExTitle);
             for (String[] ex : t.examples) {
                 if (ex == null || ex.length < 2) continue;
                 TextView tvEx = new TextView(this);
-                tvEx.setText("原文：" + ex[0] + "\n译文：" + ex[1]);
+                tvEx.setText(getString(R.string.tm_example_fmt, ex[0], ex[1]));
                 tvEx.setTextColor(0xFF6D4C41);
                 tvEx.setTextSize(13);
                 tvEx.setPadding(0, 2, 0, 4);
@@ -278,7 +278,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
             }
         }
         if (t.scenarios != null && t.scenarios.length > 0) {
-            body.addView(sectionTitle("适用场景"));
+            body.addView(sectionTitle(getString(R.string.tm_scenes)));
             TextView tvSc = new TextView(this);
             tvSc.setText(TextUtils.join("\n", t.scenarios));
             tvSc.setTextColor(0xFF6D4C41);
@@ -287,9 +287,9 @@ public class TemplateMarketActivity extends AppCompatActivity {
         }
 
         // 试译预览区
-        body.addView(sectionTitle("试译预览"));
+        body.addView(sectionTitle(getString(R.string.tm_preview)));
         EditText etTest = new EditText(this);
-        etTest.setHint("输入一句话，看看这个模板的效果");
+        etTest.setHint(getString(R.string.tm_test_hint));
         etTest.setSingleLine(false);
         etTest.setMinLines(2);
         etTest.setTextSize(14);
@@ -299,11 +299,11 @@ public class TemplateMarketActivity extends AppCompatActivity {
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER_VERTICAL);
         MaterialButton btnPreview = new MaterialButton(this);
-        btnPreview.setText("试译");
+        btnPreview.setText(getString(R.string.tm_try));
         btnPreview.setTextSize(12);
         btnRow.addView(btnPreview);
         MaterialButton btnApply = new MaterialButton(this);
-        btnApply.setText(alreadyApplied(t.name) ? "已应用（可重复生成副本）" : "应用模板");
+        btnApply.setText(alreadyApplied(t.name) ? getString(R.string.tm_applied) : getString(R.string.tm_apply));
         btnApply.setTextSize(12);
         btnApply.setTextColor(0xFFFFFFFF);
         btnApply.setBackgroundColor(0xFFE65100);
@@ -326,37 +326,37 @@ public class TemplateMarketActivity extends AppCompatActivity {
         new android.app.AlertDialog.Builder(this)
                 .setTitle(t.name)
                 .setView(sv)
-                .setNegativeButton("关闭", null)
+                .setNegativeButton(getString(R.string.api_close), null)
                 .show();
 
         // 试译：优先 API（用模板完整 prompt），无 Key 给本地兜底提示
         btnPreview.setOnClickListener(v -> {
             String text = etTest.getText().toString().trim();
             if (text.isEmpty()) {
-                Toast.makeText(this, "先输入一句话", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.tm_need_input), Toast.LENGTH_SHORT).show();
                 return;
             }
             String key = Prefs.apiKey();
             if (key == null || key.trim().isEmpty()) {
-                tvPreviewResult.setText("未配置 API Key：无法在线试译。\n请先在主界面配置 API Key 后重试。");
+                tvPreviewResult.setText(getString(R.string.tm_no_key));
                 return;
             }
             btnPreview.setEnabled(false);
-            btnPreview.setText("试译中…");
+            btnPreview.setText(getString(R.string.tm_trying));
             String prompt = StyleManager.buildTemplatePrompt(t.corePrompt, t.examples, t.fingerprint);
             ApiMiaoifier.miaoify(text, key, prompt, t.examples, false, new ApiMiaoifier.Callback() {
                 @Override public void onSuccess(String out) {
                     main.post(() -> {
                         btnPreview.setEnabled(true);
-                        btnPreview.setText("试译");
+                        btnPreview.setText(getString(R.string.tm_try));
                         tvPreviewResult.setText("【" + t.name + "】\n" + out);
                     });
                 }
                 @Override public void onError(String msg) {
                     main.post(() -> {
                         btnPreview.setEnabled(true);
-                        btnPreview.setText("试译");
-                        tvPreviewResult.setText("试译失败：" + msg);
+                        btnPreview.setText(getString(R.string.tm_try));
+                        tvPreviewResult.setText(getString(R.string.tm_fail_fmt, msg));
                     });
                 }
             });
@@ -372,7 +372,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
             int newIdx = builtIn + customIdx;
             int maxIdx = Math.max(StyleManager.personaCount() - 1, 0);
             Prefs.set("styleIndex", Math.min(Math.max(newIdx, 0), maxIdx));
-            Toast.makeText(this, "已应用「" + t.name + "」，可在风格设置中继续修改", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.tm_applied_fmt, t.name), Toast.LENGTH_LONG).show();
             adapter.notifyDataSetChanged();
         });
     }

@@ -1,0 +1,56 @@
+Miao Helper Privacy Policy
+
+Last updated: September 2026
+
+Miao Helper ("the App") is independently developed and provided. We take your personal information seriously. This policy explains what information the App collects, how it is used, and how it is protected. Please read it carefully before using the App.
+
+1. Information We Process
+
+1.1 Input field text: When you voluntarily enable the Accessibility Service and use the styling/translation features, the App reads the text in the current input field. This text is used for local dictionary replacement, or — with your authorization — sent to the third-party AI service you configured in "API Settings" (default: DeepSeek) for translation and styling. The text is used solely to complete the current translation request and for no other purpose.
+
+1.2 API configuration: The API keys and model addresses you enter are stored only on your device (encrypted via Android Keystore). The App operates no servers and does not upload your configuration.
+
+1.3 Running logs: The App stores desensitized local logs (without full original text or secrets) for troubleshooting. You can view or clear them in the "Error Log" page.
+
+1.4 Local statistics: Translation counts, cache hits, and glossary data remain on your device and are used only for the App's operation and display.
+
+2. Sharing and Transfer of Information
+
+2.1 When you use features such as AI translation or full rewriting, the text you submit is sent to the third-party AI provider configured in your settings. The transfer is protected by HTTPS encryption. The provider's subsequent processing is governed by that provider's own privacy policy and terms of use.
+
+2.2 Except as described above, the App does not sell, rent, or share your personal information with any third party.
+
+3. Permissions
+
+3.1 Accessibility Service: Enabled only when you explicitly turn it on. It reads the current input field's text and rewrites it according to your dictionary/API settings. It does not read other on-screen content and does not perform clicks or other actions.
+
+3.2 Overlay (floating window): Used to display the floating translation button for quick access.
+
+3.3 Foreground service: Keeps translation tasks running reliably while the Accessibility Service is active.
+
+4. Your Rights
+
+You may disable the Accessibility Service or overlay permission at any time in system settings. You may also clear the App's logs, cache, and history, or uninstall the App to stop all information processing.
+
+5. Children's Privacy
+
+The App may contain stylized content intended for adults. Minors should use the App under a guardian's supervision.
+
+6. Contact Us
+
+If you have any questions or complaints about this policy or your personal information, contact us at cn228590550@gmail.com. We will respond within 15 working days.
+
+---
+
+Accessibility Service Disclosure
+
+Miao Helper uses the Android Accessibility Service exclusively for the following purpose:
+
+- Reading the text currently present in the focused input field, so the App can apply your selected styling dictionary or AI-powered rewriting to it.
+
+What it does NOT do:
+- Does not read, collect, or transmit other on-screen content (e.g., messages, passwords, other apps' data).
+- Does not perform clicks, gestures, or any automated actions on your behalf.
+- Does not run when you have not enabled the service.
+
+All processing happens only when you trigger a translation or styling action. Text is used for the current request only and is never stored on any server operated by the App. You can revoke the Accessibility Service permission at any time in Android system settings.

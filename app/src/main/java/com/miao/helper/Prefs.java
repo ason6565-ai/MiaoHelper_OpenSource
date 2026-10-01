@@ -40,6 +40,12 @@ public class Prefs {
     public static boolean realtime()     { return sp().getBoolean("realtime", false); }
     /** 句尾口癖总开关（默认开；关闭后本地引擎不再追加句尾口癖） */
     public static boolean tailEnabled()  { return sp().getBoolean("tailEnabled", true); }
+    /** 界面语言：zh / en（默认 zh） */
+    public static String language()      { return sp().getString("language", "zh"); }
+    public static void setLanguage(String v) { sp().edit().putString("language", v).apply(); }
+    /** 隐私政策是否已接受（首次启动弹窗确认；接受后不再弹出） */
+    public static boolean privacyAccepted() { return sp().getBoolean("privacyAccepted", false); }
+    public static void setPrivacyAccepted(boolean v) { sp().edit().putBoolean("privacyAccepted", v).apply(); }
     /** API Key：优先读 AES-256-GCM 密文；兼容旧明文 */
     /** P1-15 修复：apiKeyEnc 解密失败标记（避免瞬时故障重复尝试+永久删Key），setApiKey 成功时复位 */
     private static volatile boolean keyDecryptFailed = false;
@@ -192,7 +198,7 @@ public class Prefs {
                 JSONObject o = arr.optJSONObject(i);
                 if (o == null) continue;
                 String key = SecureStore.decrypt(o.optString("kEnc", ""));
-                list.add(new Engine(o.optString("n", "备用" + (i + 1)),
+                list.add(new Engine(o.optString("n", getContext().getString(R.string.miao_engine_backup, i + 1)),
                         o.optString("b", ""), key, o.optString("m", "")));
             }
         } catch (Exception e) {
@@ -226,7 +232,7 @@ public class Prefs {
     public static List<Engine> engineChain(String primaryKey) {
         List<Engine> chain = new ArrayList<>();
         String mainKey = (primaryKey != null && !primaryKey.trim().isEmpty()) ? primaryKey.trim() : apiKey();
-        chain.add(new Engine("主引擎", apiBaseUrl(), mainKey, apiModel()));
+        chain.add(new Engine(getContext().getString(R.string.miao_engine_main), apiBaseUrl(), mainKey, apiModel()));
         chain.addAll(backupEngines());
         return chain;
     }
@@ -585,16 +591,22 @@ public static String triggerWord() { return sp().getString("triggerWord", "?翻"
         } catch (Exception ignored) {}
     }
 
-    /** 读取指定下标自定义人设的本地规则 JSON（模板市场应用时派生存储）；越界/无则返回 null */
+    /** 读取指定下标自定义人设的本地规则 JSON（下标=customPersonas()过滤后列表的下标）；越界/无则返回 null */
     public static String customPersonaLocalJson(int idx) {
         try {
             String raw = sp().getString("customPersonas", "[]");
             if (raw == null || raw.trim().isEmpty()) return null;
             JSONArray arr = new JSONArray(raw);
-            if (idx < 0 || idx >= arr.length()) return null;
-            JSONObject o = arr.optJSONObject(idx);
-            if (o == null) return null;
-            return o.optString("local", null);
+            // 按过滤后下标定位：跳过空名项，数到第 idx 个非空项
+            int seen = -1;
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.optJSONObject(i);
+                if (o == null) continue;
+                if (o.optString("name", "").trim().isEmpty()) continue;
+                seen++;
+                if (seen == idx) return o.optString("local", null);
+            }
+            return null;
         } catch (Exception e) {
             return null;
         }
@@ -626,12 +638,22 @@ public static String triggerWord() { return sp().getString("triggerWord", "?翻"
         } catch (Exception ignored) {}
     }
 
-    /** 删除指定位置的自定义人设：移入回收站（保留 24 小时，期间可恢复），并从人设列表移除 */
+    /** 删除指定位置的自定义人设（下标=customPersonas()过滤后列表的下标）：移入回收站（保留 24 小时，期间可恢复），并从人设列表移除 */
     public static void removeCustomPersona(int index) {
         try {
             JSONArray arr = new JSONArray(sp().getString("customPersonas", "[]"));
-            if (index >= 0 && index < arr.length()) {
-                JSONObject removed = arr.optJSONObject(index);
+            // 按过滤后下标定位原始数组下标：跳过空名项
+            int realIdx = -1;
+            int seen = -1;
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.optJSONObject(i);
+                if (o == null) continue;
+                if (o.optString("name", "").trim().isEmpty()) continue;
+                seen++;
+                if (seen == index) { realIdx = i; break; }
+            }
+            if (realIdx >= 0) {
+                JSONObject removed = arr.optJSONObject(realIdx);
                 if (removed != null) {
                     // 移入回收站：记录被删人设 + 删除时间
                     JSONArray trash = new JSONArray(sp().getString("personaTrash", "[]"));
@@ -647,7 +669,7 @@ public static String triggerWord() { return sp().getString("triggerWord", "?翻"
                 // 删除前记录该自定义人设在全量人设列表（内置+自定义+自定义入口）中的索引
                 int builtIn = StyleManager.personaBuiltinCount();
                 int fullIdx = builtIn + index;
-                arr.remove(index);
+                arr.remove(realIdx);
                 sp().edit().putString("customPersonas", arr.toString()).apply();
                 // 修正 styleIndex：删除导致后面的人设整体前移一位，当前选中索引需同步调整，防止越界/漂移
                 int cur = sp().getInt("styleIndex", 0);
@@ -744,6 +766,13 @@ public static void clearHistory() {
         for (String k : keys) arr.put(k);
         sp().edit().putString("starredStyles", arr.toString()).apply();
     }
+    // ================= v5.1 小说生成：当前故事 =================
 
+    public static String lastNovelId() {
+        return sp().getString("lastNovelId", "");
+    }
 
+    public static void setLastNovelId(String id) {
+        sp().edit().putString("lastNovelId", id == null ? "" : id).apply();
+    }
 }

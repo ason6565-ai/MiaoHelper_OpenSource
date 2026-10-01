@@ -5,13 +5,13 @@
     android:background="?attr/colorSurfaceVariant"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView android:text="本地词库管理"
+    <TextView android:text="@string/title_rule_editor"
         android:textSize="20sp" android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         android:layout_marginTop="8dp"
         android:layout_width="wrap_content" android:layout_height="wrap_content" />
     <TextView android:id="@+id/tvStyleLabel"
-        android:text="当前风格：" android:textSize="13sp"
+        android:text="@string/ui_rule_current" android:textSize="13sp"
         android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_marginTop="2dp"
         android:layout_width="match_parent" android:layout_height="wrap_content" />
@@ -27,7 +27,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_width="match_parent" android:layout_height="wrap_content">
-            <TextView android:text="AI 扩展词库"
+            <TextView android:text="@string/ui_rule_ai_dict"
                 android:textSize="15sp" android:textStyle="bold"
                 android:textColor="?attr/colorOnSurface"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content" android:layout_height="wrap_content" />
         </LinearLayout>
         <TextView android:id="@+id/tvLexiconInfo"
-            android:text="未扩展：点击下方按钮生成"
+            android:text="@string/ui_rule_not_extended"
             android:textSize="12sp" android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginTop="4dp"
             android:layout_width="match_parent" android:layout_height="wrap_content" />
@@ -47,21 +47,21 @@
             android:layout_width="match_parent" android:layout_height="wrap_content">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLexiconExpand"
-                android:text="AI 扩展当前人设"
+                android:text="@string/ui_rule_extend"
                 android:layout_marginEnd="6dp"
                 android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLexiconClear"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                android:text="清除"
+                android:text="@string/ui_rule_clear"
                 android:layout_marginStart="6dp"
                 android:layout_width="wrap_content" android:layout_height="wrap_content" />
         </LinearLayout>
     </LinearLayout>
 
     <TextView
-        android:text="输入中出现「原文」即替换为右侧文本；勾选「正则」按正则匹配"
+        android:text="@string/ui_rule_hint"
         android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_marginTop="6dp"
         android:layout_width="match_parent" android:layout_height="wrap_content" />
@@ -71,12 +71,12 @@
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" />
     <TextView android:id="@+id/tvEmpty"
-        android:text="还没有自定义规则"
+        android:text="@string/ui_rule_empty"
         android:gravity="center" android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" android:visibility="gone" />
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAdd" android:text="➕ 添加规则"
+        android:id="@+id/btnAdd" android:text="@string/ui_rule_add"
         android:layout_marginTop="12dp"
         android:layout_width="match_parent" android:layout_height="wrap_content" />
     <LinearLayout
@@ -86,13 +86,13 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSample"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:text="载入示例" android:layout_marginEnd="6dp"
+            android:text="@string/ui_rule_example" android:layout_marginEnd="6dp"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnClear"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:text="清空全部" android:layout_marginStart="6dp"
+            android:text="@string/ui_rule_clear_all" android:layout_marginStart="6dp"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" />
     </LinearLayout>
@@ -103,13 +103,13 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackupExport"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:text="导出备份" android:layout_marginEnd="6dp"
+            android:text="@string/ui_rule_export" android:layout_marginEnd="6dp"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackupImport"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:text="导入备份" android:layout_marginStart="6dp"
+            android:text="@string/ui_rule_import" android:layout_marginStart="6dp"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" />
     </LinearLayout>

@@ -60,7 +60,7 @@ public class StyleLabActivity extends AppCompatActivity {
         final String a = etA.getText().toString().trim();
         final String b = etB.getText().toString().trim();
         if (a.isEmpty() || b.isEmpty()) {
-            Toast.makeText(this, "请填写两种语言的内容", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.lab_two_langs), Toast.LENGTH_SHORT).show();
             return;
         }
         int idx = Math.max(spPersona.getSelectedItemPosition(), 0);
@@ -79,26 +79,26 @@ public class StyleLabActivity extends AppCompatActivity {
         // 2) 配置了 API 则走在线合成，覆盖为更自然的结果
         final String key = Prefs.apiKey();
         if (key == null || key.trim().isEmpty()) {
-            card.setNote("本地合并结果（未配置 API Key）");
+            card.setNote(getString(R.string.lab_local_no_key));
             return;
         }
-        card.setNote("本地合并 · 在线合成中…");
+        card.setNote(getString(R.string.lab_synth_ing));
         card.setBusy(true);
         String prompt = StyleManager.buildPrompt(idx);
         ApiMiaoifier.synthesize(a, b, key, prompt, new ApiMiaoifier.Callback() {
             @Override public void onSuccess(String out) {
                 main.post(() -> {
                     card.setResult(out);
-                    card.setNote("API 合成");
+                    card.setNote(getString(R.string.lab_api_done));
                     card.setBusy(false);
                     AppLog.i("Lab", "合成成功 人设=" + name + " 结果=" + out);
                 });
             }
             @Override public void onError(String msg) {
                 main.post(() -> {
-                    card.setNote("本地合并结果（API 失败：" + msg + "）");
+                    card.setNote(getString(R.string.lab_local_fail_fmt, msg));
                     card.setBusy(false);
-                    Toast.makeText(StyleLabActivity.this, "在线合成失败，保留本地结果", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StyleLabActivity.this, getString(R.string.lab_synth_fail), Toast.LENGTH_SHORT).show();
                 });
             }
         });
@@ -132,8 +132,8 @@ public class StyleLabActivity extends AppCompatActivity {
         head.addView(tvName, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        MaterialButton btnCopy = smallButton("复制");
-        MaterialButton btnAgain = smallButton("重新合成");
+        MaterialButton btnCopy = smallButton(getString(R.string.lab_copy));
+        MaterialButton btnAgain = smallButton(getString(R.string.lab_again));
         head.addView(btnCopy);
         head.addView(btnAgain);
 
@@ -157,7 +157,7 @@ public class StyleLabActivity extends AppCompatActivity {
         btnCopy.setOnClickListener(v -> {
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             cm.setPrimaryClip(ClipData.newPlainText("miao", tvResult.getText().toString()));
-            Toast.makeText(this, "已复制「" + personaName + "」合成结果", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.lab_copied_fmt, personaName), Toast.LENGTH_SHORT).show();
         });
         btnAgain.setOnClickListener(v -> synthesize());
 

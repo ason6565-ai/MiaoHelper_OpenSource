@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="14dp"
-        android:text="12 套精选人设模板，一键应用为自定义人设，可在此基础上继续修改。"
+        android:text="@string/ui_template_desc"
         android:textColor="#8D6E63"
         android:textSize="13sp" />
 

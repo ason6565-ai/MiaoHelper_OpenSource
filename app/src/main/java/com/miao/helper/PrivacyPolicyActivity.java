@@ -22,7 +22,7 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("隐私政策");
+        setTitle(getString(R.string.privacy_title));
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -47,15 +47,17 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
     }
 
     private String loadPolicy() {
+        // 按界面语言加载：英文界面显示英文隐私政策，其余显示中文
+        String asset = "en".equals(Prefs.language()) ? "privacy_policy_en.txt" : "privacy_policy.txt";
         StringBuilder sb = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                getAssets().open("privacy_policy.txt"), StandardCharsets.UTF_8))) {
+                getAssets().open(asset), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 sb.append(line).append('\n');
             }
         } catch (IOException e) {
-            return "隐私政策加载失败，请稍后重试。";
+            return getString(R.string.privacy_fail);
         }
         return TextUtils.isEmpty(sb) ? "" : sb.toString();
     }

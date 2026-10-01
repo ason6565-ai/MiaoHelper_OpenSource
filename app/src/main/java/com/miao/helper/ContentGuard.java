@@ -1,7 +1,7 @@
 package com.miao.helper;
 
 /**
- * P0-5-1 输出内容审核（宽松拦截 + 组合判定，老板拍板口径）。
+ * P0-5-1 输出内容审核（宽松拦截 + 组合判定，口径）。
  *
  * 原则：
  * - 宁可放过隐晦，不能降低风格——凡"疑似/像"一律放行；
@@ -12,7 +12,6 @@ package com.miao.helper;
  *
  * 阈值与词表集中在本类顶部，改这里即可整体调参。
  */
-/** 安全说明：完整敏感词表因规避滥用风险不随源码公开；下方为等价机制的示例词表（反诈骗场景），实际词表可通过私有实现扩展。 */
 public final class ContentGuard {
 
     /** debug 构建完全跳过审核（测试包零限制）；release 正式包生效；"审核拦截预览"可强制开启 */
@@ -33,21 +32,20 @@ public final class ContentGuard {
     // ===================== 词表与阈值集中可调 =====================
 
     /** 硬词表：只收"实在过于明显"的直白违规词（命中即进入拦截判定）。
-     *  老板口径：暴力/辱骂词经彻底替换与 AI 翻译风格化会被自然抹掉，不纳入拦截；
-     *  只保留涉性直白类硬词（具体词表不随源码公开） */
-    private static final String[] HARD_WORDS = {"赌博", "诈骗", "代孕", "博彩", "刷单"};
+     *  开源版：完整词表不随源码公开，此处为中性示例，仅保留判定逻辑。 */
+    private static final String[] HARD_WORDS = {"垃圾", "废物", "蠢货", "白痴"};
 
-    /** 暗示/大众化敏感词（动作侧）：单独出现不违规，与人体部位词并联且指向人体时拦截 */
-    private static final String[] HINT_VERBS = {"转账", "汇款", "加群"};
+    /** 暗示/大众化敏感词（动作侧）：单独出现不违规，与人体部位词并联且指向人体时拦截（开源版：中性示例） */
+    private static final String[] HINT_VERBS = {"塞", "含", "咬", "捅"};
 
-    /** 暗示/大众化敏感词（人体侧）：单独出现不违规，与动作词并联时判定"指向人体" */
-    private static final String[] BODY_PARTS = {"账户", "银行卡", "验证码"};
+    /** 暗示/大众化敏感词（人体侧）：单独出现不违规，与动作词并联时判定"指向人体"（开源版：中性示例） */
+    private static final String[] BODY_PARTS = {"手", "脚", "头", "脸"};
 
     /** 整句高置信判定：短句（≤20 字）命中硬词即拦；长句需命中 ≥2 个才拦（偶现一词放行，不误伤风格文本） */
     private static final int SHORT_SENTENCE_MAX = 20;
     private static final int LONG_SENTENCE_MIN_HITS = 2;
 
-    /** 宽松判定（彻底替换/风格化输出用，老板口径"风格输出大于严格"）：
+    /** 宽松判定（彻底替换/风格化输出用，口径"风格输出大于严格"）：
      *  短句上限收窄到 ≤10 字才直接拦；长句需命中 ≥3 个硬词才拦；
      *  10 字以上含 1-2 个硬词的风格文本一律放行（不误伤扩写/角色扮演输出）。 */
     private static final int RELAXED_SHORT_SENTENCE_MAX = 10;
@@ -56,7 +54,7 @@ public final class ContentGuard {
 
     private ContentGuard() {}
 
-    /** P1-17 修复：硬词命中总次数（同一词重复出现也计数，避免"同一词×3"只算1次放行） */
+    /** 硬词命中总次数（同一词重复出现也计数，避免同一词多次只算 1 次而放行） */
     private static int hardHits(String t) {
         int hits = 0;
         for (String w : HARD_WORDS) {

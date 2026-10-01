@@ -52,14 +52,14 @@ public final class PersonaPreviewDialog {
         }
 
         EditText etTest = new EditText(ctx);
-        etTest.setHint("输入一句话，看看效果");
+        etTest.setHint(ctx.getString(R.string.pp_hint));
         etTest.setSingleLine(false);
         etTest.setMinLines(2);
         etTest.setTextSize(14);
         body.addView(etTest);
 
         MaterialButton btnGo = new MaterialButton(ctx);
-        btnGo.setText("试译");
+        btnGo.setText(ctx.getString(R.string.pp_try));
         btnGo.setTextSize(12);
         body.addView(btnGo);
 
@@ -74,24 +74,24 @@ public final class PersonaPreviewDialog {
 
         final Handler main = new Handler(Looper.getMainLooper());
         final AlertDialog dlg = new AlertDialog.Builder(ctx)
-                .setTitle(personaName + " · 效果预览")
+                .setTitle(ctx.getString(R.string.pp_title_fmt, personaName))
                 .setView(sv)
-                .setNegativeButton("关闭", null)
+                .setNegativeButton(ctx.getString(R.string.api_close), null)
                 .show();
 
         btnGo.setOnClickListener(v -> {
             final String text = etTest.getText().toString().trim();
             if (text.isEmpty()) {
-                Toast.makeText(ctx, "先输入一句话", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ctx, ctx.getString(R.string.pp_need_input), Toast.LENGTH_SHORT).show();
                 return;
             }
             final String key = Prefs.apiKey();
             if (key == null || key.trim().isEmpty()) {
-                tvResult.setText("未配置 API Key：无法预览。\n请先在主界面配置 API Key 后重试。");
+                tvResult.setText(ctx.getString(R.string.pp_no_key));
                 return;
             }
             btnGo.setEnabled(false);
-            btnGo.setText("试译中…");
+            btnGo.setText(ctx.getString(R.string.pp_trying));
             // 确定实际使用的 prompt：下拉切换时用所选人设的 buildPrompt；生成页固定用传入的 prompt
             final int useIdx = fixedIndex == null ? Math.max(sp.getSelectedItemPosition(), 0) : fixedIndex;
             final String prompt = fixedIndex == null ? StyleManager.buildPrompt(useIdx) : basePrompt;
@@ -100,15 +100,15 @@ public final class PersonaPreviewDialog {
                 @Override public void onSuccess(String out) {
                     main.post(() -> {
                         btnGo.setEnabled(true);
-                        btnGo.setText("试译");
+                        btnGo.setText(ctx.getString(R.string.pp_try));
                         tvResult.setText("【" + displayName + "】\n" + out);
                     });
                 }
                 @Override public void onError(String msg) {
                     main.post(() -> {
                         btnGo.setEnabled(true);
-                        btnGo.setText("试译");
-                        tvResult.setText("试译失败：" + msg);
+                        btnGo.setText(ctx.getString(R.string.pp_try));
+                        tvResult.setText(ctx.getString(R.string.pp_fail_fmt, msg));
                     });
                 }
             });

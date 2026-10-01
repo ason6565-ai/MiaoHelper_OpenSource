@@ -5,12 +5,12 @@
     android:background="?attr/colorSurfaceVariant"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView android:text="按 App 自动切换风格"
+    <TextView android:text="@string/ui_appstyle_title"
         android:textSize="20sp" android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         android:layout_marginTop="8dp"
         android:layout_width="wrap_content" android:layout_height="wrap_content" />
-    <TextView android:text="为不同 App 设置默认风格，打开时自动切换"
+    <TextView android:text="@string/ui_appstyle_desc"
         android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_marginTop="6dp"
         android:layout_width="match_parent" android:layout_height="wrap_content" />

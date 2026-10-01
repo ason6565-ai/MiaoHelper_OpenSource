@@ -18,13 +18,13 @@ import java.util.regex.PatternSyntaxException;
  *  - 每次执行设 50ms 超时，超时直接放弃该规则，返回原文本
  *  - 编译成功的正则做 LRU 缓存，避免重复编译
  *  - 注意：Java 正则引擎不响应 Thread.interrupt()，超时后工作线程仍在跑，
- *    但单线程执行器会让后续规则排队，不会影响主线程。极端情况下一个恶意
- *    正则会占住工作线程，但用户自定义规则通常很少，可接受。
+ *    但有界池(核心1/最大2/队列10)+AbortPolicy 保证队列满时直接跳过该规则，
+ *    绝不回退到调用线程（主线程）执行，避免灾难正则导致 ANR。
  */
 public class SafeRegex {
 
-    // P0-2 修复：有界线程池（核心1/最大2/队列10/CallerRunsPolicy），
-    // 灾难正则不可中断但线程数有上限（≤2），不会无界增长导致设备发热/被杀。
+    // P0-2 修复：有界线程池（核心1/最大2/队列10/AbortPolicy），
+    // 灾难正则不可中断但线程数有上限（≤2），队列满时直接跳过规则，绝不回主线程执行。
     private static final ExecutorService EXECUTOR = new java.util.concurrent.ThreadPoolExecutor(
             1, 2, 60L, java.util.concurrent.TimeUnit.SECONDS,
             new java.util.concurrent.ArrayBlockingQueue<>(10),
@@ -33,7 +33,7 @@ public class SafeRegex {
                 t.setDaemon(true);
                 return t;
             },
-            new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+            new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
 
     private static final int MAX_REGEX_LEN = 200;
 
@@ -74,11 +74,18 @@ public class SafeRegex {
 
         final String replacement = Matcher.quoteReplacement(replace == null ? "" : replace);
 
-        Future<String> future = EXECUTOR.submit(new Callable<String>() {
-            @Override public String call() {
-                return pattern.matcher(input).replaceAll(replacement);
-            }
-        });
+        Future<String> future;
+        try {
+            future = EXECUTOR.submit(new Callable<String>() {
+                @Override public String call() {
+                    return pattern.matcher(input).replaceAll(replacement);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            // 队列满+线程忙：AbortPolicy 拒绝，直接跳过该规则，绝不回主线程执行（防 ANR）
+            AppLog.w("SafeRegex", "正则线程池已满，跳过：" + brief(regex));
+            return input;
+        }
 
         try {
             return future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);

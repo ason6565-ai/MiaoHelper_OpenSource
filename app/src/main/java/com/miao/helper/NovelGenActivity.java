@@ -1,55 +1,42 @@
 package com.miao.helper;
 
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * v5.0 小说生成测试模块（仅 debug 包开放）。
- * 最小闭环：选角色（角色池）→ 选事件（事件表）→ 以角色人设生成一段反应文本。
- * 角色用内置结构化人设（18 字段简化版），事件写死，排版不管，能读即可。
+ * v5.1 小说生成（完整工作流）。
+ * 流程：输入故事大体 → 自动生成大纲 + 事件池 → 管理角色（自定义/AI生成）→
+ *       按大纲推进 + 事件池联动生成故事；上下文自动携带（设定/大纲/角色口风/剧情摘要/最近正文/未引出事件池）。
+ * 存储：NovelStore 单故事 JSON；当前故事 id 记在 Prefs.lastNovelId。
  */
 public class NovelGenActivity extends AppCompatActivity {
 
-    /** 内置角色池：名称 + 人设 prompt */
-    private static final String[][] ROLES = {
-        {"白雀（落魄画师）",
-         "你叫白雀，三十出头，落魄画师，在旧城租了间漏雨画室。说话慢、带点自嘲，习惯把情绪藏进" +
-         "笔下的颜色里。自称『我』，偶尔叹气。哪怕心里翻江倒海，嘴上也是轻描淡写。"},
-        {"阿七（夜市摊主）",
-         "你叫阿七，四十岁，夜市炒粉摊主，嗓门大、热心肠，爱管闲事。说话带市井烟火气，自称" +
-         "『你七哥』，爱用『嘿』『得嘞』。嘴上损人，手上从不含糊。"},
-        {"小满（大学新生）",
-         "你叫小满，十九岁，刚上大学，有点怂又有点冲。说话带括号和省略号，紧张时会结巴，自称" +
-         "『我』，爱用『那个……』『怎么说呢』。心里戏多，嘴上漏一半。"}
-    };
-
-    /** 内置事件表 */
-    private static final String[] EVENTS = {
-        "凌晨两点，你听到画室外传来窸窸窣窣的敲门声，透过门缝看见一双湿透的布鞋。",
-        "收摊时，一个陌生女孩递给你一张皱巴巴的纸条，上面只有一个地址和一句「明晚见」。",
-        "开学第一周的社团招新会上，你被一个自称学姐的人强行拉进了话剧社。",
-        "巷口那家关了十年的旧书店，今晚突然亮起了灯，门缝里传出翻书声。"
-    };
-
-    private Spinner spRole, spEvent;
-    private TextView tvResult;
+    private EditText etTitle, etPremise;
+    private TextView tvStatus, tvChars, tvOutline, tvEvents, tvResult, tvSummary;
     private ProgressBar progress;
-    private EditText etEvent;          // v5.0 放宽：自定义事件（空则用内置事件表）
-    private String roleState = "";     // v5.0 角色状态追踪（参考开源 ZenStory/AI_xiaoshuo）
-    private boolean retried = false;   // v5.0 乱码/对话化自动重试一次
+    private TextView btnSetup, btnGen, btnCopy, btnAddChar, btnAiChar, btnAddEvent;
+
+    private NovelStore.Story story;
+    private String selectedEvent = "";   // 事件池中选中的事件（空=自动推进）
+    private int selectedCharEdit = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,183 +53,594 @@ public class NovelGenActivity extends AppCompatActivity {
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
 
         TextView tvTitle = new TextView(this);
-        tvTitle.setText("小说生成（测试）");
+        tvTitle.setText(getString(R.string.nov_title));
         tvTitle.setTextSize(20);
         tvTitle.setTypeface(null, Typeface.BOLD);
         tvTitle.setTextColor(0xFF3E2723);
         root.addView(tvTitle);
 
         TextView tvHint = new TextView(this);
-        tvHint.setText("测试模块：选角色 + 选事件，生成一段角色反应文本。");
-        tvHint.setTextSize(13);
+        tvHint.setText(getString(R.string.nov_hint));
+        tvHint.setTextSize(12);
         tvHint.setTextColor(0xFF8D6E63);
         tvHint.setPadding(0, pad8, 0, pad8);
         root.addView(tvHint);
 
-        String[] roleNames = new String[ROLES.length];
-        for (int i = 0; i < ROLES.length; i++) roleNames[i] = ROLES[i][0];
-        spRole = new Spinner(this);
-        spRole.setAdapter(new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, roleNames));
-        root.addView(spRole);
+        // ---- 故事设定 ----
+        etTitle = new EditText(this);
+        etTitle.setHint(getString(R.string.nov_title_hint));
+        etTitle.setTextSize(14);
+        root.addView(etTitle);
 
-        spEvent = new Spinner(this);
-        spEvent.setAdapter(new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, EVENTS));
-        root.addView(spEvent);
+        etPremise = new EditText(this);
+        etPremise.setHint(getString(R.string.nov_premise_hint));
+        etPremise.setTextSize(14);
+        etPremise.setMinLines(3);
+        etPremise.setGravity(Gravity.TOP);
+        root.addView(etPremise);
 
-        TextView tvCustom = new TextView(this);
-        tvCustom.setText("或输入自定义事件（留空用上方内置事件）");
-        tvCustom.setTextSize(13);
-        tvCustom.setTextColor(0xFF8D6E63);
-        tvCustom.setPadding(0, pad8, 0, pad8);
-        root.addView(tvCustom);
-        etEvent = new EditText(this);
-        etEvent.setHint("例如：半夜有人敲你的画室门，说找你有急事");
-        etEvent.setTextSize(14);
-        root.addView(etEvent);
+        btnSetup = button(getString(R.string.nov_setup), 0xFFFB8C00, Color.WHITE);
+        root.addView(btnSetup, matchWrap());
 
+        tvStatus = new TextView(this);
+        tvStatus.setTextSize(12);
+        tvStatus.setTextColor(0xFF6D4C41);
+        tvStatus.setPadding(0, pad8, 0, pad8);
+        root.addView(tvStatus);
+
+        // ---- 角色区 ----
+        TextView secChars = section(getString(R.string.nov_sec_chars));
+        root.addView(secChars);
+
+        LinearLayout charBtns = new LinearLayout(this);
+        charBtns.setOrientation(LinearLayout.HORIZONTAL);
+        btnAddChar = button(getString(R.string.nov_add_char), 0xFFFFF3E0, 0xFFFB8C00);
+        btnAiChar = button(getString(R.string.nov_ai_char), 0xFFFFF3E0, 0xFFFB8C00);
+        charBtns.addView(btnAddChar, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        charBtns.addView(btnAiChar, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        root.addView(charBtns);
+
+        tvChars = new TextView(this);
+        tvChars.setTextSize(13);
+        tvChars.setTextColor(0xFF3E2723);
+        tvChars.setPadding(0, pad8, 0, pad8);
+        root.addView(tvChars);
+
+        // ---- 大纲区 ----
+        TextView secOutline = section(getString(R.string.nov_outline));
+        root.addView(secOutline);
+        tvOutline = new TextView(this);
+        tvOutline.setTextSize(13);
+        tvOutline.setTextColor(0xFF3E2723);
+        tvOutline.setPadding(0, pad8, 0, pad8);
+        root.addView(tvOutline);
+
+        // ---- 事件池区 ----
+        TextView secEvents = section(getString(R.string.nov_sec_events));
+        root.addView(secEvents);
+        btnAddEvent = button(getString(R.string.nov_add_event), 0xFFFFF3E0, 0xFFFB8C00);
+        root.addView(btnAddEvent, matchWrap());
+        tvEvents = new TextView(this);
+        tvEvents.setTextSize(13);
+        tvEvents.setTextColor(0xFF3E2723);
+        tvEvents.setPadding(0, pad8, 0, pad8);
+        root.addView(tvEvents);
+
+        // ---- 生成区 ----
         progress = new ProgressBar(this);
         progress.setVisibility(View.GONE);
         root.addView(progress);
 
-        TextView btnGo = new TextView(this);
-        btnGo.setText("生成一段");
-        btnGo.setTextSize(15);
-        btnGo.setGravity(Gravity.CENTER);
-        btnGo.setTextColor(Color.WHITE);
-        btnGo.setPadding(pad8, pad8, pad8, pad8);
-        btnGo.setBackgroundColor(0xFFFB8C00);
-        root.addView(btnGo, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        btnGen = button(getString(R.string.nov_gen), 0xFFFB8C00, Color.WHITE);
+        root.addView(btnGen, matchWrap());
 
         tvResult = new TextView(this);
         tvResult.setTextSize(15);
         tvResult.setTextColor(0xFF3E2723);
         tvResult.setTextIsSelectable(true);
-        tvResult.setLineSpacing(0, 1.2f);
+        tvResult.setLineSpacing(0, 1.25f);
         tvResult.setPadding(pad8, pad8, pad8, pad8);
         tvResult.setBackgroundColor(0xFFFFF8F0);
         root.addView(tvResult);
 
-        TextView btnCopy = new TextView(this);
-        btnCopy.setText("复制结果");
-        btnCopy.setTextSize(14);
-        btnCopy.setGravity(Gravity.CENTER);
-        btnCopy.setTextColor(0xFFFB8C00);
-        btnCopy.setPadding(pad8, pad8, pad8, pad8);
-        btnCopy.setBackgroundColor(0xFFFFF3E0);
-        root.addView(btnCopy, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        btnCopy = button(getString(R.string.nov_copy), 0xFFFFF3E0, 0xFFFB8C00);
+        root.addView(btnCopy, matchWrap());
 
-        btnGo.setOnClickListener(v -> run());
-        btnCopy.setOnClickListener(v -> {
-            String s = tvResult.getText().toString();
-            if (s == null || s.trim().isEmpty() || "生成中…".equals(s)) {
-                Toast.makeText(this, "还没有结果可复制", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                    getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-            if (cm != null) {
-                cm.setPrimaryClip(android.content.ClipData.newPlainText("novel", s));
-                Toast.makeText(this, "已复制", Toast.LENGTH_SHORT).show();
-            }
-        });
+        tvSummary = new TextView(this);
+        tvSummary.setTextSize(12);
+        tvSummary.setTextColor(0xFF8D6E63);
+        tvSummary.setPadding(0, pad8, 0, 0);
+        root.addView(tvSummary);
 
         setContentView(scroll);
+
+        btnSetup.setOnClickListener(v -> doSetup());
+        btnGen.setOnClickListener(v -> doGen());
+        btnCopy.setOnClickListener(v -> copyResult());
+        btnAddChar.setOnClickListener(v -> showCharDialog(-1));
+        btnAiChar.setOnClickListener(v -> showAiCharDialog());
+        btnAddEvent.setOnClickListener(v -> showAddEventDialog());
+
+        // 恢复上次故事
+        String lastId = Prefs.lastNovelId();
+        if (!lastId.isEmpty()) {
+            story = NovelStore.load(this, lastId);
+            if (story != null) {
+                etTitle.setText(story.title);
+                etPremise.setText(story.premise);
+            }
+        }
+        refresh();
     }
 
-    private void run() {
-        String key = Prefs.apiKey();
-        if (key == null || key.trim().isEmpty()) {
-            Toast.makeText(this, "未配置 API Key，请先在 API 设置中填写", Toast.LENGTH_LONG).show();
+    // ================= UI 辅助 =================
+
+    private TextView section(String t) {
+        TextView v = new TextView(this);
+        v.setText(t);
+        v.setTextSize(14);
+        v.setTypeface(null, Typeface.BOLD);
+        v.setTextColor(0xFF4E342E);
+        v.setPadding(0, pad8() * 2, 0, pad8());
+        return v;
+    }
+
+    private TextView button(String t, int bg, int fg) {
+        TextView v = new TextView(this);
+        v.setText(t);
+        v.setTextSize(14);
+        v.setGravity(Gravity.CENTER);
+        v.setTextColor(fg);
+        v.setPadding(0, pad8(), 0, pad8());
+        v.setBackgroundColor(bg);
+        return v;
+    }
+
+    private LinearLayout.LayoutParams matchWrap() {
+        return new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    }
+
+    private int pad8() { return (int) (8 * getResources().getDisplayMetrics().density); }
+
+    private void refresh() {
+        if (story == null) {
+            tvStatus.setText(getString(R.string.nov_status_none));
+            tvChars.setText(getString(R.string.nov_chars_none));
+            tvOutline.setText(getString(R.string.nov_outline_none));
+            tvEvents.setText(getString(R.string.nov_events_none));
+            tvResult.setText("");
+            tvSummary.setText("");
             return;
         }
-        int ri = Math.max(spRole.getSelectedItemPosition(), 0);
-        String custom = etEvent == null ? "" : etEvent.getText().toString().trim();
-        String event = (custom.isEmpty())
-                ? EVENTS[Math.max(spEvent.getSelectedItemPosition(), 0)]
-                : custom;
-        AppLog.i("Api", "小说生成开始 角色=" + ROLES[ri][0] + " 事件=" + brief(event));
-        final String rolePrompt = ROLES[ri][1];
-        progress.setVisibility(View.VISIBLE);
-        tvResult.setText("生成中…");
-        String persona = rolePrompt
-                + "\n【任务】你正在经历下面这件事。请用你的口吻，写一段此刻的内心反应或自言自语，"
-                + "约 100-200 字。要像真人当下的反应，不要总结、不要喊口号。";
-        if (roleState != null && !roleState.isEmpty()) {
-            persona += "\n【你当前的状态】" + roleState
-                    + "（以上是你此前刚刚经历的事与心情，请顺着这个状态自然地继续反应，不要重复复述它）";
+        tvStatus.setText(getString(R.string.nov_status_fmt, story.title, story.id, story.chapters.size(), story.outline.size(), story.events.size(), countStatus("unused"), countStatus("introduced")));
+
+        StringBuilder cs = new StringBuilder(getString(R.string.nov_chars_prefix));
+        if (story.characters.isEmpty()) cs.append(getString(R.string.nov_chars_empty));
+        for (int i = 0; i < story.characters.size(); i++) {
+            NovelStore.Character c = story.characters.get(i);
+            if (i > 0) cs.append("\n");
+            cs.append("· ").append(c.name);
+            if (c.voice != null && !c.voice.trim().isEmpty()) cs.append(getString(R.string.nov_voice_pre)).append(c.voice).append(getString(R.string.nov_voice_suf));
         }
-        if (retried) {
-            persona += "\n【上次输出不合格】上次生成的文本出现乱码、碎片化或变成了对话腔，"
-                    + "请重新写一遍：必须是通顺连贯的中文角色内心反应，禁止乱码与碎片堆叠，禁止反问用户。";
+        tvChars.setText(cs.toString());
+        tvChars.setOnClickListener(v -> showCharListDialog());
+
+        StringBuilder os = new StringBuilder(getString(R.string.nov_outline_prefix));
+        if (story.outline.isEmpty()) os.append(getString(R.string.nov_outline_empty));
+        for (int i = 0; i < story.outline.size(); i++) {
+            os.append("\n").append(i + 1).append(". ").append(story.outline.get(i));
+            if (i == story.chapters.size() && story.chapters.size() < story.outline.size()) {
+                os.append(getString(R.string.nov_current));
+            }
         }
-        final String eventFinal = event;
-        ApiMiaoifier.rework(event, key.trim(), null, persona, new ApiMiaoifier.Callback() {
-            @Override public void onSuccess(String out) {
-                String safe = (out == null) ? "（空结果）" : out.trim();
-                if (looksBad(safe) && !retried) {
-                    retried = true;
-                    AppLog.w("Api", "小说生成输出异常（乱码/对话化），自动重试一轮：" + brief(safe));
-                    // P1-12 修复：run() 内直接操作 View，必须切主线程调用，否则池线程跨线程操作 View 导致重试永久失效
-                    runOnUiThread(() -> {
-                        progress.setVisibility(View.VISIBLE);
-                        tvResult.setText("生成中…（上次输出异常，重试中）");
-                        run();
-                    });
-                    return;
-                }
-                if (!looksBad(safe)) {
-                    roleState = summary(safe) + "（来自事件：" + brief(eventFinal) + "）";
-                }
+        tvOutline.setText(os.toString());
+
+        StringBuilder es = new StringBuilder(getString(R.string.nov_events_prefix));
+        List<NovelStore.Event> unused = new ArrayList<>();
+        for (NovelStore.Event e : story.events) {
+            if ("unused".equals(e.status)) unused.add(e);
+        }
+        if (unused.isEmpty()) {
+            es.append(getString(R.string.nov_events_empty));
+        } else {
+            for (int i = 0; i < unused.size(); i++) {
+                NovelStore.Event e = unused.get(i);
+                boolean sel = selectedEvent != null && selectedEvent.equals(e.text);
+                es.append("\n").append(sel ? "▶ " : "  ").append(i + 1).append(". ")
+                  .append(e.text).append(sel ? getString(R.string.nov_selected) : "");
+            }
+        }
+        tvEvents.setText(es.toString());
+        tvEvents.setOnClickListener(v -> showEventListDialog());
+
+        if (!story.chapters.isEmpty()) {
+            NovelStore.Chapter last = story.chapters.get(story.chapters.size() - 1);
+            tvResult.setText("【" + last.title + "】\n" + last.content);
+        } else {
+            tvResult.setText("");
+        }
+        tvSummary.setText(story.summary.trim().isEmpty() ? "" : getString(R.string.nov_summary_fmt, story.summary.trim()));
+    }
+
+    private int countStatus(String st) {
+        int n = 0;
+        for (NovelStore.Event e : story.events) if (st.equals(e.status)) n++;
+        return n;
+    }
+
+    private void busy(boolean b, String msg) {
+        progress.setVisibility(b ? View.VISIBLE : View.GONE);
+        btnSetup.setEnabled(!b);
+        btnGen.setEnabled(!b);
+        btnAddChar.setEnabled(!b);
+        btnAiChar.setEnabled(!b);
+        btnAddEvent.setEnabled(!b);
+        if (b) tvResult.setText(msg);
+    }
+
+    // ================= 动作 =================
+
+    private void doSetup() {
+        String premise = etPremise.getText().toString().trim();
+        if (premise.isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_need_premise), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String key = Prefs.apiKey();
+        if (key == null || key.trim().isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_need_key), Toast.LENGTH_LONG).show();
+            return;
+        }
+        String title = etTitle.getText().toString().trim();
+        if (title.isEmpty()) title = premise.length() > 12 ? premise.substring(0, 12) : premise;
+        busy(true, getString(R.string.nov_setup_ing));
+        final String ftitle = title;
+        final String fpremise = premise;
+        NovelEngine.generateSetup(this, fpremise, null, ftitle, new NovelEngine.Callback() {
+            @Override public void onDone(String storyId) {
                 runOnUiThread(() -> {
-                    progress.setVisibility(View.GONE);
-                    tvResult.setText(safe);
-                    retried = false;
+                    if (isFinishing() || isDestroyed()) return;
+                    story = NovelStore.load(NovelGenActivity.this, storyId);
+                    Prefs.setLastNovelId(storyId);
+                    if (story != null) {
+                        // 为大纲角色填充默认角色骨架：设定里提名的角色自动进角色表
+                        ensureCharsFromPremise(fpremise);
+                        NovelStore.save(NovelGenActivity.this, story);
+                    }
+                    busy(false, "");
+                    refresh();
+                    Toast.makeText(NovelGenActivity.this,
+                            getString(R.string.nov_setup_done_fmt, (story == null ? 0 : story.outline.size()), (story == null ? 0 : story.events.size())),
+                            Toast.LENGTH_LONG).show();
                 });
             }
             @Override public void onError(String msg) {
                 runOnUiThread(() -> {
-                    progress.setVisibility(View.GONE);
-                    tvResult.setText("出错了：" + msg);
-                    retried = false;
+                    busy(false, "");
+                    Toast.makeText(NovelGenActivity.this, getString(R.string.nov_fail_fmt, msg), Toast.LENGTH_LONG).show();
                 });
             }
         });
     }
 
-    /** v5.0 生成结果审计（参考开源 InkOS 审计-修订闭环）：乱码/对话化/自报身份检测，保守启发式，宁可放过不误伤 */
-    private static boolean looksBad(String s) {
-        if (s == null || s.trim().isEmpty()) return true;
-        String t = s.trim();
-        String low = t.toLowerCase();
-        if (low.contains("我是ai") || low.contains("我是人工智能") || low.contains("作为ai")
-                || low.contains("作为助手") || low.contains("你觉得呢") || low.contains("你说呢")
-                || low.contains("对不对")) return true;
-        int cn = 0, letters = 0;
-        for (int i = 0; i < t.length(); i++) {
-            char c = t.charAt(i);
-            if (Character.isLetter(c)) {
-                letters++;
-                if (c >= '\u4e00' && c <= '\u9fff') cn++;
+    /** 从设定文本简单提取「主角名」等候选角色名（按“名”/“/”/顿号切分，长度 1-8 的片段），避免空角色表 */
+    private void ensureCharsFromPremise(String premise) {
+        if (story == null || premise == null) return;
+        if (!story.characters.isEmpty()) return;
+        String[] parts = premise.split("[，,。！？、/\\s]+");
+        for (String p : parts) {
+            String n = p.trim();
+            if (n.length() >= 1 && n.length() <= 8 && !n.matches(".*[的了吗呢是我你有他她它们和与在了一不].*")) {
+                NovelStore.Character c = new NovelStore.Character();
+                c.name = n;
+                c.desc = "";
+                story.characters.add(c);
+                if (story.characters.size() >= 6) break;
             }
         }
-        if (letters > 0 && cn * 100 / letters < 40) return true;
-        for (int i = 2; i < t.length(); i++) {
-            if (t.charAt(i) == t.charAt(i - 1) && t.charAt(i) == t.charAt(i - 2)) return true;
+    }
+
+    private void doGen() {
+        if (story == null) {
+            Toast.makeText(this, getString(R.string.nov_need_setup), Toast.LENGTH_SHORT).show();
+            return;
         }
-        return false;
+        if (story.outline.isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_outline_empty2), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (story.chapters.size() >= story.outline.size() && story.events.isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_all_done), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (story.chapters.size() >= story.outline.size() && selectedEvent.isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_pick_event), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String key = Prefs.apiKey();
+        if (key == null || key.trim().isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_need_key2), Toast.LENGTH_LONG).show();
+            return;
+        }
+        final String evt = selectedEvent;
+        busy(true, evt.isEmpty() ? getString(R.string.nov_gen_ing) : getString(R.string.nov_evt_ing_fmt, evt));
+        NovelEngine.generateChapter(this, story, evt, new NovelEngine.Callback() {
+            @Override public void onDone(String chapterTitle) {
+                runOnUiThread(() -> {
+                    selectedEvent = "";   // 用完清空选中
+                    busy(false, "");
+                    refresh();
+                    Toast.makeText(NovelGenActivity.this, getString(R.string.nov_gen_done_fmt, chapterTitle), Toast.LENGTH_SHORT).show();
+                });
+            }
+            @Override public void onError(String msg) {
+                runOnUiThread(() -> {
+                    busy(false, "");
+                    Toast.makeText(NovelGenActivity.this, getString(R.string.nov_fail_fmt, msg), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
 
-    private static String summary(String s) {
-        String t = s == null ? "" : s.trim();
-        return t.length() > 45 ? t.substring(0, 45) + "……" : t;
+    private void copyResult() {
+        String s = tvResult.getText().toString();
+        if (s == null || s.trim().isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_nothing_copy), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(ClipData.newPlainText("novel", s));
+            Toast.makeText(this, getString(R.string.nov_copied), Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private static String brief(String s) {
-        if (s == null) return "";
-        return s.length() > 20 ? s.substring(0, 20) + "…" : s;
+    // ================= 角色管理 =================
+
+    private void showCharListDialog() {
+        if (story == null) return;
+        String[] names = new String[story.characters.size()];
+        for (int i = 0; i < names.length; i++) names[i] = story.characters.get(i).name;
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.nov_char_list))
+                .setItems(names, (d, w) -> showCharDialog(w))
+                .setNegativeButton(getString(R.string.api_close), null)
+                .show();
+    }
+
+    /** 新增（idx=-1）或编辑角色（idx>=0） */
+    private void showCharDialog(final int idx) {
+        if (story == null) return;
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(24, 8, 24, 0);
+
+        final EditText etName = new EditText(this);
+        etName.setHint(getString(R.string.nov_char_name));
+        etName.setTextSize(14);
+        final EditText etDesc = new EditText(this);
+        etDesc.setHint(getString(R.string.nov_char_desc));
+        etDesc.setTextSize(14);
+        etDesc.setMinLines(2);
+        etDesc.setGravity(Gravity.TOP);
+        final EditText etVoice = new EditText(this);
+        etVoice.setHint(getString(R.string.nov_char_voice));
+        etVoice.setTextSize(14);
+        etVoice.setMinLines(2);
+        etVoice.setGravity(Gravity.TOP);
+
+        if (idx >= 0 && idx < story.characters.size()) {
+            NovelStore.Character c = story.characters.get(idx);
+            etName.setText(c.name);
+            etDesc.setText(c.desc);
+            etVoice.setText(c.voice);
+        }
+        root.addView(etName);
+        root.addView(etDesc);
+        root.addView(etVoice);
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
+                .setTitle(idx < 0 ? getString(R.string.nov_add_char2) : getString(R.string.nov_edit_char))
+                .setView(root)
+                .setPositiveButton(getString(R.string.nov_save), (d, w) -> {
+                    String name = etName.getText().toString().trim();
+                    if (name.isEmpty()) { Toast.makeText(this, getString(R.string.nov_char_name_empty), Toast.LENGTH_SHORT).show(); return; }
+                    NovelStore.Character c;
+                    if (idx >= 0 && idx < story.characters.size()) {
+                        c = story.characters.get(idx);
+                    } else {
+                        c = new NovelStore.Character();
+                        story.characters.add(c);
+                    }
+                    c.name = name;
+                    c.desc = etDesc.getText().toString().trim();
+                    c.voice = etVoice.getText().toString().trim();
+                    NovelStore.save(this, story);
+                    refresh();
+                });
+        if (idx >= 0) {
+            b.setNegativeButton(getString(R.string.nov_del), (d, w) -> {
+                story.characters.remove(idx);
+                NovelStore.save(this, story);
+                refresh();
+            });
+        } else {
+            b.setNegativeButton(getString(R.string.cancel), null);
+        }
+        b.show();
+    }
+
+    /** AI 生成角色：输入描述 → 生成人设+口风 */
+    private void showAiCharDialog() {
+        if (story == null) {
+            Toast.makeText(this, getString(R.string.nov_need_setup), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(24, 8, 24, 0);
+        final EditText etDesc = new EditText(this);
+        etDesc.setHint(getString(R.string.nov_ai_char_hint));
+        etDesc.setTextSize(14);
+        etDesc.setMinLines(2);
+        etDesc.setGravity(Gravity.TOP);
+        root.addView(etDesc);
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.nov_ai_char_title))
+                .setView(root)
+                .setPositiveButton(getString(R.string.nov_gen_btn), (d, w) -> {
+                    String desc = etDesc.getText().toString().trim();
+                    if (desc.isEmpty()) { Toast.makeText(this, getString(R.string.nov_desc_empty), Toast.LENGTH_SHORT).show(); return; }
+                    d.dismiss();
+                    busy(true, getString(R.string.nov_ai_ing));
+                    genCharByAi(desc);
+                })
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show();
+    }
+
+    private void genCharByAi(String desc) {
+        final String fd = desc;
+        String lang = Prefs.language();
+        String system;
+        String userMsg;
+        if ("en".equals(lang)) {
+            system = "You are a character design assistant. Based on the character description, produce a concise character profile.\n"
+                    + "Format (output exactly three lines):\n"
+                    + "Name: xxx\nPersona: one-sentence summary of personality, identity, background\nVoice: speaking style (self-reference, tone words, sentence habits)\n"
+                    + "Requirement: English, fluent, no garbled text, do not self-identify.";
+            userMsg = "Character description: " + desc;
+        } else if ("ja".equals(lang)) {
+            system = "あなたはキャラクターデザインアシスタントです。ユーザーのキャラクター説明に基づき、簡潔なキャラクター設定を出力してください。\n"
+                    + "形式（以下の3行を厳守）：\n"
+                    + "名前：xxx\n人設：性格・身分・背景を一文で\n口風：話し方（自称、語調、文型の癖）\n"
+                    + "要件：日本語、自然、乱れなし、自分をアシスタントと名乗らない。";
+            userMsg = "キャラクター説明：" + desc;
+        } else if ("ko".equals(lang)) {
+            system = "당신은 캐릭터 디자인 어시스턴트입니다. 사용자의 캐릭터 설명을 바탕으로 간결한 캐릭터 설정을 출력하세요.\n"
+                    + "형식(정확히 아래 3줄로 출력):\n"
+                    + "이름: xxx\n인물상: 성격·신분·배경을 한 문장으로\n말투: 말하는 방식(자칭, 어조, 문장 습관)\n"
+                    + "요구: 한국어, 자연스럽게, 깨짐 없이, 스스로를 어시스턴트라고 밝히지 않기.";
+            userMsg = "캐릭터 설명: " + desc;
+        } else {
+            system = "你是角色设计助手。根据用户给出的角色描述，产出一份简洁的角色设定。\n"
+                    + "格式（严格按以下三行输出）：\n"
+                    + "名字：xxx\n人设：一句话概括性格、身份、背景\n口风：说话风格描述（自称、语气词、句式习惯）\n"
+                    + "要求：中文、通顺、无乱码、不自报身份。";
+            userMsg = "角色描述：" + desc;
+        }
+        ApiMiaoifier.chat(system, userMsg, 600, new ApiMiaoifier.Callback() {
+            @Override public void onSuccess(String text) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    busy(false, "");
+                    NovelStore.Character c = new NovelStore.Character();
+                    c.name = pick(text, charLabel(lang, "name"));
+                    c.desc = pick(text, charLabel(lang, "desc"));
+                    c.voice = pick(text, charLabel(lang, "voice"));
+                    if (c.name.isEmpty()) c.name = getString(R.string.nov_default_char) + (story.characters.size() + 1);
+                    story.characters.add(c);
+                    NovelStore.save(NovelGenActivity.this, story);
+                    refresh();
+                    Toast.makeText(NovelGenActivity.this, getString(R.string.nov_char_done_fmt, c.name), Toast.LENGTH_SHORT).show();
+                });
+            }
+            @Override public void onError(String msg) {
+                runOnUiThread(() -> {
+                    busy(false, "");
+                    Toast.makeText(NovelGenActivity.this, getString(R.string.nov_fail_fmt, msg), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private static String pick(String text, String label) {
+        if (text == null) return "";
+        String[] lines = text.split("\n");
+        for (String raw : lines) {
+            String line = raw.trim();
+            if (line.startsWith(label) || line.startsWith("【" + label + "】")) {
+                int i = line.indexOf('：');
+                int j = line.indexOf(':');
+                int k = (i < 0) ? j : ((j < 0) ? i : Math.min(i, j));
+                if (k >= 0 && k < line.length() - 1) return line.substring(k + 1).trim();
+            }
+        }
+        return "";
+    }
+
+    /** AI 生成角色的字段标记，随界面语言 zh/en/ja/ko */
+    private static String charLabel(String lang, String which) {
+        if ("en".equals(lang)) {
+            if ("name".equals(which)) return "Name";
+            if ("desc".equals(which)) return "Persona";
+            return "Voice";
+        }
+        if ("ja".equals(lang)) {
+            if ("name".equals(which)) return "名前";
+            if ("desc".equals(which)) return "人設";
+            return "口風";
+        }
+        if ("ko".equals(lang)) {
+            if ("name".equals(which)) return "이름";
+            if ("desc".equals(which)) return "인물상";
+            return "말투";
+        }
+        if ("name".equals(which)) return "名字";
+        if ("desc".equals(which)) return "人设";
+        return "口风";
+    }
+
+    // ================= 事件管理 =================
+
+    private void showAddEventDialog() {
+        if (story == null) {
+            Toast.makeText(this, getString(R.string.nov_need_setup), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final EditText et = new EditText(this);
+        et.setHint(getString(R.string.nov_event_hint));
+        et.setTextSize(14);
+        et.setPadding(24, 8, 24, 0);
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.nov_add_event_title))
+                .setView(et)
+                .setPositiveButton(getString(R.string.nov_add), (d, w) -> {
+                    String t = et.getText().toString().trim();
+                    if (t.isEmpty()) return;
+                    NovelStore.Event e = new NovelStore.Event();
+                    e.text = t;
+                    e.status = "unused";
+                    story.events.add(e);
+                    NovelStore.save(this, story);
+                    refresh();
+                })
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show();
+    }
+
+    private void showEventListDialog() {
+        if (story == null) return;
+        List<NovelStore.Event> unused = new ArrayList<>();
+        for (NovelStore.Event e : story.events) if ("unused".equals(e.status)) unused.add(e);
+        if (unused.isEmpty()) {
+            Toast.makeText(this, getString(R.string.nov_no_unused), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] items = new String[unused.size()];
+        for (int i = 0; i < items.length; i++) items[i] = unused.get(i).text;
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.nov_pick_evt_title))
+                .setItems(items, (d, w) -> {
+                    selectedEvent = unused.get(w).text;
+                    refresh();
+                    Toast.makeText(this, getString(R.string.nov_evt_picked), Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(getString(R.string.nov_cancel_auto), (d, w) -> {
+                    selectedEvent = "";
+                    refresh();
+                })
+                .show();
     }
 }

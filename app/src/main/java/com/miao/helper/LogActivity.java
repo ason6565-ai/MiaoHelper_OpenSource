@@ -58,25 +58,25 @@ public class LogActivity extends AppCompatActivity {
             ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             String copyText = showAll ? tvLog.getText().toString() : recentLogsText(20);
             cm.setPrimaryClip(ClipData.newPlainText("MiaoHelper Log", copyText));
-            Toast.makeText(this, "日志已复制", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.log_copied), Toast.LENGTH_SHORT).show();
         });
         btnShare.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_SEND);
             i.setType("text/plain");
-            i.putExtra(Intent.EXTRA_SUBJECT, "拟言助手错误日志");
+            i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.log_subject));
             i.putExtra(Intent.EXTRA_TEXT, tvLog.getText().toString());
-            startActivity(Intent.createChooser(i, "分享日志"));
+            startActivity(Intent.createChooser(i, getString(R.string.log_share)));
         });
         btnClear.setOnClickListener(v -> {
             AppLog.clear();
             reload();
-            Toast.makeText(this, "日志已清空", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.log_cleared), Toast.LENGTH_SHORT).show();
         });
 
         btnSave.setOnClickListener(v -> saveAsTxt());
         btnToggle.setOnClickListener(v -> {
             showAll = !showAll;
-            btnToggle.setText(showAll ? "最近50条" : "查看全部");
+            btnToggle.setText(showAll ? getString(R.string.log_recent) : getString(R.string.log_all));
             reload();
         });
         reload();
@@ -97,7 +97,7 @@ public class LogActivity extends AppCompatActivity {
             String fileText = readFile(f);
             String mem = AppLog.dump();
             if (!fileText.isEmpty()) {
-                sb.append("===== 文件日志 =====").append('\n').append(fileText);
+                sb.append(getString(R.string.log_file_section)).append('\n').append(fileText);
                 java.util.HashSet<String> inFile = new java.util.HashSet<>();
                 for (String l : fileText.split("\n")) inFile.add(l.trim());
                 StringBuilder fresh = new StringBuilder();
@@ -106,17 +106,17 @@ public class LogActivity extends AppCompatActivity {
                     if (!inFile.contains(l.trim())) fresh.append(l).append('\n');
                 }
                 if (fresh.length() > 0) {
-                    sb.append('\n').append("===== 本次运行（未落盘）=====").append('\n').append(fresh);
+                    sb.append('\n').append(getString(R.string.log_fresh_section)).append('\n').append(fresh);
                 }
             } else {
-                sb.append(mem.isEmpty() ? "（暂无日志）" : mem);
+                sb.append(mem.isEmpty() ? getString(R.string.log_none) : mem);
             }
             tvLog.setText(sb.toString());
         } else {
             // 用户级视图：最近50条，颜色分级（绿=成功/INFO，黄=WARN，红=ERROR，灰=DEBUG）
             java.util.List<String> logs = AppLog.getRecentLogs(50);
             if (logs.isEmpty()) {
-                tvLog.setText("（暂无日志）");
+                tvLog.setText(getString(R.string.log_none));
             } else {
                 SpannableStringBuilder ssb = new SpannableStringBuilder();
                 for (String line : logs) {
@@ -146,8 +146,8 @@ public class LogActivity extends AppCompatActivity {
     /** 保存日志为 txt 文件到下载目录 */
     private void saveAsTxt() {
         String content = tvLog.getText().toString();
-        if (content.isEmpty() || content.equals("（暂无日志）")) {
-            Toast.makeText(this, "暂无日志可保存", Toast.LENGTH_SHORT).show();
+        if (content.isEmpty() || content.equals(getString(R.string.log_none))) {
+            Toast.makeText(this, getString(R.string.log_nothing_save), Toast.LENGTH_SHORT).show();
             return;
         }
         String fileName = "miao_log_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
@@ -161,7 +161,7 @@ public class LogActivity extends AppCompatActivity {
                         android.os.Environment.DIRECTORY_DOWNLOADS);
                 android.net.Uri uri = getContentResolver().insert(
                         android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                if (uri == null) throw new Exception("创建文件失败");
+                if (uri == null) throw new Exception(getString(R.string.err_file_create));
                 java.io.OutputStream os = getContentResolver().openOutputStream(uri);
                 os.write(content.getBytes(StandardCharsets.UTF_8));
                 os.close();
@@ -174,7 +174,7 @@ public class LogActivity extends AppCompatActivity {
                 fw.write(content);
                 fw.close();
             }
-            Toast.makeText(this, "已保存到下载：" + fileName, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.log_saved_fmt, fileName), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             // 降级：保存到 app 外部文件目录
             try {
@@ -182,9 +182,9 @@ public class LogActivity extends AppCompatActivity {
                 java.io.FileWriter fw = new java.io.FileWriter(f);
                 fw.write(content);
                 fw.close();
-                Toast.makeText(this, "已保存：" + f.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.log_saved_path_fmt, f.getAbsolutePath()), Toast.LENGTH_LONG).show();
             } catch (Exception e2) {
-                Toast.makeText(this, "保存失败：" + e2.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.log_save_fail_fmt, e2.getMessage()), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -194,7 +194,7 @@ public class LogActivity extends AppCompatActivity {
             byte[] b = Files.readAllBytes(f.toPath());
             return new String(b, StandardCharsets.UTF_8);
         } catch (Throwable t) {
-            return "读取日志文件失败：" + t;
+            return getString(R.string.log_read_fail_fmt, t);
         }
     }
 }
