@@ -2,9 +2,13 @@
 
 Android 无障碍输入文本增强工具：在任意 App 的输入框中，通过悬浮球一键触发文本风格化转换（本地替换引擎 + 多厂商 AI 风格化翻译），内置内容安全审核。
 
-[![Download](https://img.shields.io/badge/Download-v5.0.0-4F8CFF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/ason6565-ai/MiaoHelper_OpenSource/releases/latest)
+[![Download](https://img.shields.io/badge/Download-v5.2.0-4F8CFF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/ason6565-ai/MiaoHelper_OpenSource/releases/latest)
 
 > 本仓库为开源公开版，源码仅供学习交流与技术研究。
+
+## Keywords
+
+android · accessibility service · floating window · input enhancement · ai translation · text style transfer · chatbot persona · multilingual i18n · 无障碍 · 悬浮球 · 输入框增强 · AI 翻译 · 风格化
 
 ## 特色亮点
 
@@ -25,9 +29,11 @@ Android 无障碍输入文本增强工具：在任意 App 的输入框中，通�
 ## 功能特性
 
 - **无障碍悬浮球**：基于 AccessibilityService 的全局悬浮球，在任何输入框场景实时捕获文本并替换
+- **跟随系统语言**：默认随系统语言自动切换界面语言（中文 / English / 日本語 / 한국어），悬浮窗与无障碍服务文案实时跟随
 - **双引擎**：本地规则替换引擎（毫秒级、离线可用）+ AI 风格化翻译引擎（多厂商接入）
 - **多厂商 API 接入**：DeepSeek / 通义千问 / 智谱 GLM / Kimi / 字节豆包 / 腾讯混元 / SiliconFlow / OpenRouter / OpenAI，全部 OpenAI Chat Completions 兼容格式
 - **AI 裁判机制**：多候选生成 + 多 AI 裁判投票，解决大模型输出风格跑偏问题（生成数量与裁判数量可独立调节）
+- **多引擎自动降级**：主 API 失效自动切换备用引擎，彻底替换断网降级本地词库
 - **内容安全审核**：内置敏感词拦截（硬词 + 暗示词并联检测），未通过审核的内容不写回输入框
 - **翻译缓存**：本地磁盘 LRU 缓存（可配 TTL 与容量上限），减少重复 API 调用
 - **本地词库**：支持风格化词库可视化编辑与自定义人设模板
