@@ -71,7 +71,6 @@ public class MiaoService extends AccessibilityService {
         }
     };
 
-
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -109,9 +108,7 @@ public class MiaoService extends AccessibilityService {
         refreshFloat();
     }
 
-    // ============================================================
     // 无障碍事件：实时模式
-    // ============================================================
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
         // 按 App 自动切换风格：海外包已隐藏该功能（菜单入口+运行逻辑停用），此处保留代码便于后续恢复
@@ -255,9 +252,7 @@ public class MiaoService extends AccessibilityService {
         super.onDestroy();
     }
 
-    // ============================================================
     // busy 状态管理：配合看门狗，杜绝回调丢失导致的永久卡死（长期挂后台后的“点了没反应”）
-    // ============================================================
     private void markBusy() {
         busy = true;
         busySince = System.currentTimeMillis();
@@ -295,10 +290,7 @@ public class MiaoService extends AccessibilityService {
         return tail.indexOf(s.charAt(s.length() - 1)) >= 0;
     }
 
-    // ============================================================
     // 悬浮球：生命周期 + 状态显示 + 快捷菜单
-    // ============================================================
-
     /** 根据配置显示/隐藏悬浮球（Activity 也可调用刷新） */
     public void refreshFloat() {
         main.post(() -> {
@@ -531,10 +523,7 @@ public class MiaoService extends AccessibilityService {
         toast(getString(R.string.ms_float_hidden));
     }
 
-    // ============================================================
     // 风格化入口
-    // ============================================================
-
     /** 悬浮球点击：风格化当前焦点输入框 */
     public void miaoifyCurrentInput() {
         // 卡死自检：上次请求回调丢失会让 busy 长期为 true（长期挂后台最常见），到时自动恢复
@@ -618,7 +607,7 @@ public class MiaoService extends AccessibilityService {
                         try {
                             final String out = ApiMiaoifier.sanitize(s);
                             // 1) 硬红线：自报身份/助手腔/视角翻转，不受裁判严格度影响，直接本地兜底
-                            if (isDialogueResponse(s, reqText, true)) {
+                            if (OutSanity.isDialogueResponse(s, reqText, true)) {
                                 String local = MiaoifyEngine.miaoify(reqText, styleKeyNow);
                                 AppLog.w("Service", "彻底替换命中对话回复红线，转本地兜底。API=" + briefLog(s)
                                         + " → 本地=" + briefLog(local));
@@ -818,12 +807,8 @@ public class MiaoService extends AccessibilityService {
             }
         }
     }
-    // ============================================================
     // 生成回复：复制对方的话 → 长按悬浮球 → AI 以当前人设生成回复填入输入框
-    // ============================================================
-        // ============================================================
     // 生成回复：弹出输入框，用户粘贴/输入对方的话 → AI 以当前人设生成回复填入输入框
-    // ============================================================
     /** 悬浮球菜单：AI 裁判严格度调节对话框（SeekBar 1-5，即时预览+确定保存） */
     private void showJudgeStrengthDialog() {
         main.post(() -> {
@@ -989,10 +974,7 @@ private void callReplyApi(final String otherText, String key) {
         });
     }
 
-    // ============================================================
     // 检测与兜底
-    // ============================================================
-
     /** 身份诱导检测：命中则本地兜底，避免模型自报身份/跑偏成对话 */
     private static boolean isIdentityProbe(String text) {
         if (text == null) return false;
@@ -1056,12 +1038,9 @@ private void callReplyApi(final String otherText, String key) {
      * 快筛：译文是否"可疑"到需要 AI 裁判二次确认。
      * 阈值随严格度变化：1=最宽松(几乎直接放行)，5=最严格(几乎所有添加都进裁判)。
      */
-    // ============================================================
     // 4.6 多选一裁判核心流程（彻底替换 / 纯翻译共用）
     // 候选生成（风格浓度梯度，末位=零风格纯转述保底）→ L0 过滤 → K 裁判选择题投票
     // → 输出；全不合格→带理由重生成一轮→再不合格落保底候选（禁碎片）
-    // ============================================================
-
     /**
      * L0 候选过滤：末位保底候选只过"对话红线"（零风格转述不会被误伤）；
      * 其余候选过红线+快筛。返回通过列表，fallbackRef[0] 记录可用保底候选。
@@ -1081,14 +1060,14 @@ private void callReplyApi(final String otherText, String key) {
                 continue;
             }
             if (i == last) {   // 保底候选
-                if (!isDialogueResponse(c, orig, rework)) {
+                if (!OutSanity.isDialogueResponse(c, orig, rework)) {
                     pass.add(c);
                     fallbackRef[0] = c;
                 }
             } else {
-                if (isDialogueResponse(c, orig, rework)) continue;
-                if (rework) { if (looksReworkSuspicious(c, orig, strict)) continue; }
-                else        { if (looksSuspicious(c, orig, strict)) continue; }
+                if (OutSanity.isDialogueResponse(c, orig, rework)) continue;
+                if (rework) { if (OutSanity.looksReworkSuspicious(c, orig, strict)) continue; }
+                else        { if (OutSanity.looksSuspicious(c, orig, strict)) continue; }
                 pass.add(c);
             }
         }
@@ -1180,8 +1159,8 @@ private void callReplyApi(final String otherText, String key) {
                     // 方向错误会被 L0 剔除（isDialogueResponse / 快筛），安全
                     if (firstCandidate != null && !firstCandidate.trim().isEmpty()) {
                         String fc = firstCandidate.trim();
-                        if (!isDialogueResponse(fc, reqText, rework)) {
-                            if (!rework || !looksReworkSuspicious(fc, reqText, strict)) {
+                        if (!OutSanity.isDialogueResponse(fc, reqText, rework)) {
+                            if (!rework || !OutSanity.looksReworkSuspicious(fc, reqText, strict)) {
                                 pool.add(0, fc);
                             }
                         }
@@ -1289,7 +1268,7 @@ private void callReplyApi(final String otherText, String key) {
         try {
             final String sanitized = ApiMiaoifier.sanitize(s);
             // P0-4-4 纯翻译绝不本地兜底：对话式回应视为 AI 输出异常，直接报错，不偷偷本地风格化
-            if (isDialogueResponse(s, reqText)) {
+            if (OutSanity.isDialogueResponse(s, reqText)) {
                 AppLog.w("Service", "规则判定对话式回应，纯翻译不本地兜底。API=" + briefLog(s));
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();
@@ -1345,168 +1324,8 @@ private void callReplyApi(final String otherText, String key) {
             }
         });
     }
-    private static boolean looksSuspicious(String trans, String orig, int strictness) {
-        if (trans == null || trans.trim().isEmpty()) return true;
-        double lenMult; int sentDiff; boolean checkParen; boolean checkRhetoric;
-        switch (strictness) {
-            case 1:  lenMult = 3.0; sentDiff = 5; checkParen = false; checkRhetoric = false; break;
-            case 2:  lenMult = 2.2; sentDiff = 3; checkParen = true;  checkRhetoric = false; break;
-            case 4:  lenMult = 1.3; sentDiff = 1; checkParen = true;  checkRhetoric = true;  break;
-            case 5:  lenMult = 1.1; sentDiff = 1; checkParen = true;  checkRhetoric = true;  break;
-            default: lenMult = 1.6; sentDiff = 2; checkParen = true;  checkRhetoric = true;
-        }
-        if (checkParen && (trans.indexOf('(') >= 0 || trans.indexOf('（') >= 0)) return true;
-        if (orig != null && orig.length() > 0 && trans.length() > orig.length() * lenMult + 6) return true;
-        if (checkRhetoric) {
-            boolean origQ = orig != null && (orig.indexOf('？') >= 0 || orig.indexOf('?') >= 0);
-            String[] sus = {"对不对", "是不是", "你觉得", "主人觉得", "对吧", "是吧", "你说呢",
-                    "怎么样呢", "好不好", "要不要", "？", "?"};
-            for (String k : sus) {
-                boolean isQ = k.equals("？") || k.equals("?");
-                if (trans.contains(k)) {
-                    if (isQ && origQ) continue;
-                    return true;
-                }
-            }
-        }
-        if (strictness >= 5) {
-            String[] emo = {"觉得", "认为", "开心", "难过", "生气", "伤心", "高兴", "兴奋", "害怕", "担心", "好奇", "委屈", "害羞"};
-            for (String k : emo) {
-                if (trans.contains(k) && (orig == null || !orig.contains(k))) return true;
-            }
-        }
-        // 视角翻转信号（不受严格度影响，一定送裁判）：原文是问句、译文问号消失；或“主人问/你说…自称”转述结构
-        boolean oq = orig != null && (orig.indexOf('？') >= 0 || orig.indexOf('?') >= 0
-                || orig.matches(".*(吗|呢|怎么|什么|为什么|干嘛|干什么|做什么|如何|谁|哪|几|多少).*"));
-        boolean tq = trans.indexOf('？') >= 0 || trans.indexOf('?') >= 0;
-        if (oq && !tq) return true;
-        if (trans.matches(".*(主人|你).{0,5}(问|说).{0,8}(本喵|人家|吾|本小姐|本大爷|本系统|我).*")) return true;
-        if (countSentences(trans) >= countSentences(orig) + sentDiff) return true;
-        return false;
-    }
 
-    /** 彻底替换（再创作）结果快筛：比翻译版 looksSuspicious 更宽松——允许大幅扩写/换措辞/情绪渲染，
-     *  只抓"跑偏成对话"信号（反问用户、视角翻转、篇幅离谱、高严格度下句子暴增）。返回 true=可疑，送 AI 裁判 */
-    private static boolean looksReworkSuspicious(String trans, String orig, int strictness) {
-        if (trans == null || trans.trim().isEmpty()) return true;
-        // 长度倍数：再创作允许扩写，阈值比翻译宽松，严格度越高越紧
-        double lenMult;
-        switch (strictness) {
-            case 1:  lenMult = 8.0; break;   // 最宽松：几乎不限篇幅
-            case 2:  lenMult = 6.0; break;
-            case 4:  lenMult = 4.0; break;
-            case 5:  lenMult = 3.0; break;
-            default: lenMult = 5.0;
-        }
-        if (orig != null && orig.length() > 0 && trans.length() > orig.length() * lenMult + 10) return true;
-        // 反问/求助用户：再创作也不允许把"要说出去的话"变成向用户提问或提供帮助
-        String[] askUser = {"你觉得", "主人觉得", "你说呢", "怎么样呢", "要不要我", "需要我帮", "请问你", "我来帮你"};
-        for (String k : askUser) if (trans.contains(k)) return true;
-        // 视角翻转（不受严格度影响）：原文是问句、候选却无问号且以人设自称开头；或"主人问/你说…自称"转述自答
-        boolean oq = orig != null && (orig.indexOf('？') >= 0 || orig.indexOf('?') >= 0
-                || orig.matches(".*(吗|呢|怎么|什么|为什么|干嘛|干什么|做什么|如何|谁|哪|几|多少).*"));
-        boolean tq = trans.indexOf('？') >= 0 || trans.indexOf('?') >= 0;
-        if (oq && !tq && startsWithPersonaSelf(trans)) return true;
-        if (trans.matches(".*(主人|你).{0,5}(问|说).{0,8}(本喵|人家|吾|本小姐|本大爷|本系统|我).*")) return true;
-        // 高严格度：新增句子数过多视为可疑（用户显式拉高扩写等级=授权加戏，不再以此剔除）
-        if (strictness >= 4 && Prefs.expandLevel() <= 2 && countSentences(trans) >= countSentences(orig) + 3) return true;
-        return false;
-    }
-
-    private static int countSentences(String s) {
-        if (s == null || s.isEmpty()) return 0;
-        int n = 1;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '。' || c == '！' || c == '？' || c == '!' || c == '?'
-                    || c == '…' || c == '\n') n++;
-        }
-        return n;
-    }
-
-    /** 对话回应兜底检测：模型自报身份、助手腔或篇幅暴增时判为跑偏成对话，转本地兜底 */
-    private static boolean isDialogueResponse(String resp, String orig) {
-        return isDialogueResponse(resp, orig, false);
-    }
-    /** 对话回应兜底检测（可放宽）：allowExpand=true 用于彻底替换模式，允许大幅扩写，跳过篇幅暴增判据，只保留真正的对话回复红线 */
-    private static boolean isDialogueResponse(String resp, String orig, boolean allowExpand) {
-        if (resp == null || resp.trim().isEmpty()) return true;
-        String r = resp.trim();
-        // 一开口就是助手自我介绍
-        if (r.matches(".*我是(DeepSeek|deepseek|AI|ai|人工智能|大模型|语言模型|模型|助手|机器人|豆包|ChatGPT|GPT|一个|一款|由|OpenAI|字节|深度求索).*"))
-            return true;
-        if (r.matches(".*(抱歉，?我是|很抱歉，?我是|你好！?我是|你好呀！?我是|我是你的|很高兴认识你，?我是).*"))
-            return true;
-        // 助手腔 / 拒答套话关键词（4.6：加 orig 守卫——原文本身含"以下是/很高兴为你"等词不得误杀忠实译文）
-        String[] assistantTone = {
-            "作为一个AI", "作为一个ai", "作为AI", "作为人工智能", "作为大模型", "作为语言模型", "作为模型", "作为助手",
-            "我能帮你", "我可以帮您", "我可以帮你", "有什么可以帮你", "有什么可以为您", "请问有什么", "需要我帮忙", "有什么能帮",
-            "很高兴为您", "很高兴为你", "为您服务", "为你服务", "我是一个语言模型", "我是一个大模型", "我是个人工智能",
-            "我无法透露", "我不能透露", "我没有感情", "我没有实体", "根据我的训练", "训练数据",
-            "以下是", "希望这能帮到", "希望可以帮到", "如果还有", "需要其他帮助", "请问还有什么", "还有什么问题", "随时为您",
-            "我是虚拟助手", "作为一个虚拟"
-        };
-        for (String kw : assistantTone) {
-            if (r.contains(kw) && (orig == null || !orig.contains(kw))) return true;
-        }
-        // 云端/运行状态自述：模型解释自己"没有在使用中/并不在云端/本地运行"等，明显对话跑偏 → 直接本地兜底
-        String[] cloudTone = {
-            "没有在使用", "不在使用", "未在使用", "没在使用",
-            "不在运行", "未在运行", "没有在运行", "没在运行",
-            "不在云端", "没有在云端", "未在云端", "没在云端", "并不在云端",
-            "未连接云端", "没有连接云端", "没连上云端", "未连接到云端",
-            "本地运行", "本地部署", "本地模型", "本地执行",
-            "不需要云端", "无法在云端", "不能在云端", "未在云端使用"
-        };
-        for (String kw : cloudTone) {
-            if (r.contains(kw) && (orig == null || !orig.contains(kw))) return true;
-        }
-        // 否定式自述 + 云端/使用中/运行中（如"我并没有在使用中"、"我现在没有在云端运行"）
-        if (r.matches(".*(没有|不在|未在|没在|并未|并不|无法|不能)(在)?(云端|使用中|运行中|在线|被使用|被运行).*"))
-            return true;
-        // 篇幅暴增：正常风格化不会让长度翻数倍；超短原文放宽倍数，避免误伤风格化扩写
-        if (orig != null && orig.length() > 0) {
-            if (!allowExpand) {
-                int mult = orig.length() <= 6 ? 15 : 6;
-                if (r.length() > orig.length() * mult) return true;
-            }
-        }
-        // ===== 视角翻转回答：原文是“说话人发出去的话”，译文却变成“人设角色在回答说话人” =====
-        boolean origAsk = isQuestionText(orig);
-        boolean transAsk = isQuestionText(r);
-        // 1) 原文是问句、译文却不再是问句，且译文以人设自称开头 → 模型在回答而非改写
-        if (origAsk && !transAsk && startsWithPersonaSelf(r)) return true;
-        // 2) “主人问/主人说：…”式先转述再自答：转述动词后必须跟冒号/引号/道/过（“说话方式”的“说”不算转述）
-        if (r.matches(".*(主人|你).{0,5}(问|说)([:：\"\"]|道|过).{0,8}(本喵|人家|吾|本小姐|本大爷|本系统|本姑娘|我).{0,12}(正在|在想|觉得|认为|这就|来告诉|当然|答案|可以|来帮|马上).*"))
-            return true;   // ★v4 修复：原为悬空 if（上一行 if 的语句体是下一行 if），该判据永不生效
-        if (r.matches(".*(主人|你).{0,5}问.{0,8}(本喵|人家|吾|本小姐|本大爷|本系统|本姑娘|我).{0,12}(正在|在想|觉得|认为|这就|来告诉|当然|答案|可以|来帮|马上).*"))
-            return true;
-        // 3) 原文是问句、译文无问号，且出现“自称+回答谓语”
-        if (origAsk && !transAsk
-                && r.matches(".*(本喵|人家|吾|本小姐|本大爷|本系统|本姑娘|我).{0,3}(正在|在想|觉得|认为|这就|来告诉你|当然是|答案是|可以帮|来帮你|马上).*"))
-            return true;
-        return false;
-    }
-
-    /** 是否为疑问句：含问号或疑问词 */
-    private static boolean isQuestionText(String s) {
-        if (s == null) return false;
-        if (s.indexOf('?') >= 0 || s.indexOf('？') >= 0) return true;
-        return s.matches(".*(吗|呢|怎么|什么|为什么|咋|如何|谁|哪|几|多少|是不是|有没有|干嘛|干什么|做什么|咋样).*");
-    }
-
-    /** 是否以人设第一人称自称开头 */
-    private static boolean startsWithPersonaSelf(String s) {
-        if (s == null) return false;
-        String[] self = {"本喵", "人家", "吾", "本小姐", "本大爷", "本系统", "本姑娘", "咱", "阿拉", "本蹦", "在下", "鄙人", "我"};
-        for (String z : self) if (s.startsWith(z)) return true;
-        return false;
-    }
-
-    // ============================================================
     // 无障碍节点工具
-    // ============================================================
-
     /**
      * 查找当前焦点输入框（多策略兜底，适配微信/QQ 等自定义输入框、多窗口场景）。
      * 策略1：当前活动窗口树；策略2：遍历所有 TYPE_APPLICATION 窗口树。

@@ -193,7 +193,7 @@ public class ApiMiaoifier {
                     cb.onSuccess("连接成功！模型响应正常。");
                 } else {
                     String err = readStream(conn.getErrorStream());
-                    cb.onError("连接失败 (" + code + ")：" + extractErrorMsg(err));
+                    cb.onError("连接失败 (" + code + ")：" + errMsg(err));
                 }
             } catch (Throwable e) {
                 AppLog.e("Api", "测试连接异常", e);
@@ -247,7 +247,7 @@ public class ApiMiaoifier {
                 if (code != 200) {
                     if (volcano) { fallbackVolcano(raw); return; }
                     String err = readStream(conn.getErrorStream());
-                    raw.onError("获取失败 (" + code + ")：" + extractErrorMsg(err) + "。也可手动输入模型 ID。");
+                    raw.onError("获取失败 (" + code + ")：" + errMsg(err) + "。也可手动输入模型 ID。");
                     return;
                 }
                 String resp = readStream(conn.getInputStream());
@@ -322,7 +322,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         ? defaultPrompt() : stylePrompt;
                 String sysTool = buildTranslateTool() + "\n\n" + system;
                 if (targetIsForeign() && !wantsForeignLang(stylePrompt)) {
-                    String iron = outputLanguageIronRule();
+                    String iron = langIronRule();
                     if (!iron.isEmpty()) sysTool = sysTool + "\n\n" + iron;
                 }
 
@@ -401,9 +401,9 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         JSONObject resp = new JSONObject(respBody);
                         String content = resp.getJSONArray("choices").getJSONObject(0)
                                 .getJSONObject("message").getString("content").trim();
-                        content = stripWrapper(content);
+                        content = dropWrap(content);
 
-                        boolean valid = isValidTranslation(text, content, stylePrompt);
+                        boolean valid = transOk(text, content, stylePrompt);
                         if (!valid) {
                             if (!retried) {
                                 retried = true;
@@ -451,10 +451,8 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         execute(task, cb);
     }
 
-    // ============================================================
     // v3.3 真流式翻译（OkHttp + SSE）：仅主翻译链路使用；端点不支持 SSE 时自动整体解析回退，
     // 再不行由调用方回退到非流式 miaoify()。所有回调都在 miao-api 后台线程触发，UI 由调用方切主线程。
-    // ============================================================
     public interface StreamCallback {
         /** 每收到一个增量：full=当前累积全文，delta=本次增量，estProgress=估算进度 0.05~0.92 */
         void onDelta(String full, String delta, float estProgress);
@@ -597,7 +595,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 }
                 String content;
                 if (gotAnyData) {
-                    content = stripWrapper(acc.toString());
+                    content = dropWrap(acc.toString());
                 } else {
                     // 端点忽略 stream 参数、直接回了整段 JSON：整体解析一次
                     content = parseNonStreamContent(nonSse.toString());
@@ -610,7 +608,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     cb.onError(Prefs.getContext().getString(R.string.err_stream_empty));
                     return;
                 }
-                if (!isValidTranslation(text, content, stylePrompt)) {
+                if (!transOk(text, content, stylePrompt)) {
                     AppLog.w("Api", "流式译文校验未通过，交上层回退：" + brief(content));
                     cb.onError(Prefs.getContext().getString(R.string.err_stream_error));
                     return;
@@ -636,7 +634,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             String c = resp.getJSONArray("choices").getJSONObject(0)
                     .getJSONObject("message").getString("content").trim();
             if ("null".equals(c) || "NULL".equals(c)) return null;
-            return stripWrapper(c);
+            return dropWrap(c);
         } catch (Exception e) {
             return null;
         }
@@ -661,7 +659,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         msgs.put(new JSONObject().put("role", "assistant").put("content", output));
     }
 
-    private static String stripWrapper(String s) {
+    private static String dropWrap(String s) {
         if (s == null) return "";
         String out = s.trim();
         int bi = out.indexOf(BEGIN);
@@ -747,7 +745,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         }
     }
     /** 输出语言铁律：按目标语言生成最高优先级约束（压过中文写的人设/示例） */
-    private static String outputLanguageIronRule() {
+    private static String langIronRule() {
         switch (targetLang()) {
             case "ja":
                 return "【出力言語の鉄則】（最優先。上記のすべてのルール・人設・例に優先する）今回は出力をすべて日本語にする。中国語・韓国語など日本語以外を一切出力してはならない。"
@@ -787,7 +785,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     /**
      * 译文合法性校验：检测乱码、对话式回应、长度异常、文言文幻觉、反问句
      */
-    private static boolean isValidTranslation(String original, String translated, String stylePrompt) {
+    private static boolean transOk(String original, String translated, String stylePrompt) {
         if (translated == null || translated.trim().isEmpty()) return false;
         int origLen = original == null ? 0 : original.length();
         int transLen = translated.length();
@@ -896,17 +894,17 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             case 402: return "账户余额不足，请到对应平台的账户中心充值后重试";
             case 429: return "请求太频繁被限流，请稍后再试";
             case 400: {
-                String m = extractErrorMsg(body);
+                String m = errMsg(body);
                 return m.isEmpty() ? "请求格式错误(400)" : "请求错误：" + m;
             }
             default: {
-                String m = extractErrorMsg(body);
+                String m = errMsg(body);
                 return m.isEmpty() ? "API 错误 " + code : "API 错误 " + code + "：" + m;
             }
         }
     }
 
-    private static String extractErrorMsg(String body) {
+    private static String errMsg(String body) {
         if (body == null || body.isEmpty()) return "";
         try {
             JSONObject j = new JSONObject(body);
@@ -929,7 +927,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
 
     /**
      * 词库扩展专用请求（4.4 修复：与翻译链路彻底解耦）。
-     * 不走 buildTranslateTool 叠加、不走 isValidTranslation 校验、不走 AI 裁判、无本地兜底：
+     * 不走 buildTranslateTool 叠加、不走 transOk 校验、不走 AI 裁判、无本地兜底：
      * 扩展请求的输出是「词表」，永远不该被"忠实翻译"校验拦截；失败直接 onError 上报。
      */
     public static void expandLexicon(String userPrompt, String systemPrompt, String key, Callback raw) {
@@ -1179,9 +1177,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                "用户：你吃了吗？\n输出：（按当前风格转换后的结果）";
     }
 
-    // ============================================================
     // 回复生成：读对方的话，以当前人设生成一条聊天回复（真·对话，与翻译互斥）
-    // ============================================================
     public static void generateReply(String otherText, String key, String personaPrompt, Callback raw) {
         totalRequests++;
         final Callback cb = once(raw);
@@ -1248,7 +1244,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
                         String content = resp.getJSONArray("choices").getJSONObject(0)
                                 .getJSONObject("message").getString("content").trim();
-                        content = stripReplyPrefix(content);
+                        content = cutPrefix(content);
                         if (content.isEmpty()) {
                             cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
@@ -1276,7 +1272,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /** 合成模式无自定义人设时的默认说话方式（跟随目标语言） */
-    private static String syntheticPersonaDefault() {
+    private static String synthDefault() {
         switch (targetLang()) {
             case "en": return "natural, conversational English";
             case "ja": return "自然で口語的な日本語の話し方";
@@ -1285,9 +1281,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         }
     }
 
-    // ============================================================
     // 合成模式：把两段不同语言的内容合成为一句融合两种语言、带人设语气的话
-    // ============================================================
     public static void synthesize(String textA, String textB, String key, String personaPrompt, Callback raw) {
         totalRequests++;
         final Callback cb = once(raw);
@@ -1296,7 +1290,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         Runnable task = () -> {
             try {
                 String persona = (personaPrompt == null || personaPrompt.trim().isEmpty())
-                        ? syntheticPersonaDefault() : personaPrompt;
+                        ? synthDefault() : personaPrompt;
                 persona = persona.replaceAll("【改写强度[\\s\\S]*$", "").trim();
                 String system =
                         "你是风格合成器。用户会给你两段【文本A】和【文本B】，它们通常是两种不同语言（如中文+英文、中文+日语、普通话+方言）对同一内容或相关内容的表达。\n\n"
@@ -1350,7 +1344,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
                         String content = resp.getJSONArray("choices").getJSONObject(0)
                                 .getJSONObject("message").getString("content").trim();
-                        content = stripReplyPrefix(content);
+                        content = cutPrefix(content);
                         if (content.isEmpty()) {
                             cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
@@ -1377,11 +1371,8 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         execute(task, cb);
     }
 
-    // ============================================================
     // 彻底替换模式：AI 以人设自由再创作整句话（非逐句翻译，随机性高）
     // 只拦“对话回复”，不做翻译式严格校验，鼓励发挥与扩写
-    // ============================================================
-
     public static void rework(String text, String key, String styleKey, String personaPrompt, Callback raw) {
         totalRequests++;
         final Callback cb = once(raw);
@@ -1394,8 +1385,8 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 // 兜底：若传入人设仍带翻译式强度/篇幅指令则截掉（正常已由 currentPersonaBase 剔除）
                 persona = persona.replaceAll("【改写强度[\\s\\S]*$", "").trim();
                 // 再创作篇幅跟随用户的「扩写等级」（0=自动→适度），让已有调节对彻底替换生效
-                String reworkLen = reworkLengthDirective(Prefs.expandLevel());
-                String reworkItn = reworkIntensityDirective(Prefs.styleIntensity());
+                String reworkLen = lenDirective(Prefs.expandLevel());
+                String reworkItn = intensityLine(Prefs.styleIntensity());
                 String system =
                         "你是内容再创作者，不是一个聊天助手。用户给你一段【原文】，你要把它当作“待再创作的素材”，而不是对你说话。\n\n"
                         + "【你要代入的人设】\n" + persona + "\n\n"
@@ -1412,7 +1403,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         + "6. 输出必须是通顺连贯的" + targetLangName() + "文本：禁止乱码、禁止无意义字符堆叠、禁止把词语打碎成碎片乱序拼接、"
                         + "禁止连续重复同一字词制造伪节奏；写不出的地方宁可平实直说也不要生造";
                 if (targetIsForeign() && !wantsForeignLang(persona)) {
-                    String iron = outputLanguageIronRule();
+                    String iron = langIronRule();
                     if (!iron.isEmpty()) system = system + "\n\n" + iron;
                 }
 
@@ -1476,7 +1467,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
                         String content = resp.getJSONArray("choices").getJSONObject(0)
                                 .getJSONObject("message").getString("content").trim();
-                        content = stripWrapper(content);
+                        content = dropWrap(content);
                         if (content.isEmpty()) {
                             cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
@@ -1553,7 +1544,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
                         String content = resp.getJSONArray("choices").getJSONObject(0)
                                 .getJSONObject("message").getString("content").trim();
-                        content = stripWrapper(content);
+                        content = dropWrap(content);
                         if (content.isEmpty()) {
                             cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
@@ -1581,7 +1572,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /** 彻底替换的再创作篇幅指令：跟随用户「扩写等级」（0=自动→适度，1克制…5自由），让已有调节对彻底替换生效 */
-    private static String reworkLengthDirective(int expand) {
+    private static String lenDirective(int expand) {
         switch (expand) {
             case 1:  return "【篇幅·克制】只换说法和语气，不扩写，长度与原文基本一致。";
             case 2:  return "【篇幅·轻扩】以换说法为主，最多补一两个语气词或短碎念，略长于原文即可。";
@@ -1593,7 +1584,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /** 彻底替换的风格浓度指令：跟随用户「风格强度」（1-5），浓度越高要求改写幅度越大、风格越鲜明 */
-    private static String reworkIntensityDirective(int level) {
+    private static String intensityLine(int level) {
         int lv = Math.min(Math.max(level, 1), 5);
         String[] d = {
             "【风格浓度 1/5】人设风味最轻：保持原话的基本说法，仅在措辞上轻微带出人设的口癖或语气词，几乎不影响原句结构。",
@@ -1606,7 +1597,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /** 回复结果清洗：去前缀、外层引号；若模型违规罗列多条只取第一条 */
-    private static String stripReplyPrefix(String s) {
+    private static String cutPrefix(String s) {
         if (s == null) return "";
         String out = s.trim();
         String[] prefixes = {"回复：", "回复:", "我：", "我:", "答：", "答:", "对方：", "对方:"};
@@ -1777,9 +1768,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     /**
      * 译文净化：双保险，去掉模型擅自加的括号动作描写、反问尾巴、多余语气词、口癖字堆叠
      */
-    // ============================================================
     // AI 裁判（LLM-as-judge）：对比原文与译文，判断是否忠实改写而非跑偏成对话
-    // ============================================================
     public interface JudgeCallback {
         /** faithful=true 译文忠实可输出；false 跑偏，应转本地兜底 */
         void onResult(boolean faithful);
@@ -1886,11 +1875,9 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         try { POOL.execute(task); } catch (Throwable t) { raw.onResult(true); }
     }
 
-    // ============================================================
     // 4.6 多选一裁判：候选生成 + K 裁判选择题 + 投票合并
     // 解决"回复式翻译"：模型把待改写原话当对话回应（反问/回答而非转述）。
     // 硬性规则：先淘汰回答式再排序；方向 > 忠实 > 风格（prompt + 投票双重约束）。
-    // ============================================================
     public interface CandidateCallback {
         /** candidates 长度 == n（含保底候选在末位） */
         void onSuccess(String[] candidates);
@@ -1948,15 +1935,15 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                         .append("2. 禁止自报AI身份、禁止新增与原文无关的关键事实。\n")
                         .append("3. 每个候选都必须是完整的一句话或一小段，禁止输出编号、引号或解释。");
                     if (rework) {
-                        sysA.append("\n\n").append(reworkLengthDirective(Prefs.expandLevel()));
-                        sysA.append("\n").append(reworkIntensityDirective(Prefs.styleIntensity()));
+                        sysA.append("\n\n").append(lenDirective(Prefs.expandLevel()));
+                        sysA.append("\n").append(intensityLine(Prefs.styleIntensity()));
                     }
                     if (stylePrompt != null && !stylePrompt.trim().isEmpty()) {
                         sysA.append("\n\n【当前人设】\n").append(stylePrompt);
                     }
                     String userA = "【原文】\n" + text + "\n\n请输出 " + nFaith + " 个候选的 JSON 数组："
                             + (fixHint == null || fixHint.isEmpty() ? "" : "\n\n【上次评审意见，必须修正】\n" + fixHint);
-                    String[] got = requestCandidates(key, sysA.toString(), shots, userA, nFaith, t0, "A原文", text, rework);
+                    String[] got = reqCands(key, sysA.toString(), shots, userA, nFaith, t0, "A原文", text, rework);
                     for (String c : got) if (c != null && !c.isEmpty()) all.add(c);
                 }
                 // ---- 轨道 B：只看【本地打底】的风格强化（浓度拉满） ----
@@ -1974,7 +1961,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     }
                     String userB = "【风格参考】\n" + base + "\n\n请输出 " + nStyle + " 个候选的 JSON 数组："
                             + (fixHint == null || fixHint.isEmpty() ? "" : "\n\n【上次评审意见，必须修正】\n" + fixHint);
-                    String[] got = requestCandidates(key, sysB.toString(), null, userB, nStyle, t0, "B打底", text, rework);
+                    String[] got = reqCands(key, sysB.toString(), null, userB, nStyle, t0, "B打底", text, rework);
                     for (String c : got) if (c != null && !c.isEmpty()) all.add(c);
                 }
                 // ---- 保底：原文纯转述（本地生成，零风格、绝不跑偏），固定末位 ----
@@ -1998,7 +1985,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
      *  - 异常文字（韩/俄/阿/希腊等）+ 异常符号占比 > 25% → 乱码
      *  - 原文为中文时，候选汉字/假名占比 < 40% → 乱码（外语翻译场景按原文语言豁免）
      *  - 单候选超长（>800 字符，宽松提取时引号未闭合可能吞到文件尾）→ 丢弃 */
-    private static boolean isGarbageCandidate(String s, String orig) {
+    private static boolean garbageLike(String s, String orig) {
         if (s == null) return true;
         String t = s.trim();
         if (t.isEmpty()) return true;
@@ -2018,12 +2005,12 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         if (content == 0) return true;
         if (weird * 100 / content > 25) return true;
         // 原文为中文时才做汉字占比检查（外语翻译场景候选是外语，豁免）
-        if (orig != null && isMostlyCjk(orig) && cjk * 100 / content < 40) return true;
+        if (orig != null && hanHeavy(orig) && cjk * 100 / content < 40) return true;
         return false;
     }
 
     /** 原文是否以中文为主（>50% 汉字/假名） */
-    private static boolean isMostlyCjk(String s) {
+    private static boolean hanHeavy(String s) {
         if (s == null || s.isEmpty()) return false;
         int cjk = 0, total = 0;
         for (int i = 0; i < s.length(); i++) {
@@ -2035,7 +2022,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /** v4.7.1 单轨候选请求：一次 LLM 调用返回 nWant 个候选（可能不足，上层对齐） */
-    private static String[] requestCandidates(final String key, final String system, final String[][] shots,
+    private static String[] reqCands(final String key, final String system, final String[][] shots,
                                               final String user, final int nWant, final long t0,
                                               final String tag, final String orig, final boolean rework) throws Exception {
         JSONArray msgs = new JSONArray();
@@ -2085,7 +2072,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
                 String content = resp.getJSONArray("choices").getJSONObject(0)
                         .getJSONObject("message").getString("content").trim();
-                content = stripWrapper(content);
+                content = dropWrap(content);
                 content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
         // 容错解析：AI 返回的 JSON 数组可能未闭合（缺 ]）或混入乱码，先尝试严格解析，失败则宽松提取字符串元素
         java.util.List<String> list = new java.util.ArrayList<>();
@@ -2093,7 +2080,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             JSONArray arr = new JSONArray(content);
             for (int i = 0; i < arr.length(); i++) {
                 String s2 = arr.optString(i, "").trim();
-                if (!s2.isEmpty() && !isGarbageCandidate(s2, orig)) {
+                if (!s2.isEmpty() && !garbageLike(s2, orig)) {
                     list.add(s2);
                     if (list.size() >= nWant) break;   // ★截断：AI 返回超量时只取前 nWant 个，防止挤掉保底/裁判池超 N
                 }
@@ -2116,7 +2103,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     j++;
                 }
                 String s2 = sb.toString().trim();
-                if (!s2.isEmpty() && !isGarbageCandidate(s2, orig)) list.add(s2);
+                if (!s2.isEmpty() && !garbageLike(s2, orig)) list.add(s2);
                 i = j + 1;
             }
             if (list.isEmpty()) {
