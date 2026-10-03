@@ -135,7 +135,8 @@ public class PreviewBubble {
         main.post(() -> {
             this.listener = l;
             title.setText(changePercent >= 0 ? appCtx.getString(R.string.pb_title_chg_fmt, changePercent) : appCtx.getString(R.string.pb_title));
-            body.setText(translated == null ? "" : translated);
+            body.setText(translated == null || translated.isEmpty()
+                    ? appCtx.getString(R.string.pb_no_result) : translated);
             try {
                 if (showing) wm.updateViewLayout(root, lp);
                 else { wm.addView(root, lp); showing = true; }

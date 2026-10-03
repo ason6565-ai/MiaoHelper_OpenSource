@@ -63,6 +63,14 @@ public class MiaoService extends AccessibilityService {
 
     public static MiaoService get() { return inst; }
 
+    /** 系统语言变化监听（跟随系统模式）：浮窗 View 语言在创建时固定，语言变了必须重建 */
+    private final android.content.BroadcastReceiver localeReceiver = new android.content.BroadcastReceiver() {
+        @Override public void onReceive(android.content.Context c, android.content.Intent intent) {
+            AppLog.i("Service", "系统语言变化，重建浮窗（跟随系统）");
+            recreateFloatForLanguage();
+        }
+    };
+
 
     @Override
     protected void onServiceConnected() {
@@ -90,6 +98,14 @@ public class MiaoService extends AccessibilityService {
         // 复核 P0-2：线程池拒绝时通过 UiFeedback 统一出口提示，不静默丢请求
         ApiMiaoifier.setRejectNotifier(msg -> main.post(() -> toast(msg)));
         AppLog.i("Service", "无障碍服务已连接 onServiceConnected");
+        // 跟随系统语言：监听系统语言变化，重建浮窗让文案刷新（Android 14+ 系统广播用 NOT_EXPORTED 合法）
+        try {
+            android.content.IntentFilter lf = new android.content.IntentFilter(android.content.Intent.ACTION_LOCALE_CHANGED);
+            androidx.core.content.ContextCompat.registerReceiver(this, localeReceiver, lf,
+                    androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+        } catch (Throwable t) {
+            AppLog.w("Service", "注册系统语言变化广播失败：" + t);
+        }
         refreshFloat();
     }
 
@@ -227,6 +243,7 @@ public class MiaoService extends AccessibilityService {
     @Override
     public void onDestroy() {
         AppLog.w("Service", "无障碍服务 onDestroy");
+        try { unregisterReceiver(localeReceiver); } catch (Throwable ignored) { }
         ApiMiaoifier.setRejectNotifier(null);
         resetBusy();
         if (floatBall != null) {
@@ -315,6 +332,7 @@ public class MiaoService extends AccessibilityService {
             if (floatBall == null) return;
             floatBall.hide();
             if (floatPanel != null) { floatPanel.hide(); floatPanel = null; }
+            if (previewBubble != null) { previewBubble.hide(); previewBubble = null; }
             floatBall = null;
             if (Prefs.showFloat() && Settings.canDrawOverlays(this)) {
                 createFloats();
@@ -604,7 +622,8 @@ public class MiaoService extends AccessibilityService {
                                 String local = MiaoifyEngine.miaoify(reqText, styleKeyNow);
                                 AppLog.w("Service", "彻底替换命中对话回复红线，转本地兜底。API=" + briefLog(s)
                                         + " → 本地=" + briefLog(local));
-                                finishTranslation(reqText, local, true);
+                                if (!Prefs.previewMode()) finishTranslation(reqText, local, true);
+                                else deliver(reqText, local, true);
                                 return;
                             }
                             // 2) 关闭二次校验 → 直接输出（省一次裁判请求）
@@ -613,7 +632,8 @@ public class MiaoService extends AccessibilityService {
                             final int strict = Prefs.judgeStrictness();
                             if (!Prefs.aiVerify()) {
                                 AppLog.i("Service", "彻底替换成功：" + briefLog(out));
-                                finishTranslation(reqText, out, true);
+                                if (!Prefs.previewMode()) finishTranslation(reqText, out, true);
+                                else deliver(reqText, out, true);
                                 return;
                             }
                             // 3) 4.6 多选一裁判——生成风格浓度梯度候选池，K 裁判选择题投票
@@ -629,8 +649,13 @@ public class MiaoService extends AccessibilityService {
                     @Override public void onError(String m) {
                         resetBusy();
                         if (floatBall != null) floatBall.cancelProgress();
-                        AppLog.w("Service", "彻底替换失败：" + m);
-                        toastError(getString(R.string.ms_full_fail_fmt, m));
+                        AppLog.w("Service", "彻底替换失败，降级本地词库：" + m);
+                        String local = MiaoifyEngine.miaoify(reqText, styleKeyNow);
+                        AppLog.i("Service", "彻底替换本地兜底 风格=" + StyleManager.currentName()
+                                + " 原文=" + briefLog(reqText) + " 译文=" + briefLog(local));
+                        if (!Prefs.previewMode()) finishTranslation(reqText, local, true);
+                        else deliver(reqText, local, true);
+                        toast(getString(R.string.ms_fallback_local));
                     }
                 });
                 return;
@@ -702,7 +727,8 @@ public class MiaoService extends AccessibilityService {
         } else {
             String out = MiaoifyEngine.miaoify(content);
             AppLog.i("Local", "触发词本地翻译：" + briefLog(content) + " → " + briefLog(out));
-            finishTranslation(content, out);
+            if (!Prefs.previewMode()) finishTranslation(content, out);
+            else deliver(content, out);
         }
     }
 
@@ -1170,7 +1196,8 @@ private void callReplyApi(final String otherText, String key) {
                         } else {
                             AppLog.w("Service", "4.6 候选池两轮全空，彻底替换转本地兜底");
                             if (rework) {
-                                finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                if (!Prefs.previewMode()) finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                else deliver(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
                             } else {
                                 resetBusy();
                                 if (floatBall != null) floatBall.cancelProgress();
@@ -1180,10 +1207,10 @@ private void callReplyApi(final String otherText, String key) {
                         return;
                     }
                     // 只剩一个候选（通常是保底）：直接采用，不再浪费裁判
-                    if (pool.size() == 1) {
+                        if (pool.size() == 1) {
                         AppLog.i("Service", "4.6 候选池过滤后仅剩 1 个，直接采用：" + briefLog(pool.get(0)));
-                        if (rework) finishTranslation(reqText, pool.get(0), true);
-                        else deliver(reqText, pool.get(0));
+                        if (rework && !Prefs.previewMode()) finishTranslation(reqText, pool.get(0), true);
+                        else deliver(reqText, pool.get(0), rework);
                         return;
                     }
                     AppLog.i("Service", "4.6 多选一裁判开始 N=" + pool.size() + " K=" + K + "（原始 N=" + N + "）");
@@ -1192,8 +1219,8 @@ private void callReplyApi(final String otherText, String key) {
                         if (choice >= 0) {
                             String chosen = pool.get(choice);
                             AppLog.i("Service", "4.6 多选一选中候选#" + choice + "：" + briefLog(chosen));
-                            if (rework) finishTranslation(reqText, chosen, true);
-                            else deliver(reqText, chosen);
+                            if (rework && !Prefs.previewMode()) finishTranslation(reqText, chosen, true);
+                            else deliver(reqText, chosen, rework);
                         } else if (choice == -1) {
                             // 全不合格：带裁判理由重生成一轮；二次仍不合格 → 落保底候选
                             if (!second[0]) {
@@ -1206,11 +1233,12 @@ private void callReplyApi(final String otherText, String key) {
                                 String fb = pickFallback(pool, fallbackRef);
                                 if (fb != null) {
                                     AppLog.w("Service", "4.6 二次仍不合格，落保底候选：" + briefLog(fb));
-                                    if (rework) finishTranslation(reqText, fb, true);
-                                    else deliver(reqText, fb);
+                                    if (rework && !Prefs.previewMode()) finishTranslation(reqText, fb, true);
+                                    else deliver(reqText, fb, rework);
                                 } else if (rework) {
                                     AppLog.w("Service", "4.6 无保底候选，彻底替换转本地兜底");
-                                    finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                    if (!Prefs.previewMode()) finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                    else deliver(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
                                 } else {
                                     resetBusy();
                                     if (floatBall != null) floatBall.cancelProgress();
@@ -1222,11 +1250,12 @@ private void callReplyApi(final String otherText, String key) {
                             String fb = pickFallback(pool, fallbackRef);
                             if (fb != null) {
                                 AppLog.w("Service", "4.6 裁判全部失败，落保底候选：" + briefLog(fb));
-                                if (rework) finishTranslation(reqText, fb, true);
-                                else deliver(reqText, fb);
+                                if (rework && !Prefs.previewMode()) finishTranslation(reqText, fb, true);
+                                else deliver(reqText, fb, rework);
                             } else if (rework) {
                                 AppLog.w("Service", "4.6 裁判失败且无保底，彻底替换转本地兜底");
-                                finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                if (!Prefs.previewMode()) finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                                else deliver(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
                             } else {
                                 resetBusy();
                                 if (floatBall != null) floatBall.cancelProgress();
@@ -1244,7 +1273,8 @@ private void callReplyApi(final String otherText, String key) {
                 // 候选生成失败：彻底替换转本地兜底；纯翻译报错（P0-4-4）
                 AppLog.w("Service", "4.6 候选生成失败：" + msg);
                 if (rework) {
-                    finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                    if (!Prefs.previewMode()) finishTranslation(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
+                    else deliver(reqText, MiaoifyEngine.miaoify(reqText, styleKey), true);
                 } else {
                     resetBusy();
                     if (floatBall != null) floatBall.cancelProgress();
@@ -1290,19 +1320,24 @@ private void callReplyApi(final String otherText, String key) {
 
     /** 结果投递：开启预览模式先弹确认条（点采用才真正写入），否则直接写入输入框 */
     private void deliver(final String orig, final String out) {
+        deliver(orig, out, false);
+    }
+
+    /** 结果投递（宽松审核版本，供彻底替换链路使用）：预览模式下弹确认条，采用后按 relaxedGuard 审核写回 */
+    private void deliver(final String orig, final String out, final boolean relaxedGuard) {
         if (Prefs.previewMode()) {
-            main.post(() -> showPreviewBubble(orig, out));
+            main.post(() -> showPreviewBubble(orig, out, relaxedGuard));
         } else {
-            finishTranslation(orig, out);
+            finishTranslation(orig, out, relaxedGuard);
         }
     }
 
-    private void showPreviewBubble(final String orig, final String out) {
+    private void showPreviewBubble(final String orig, final String out, final boolean relaxedGuard) {
         if (previewBubble == null) previewBubble = new PreviewBubble(this);
         previewBubble.hide();
         final int pct = TextDiff.changePercent(orig, out);
         previewBubble.show(out, pct, new PreviewBubble.Listener() {
-            @Override public void onAccept() { finishTranslation(orig, out); }
+            @Override public void onAccept() { finishTranslation(orig, out, relaxedGuard); }
             @Override public void onCancel() {
                 resetBusy();
                 if (floatBall != null) floatBall.cancelProgress();

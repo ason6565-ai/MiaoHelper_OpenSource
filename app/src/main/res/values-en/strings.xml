@@ -24,6 +24,7 @@
     <string name="menu_experimental">Experimental</string>
     <string name="menu_language">Language</string>
     <string name="lang_chinese">中文</string>
+    <string name="lang_system">Follow system</string>
     <string name="lang_english">English</string>
     <string name="lang_japanese">日本語</string>
     <string name="lang_korean">한국어</string>
@@ -307,6 +308,8 @@ Try another keyword or clear the favorite filter</string>
     <string name="nov_voice_pre"> (voice: </string>
     <string name="nov_voice_suf">)</string>
     <string name="pb_apply">Apply</string>
+    <string name="pb_no_result">(no result)</string>
+    <string name="ms_fallback_local">Degraded to local lexicon, limited effect</string>
     <string name="pb_title">Translation Preview</string>
     <string name="pb_title_chg_fmt">Translation Preview · %1$s%% changed</string>
     <string name="pg_custom">Custom Persona</string>

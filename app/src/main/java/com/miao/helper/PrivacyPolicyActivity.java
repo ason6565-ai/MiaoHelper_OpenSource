@@ -48,7 +48,7 @@ public class PrivacyPolicyActivity extends AppCompatActivity {
 
     private String loadPolicy() {
         // 按界面语言加载：英文界面显示英文隐私政策，其余显示中文
-        String asset = "en".equals(Prefs.language()) ? "privacy_policy_en.txt" : "privacy_policy.txt";
+        String asset = "en".equals(L10n.effectiveTag()) ? "privacy_policy_en.txt" : "privacy_policy.txt";
         StringBuilder sb = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(
                 getAssets().open(asset), StandardCharsets.UTF_8))) {

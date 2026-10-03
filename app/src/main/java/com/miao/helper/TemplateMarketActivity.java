@@ -35,7 +35,7 @@ import java.util.List;
 
 /**
  * 人设模板市场（P1-1-2）：
- *  - 读取 assets/personas/*.json（mar 12 套模板）
+ *  - 读取 assets/personas/*.json（market 12 套模板）
  *  - 列表展示：模板名 + 描述 + 适用场景首条
  *  - 点击进详情：完整描述 + 3 句示例 + 场景
  *  - 「试译预览」：输入测试文本，走 API 翻译（无 Key 时本地兜底提示）
@@ -122,7 +122,7 @@ public class TemplateMarketActivity extends AppCompatActivity {
                 }
             }
             t.examples = exList.toArray(new String[0][]);
-            // 兼容 scenarios 为数组或单个字符串（mar 12 套模板实际为字符串形态，optJSONArray 会返回 null）
+            // 兼容 scenarios 为数组或单个字符串（market 12 套模板实际为字符串形态，optJSONArray 会返回 null）
             JSONArray sc = o.optJSONArray("scenarios");
             List<String> scList = new ArrayList<>();
             if (sc != null) {

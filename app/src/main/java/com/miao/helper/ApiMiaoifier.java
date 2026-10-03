@@ -303,7 +303,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
         totalRequests++;
         final Callback cb = once(raw);
         // v4.8-⑤ 缓存命名空间隔离：T=普通翻译 / S=流式 / CAND=候选池，防跨引擎串缓存
-        String cacheKey = "T|" + Prefs.language() + "|" + resolveModel() + "|" + Prefs.apiTemperature() + "|" + (stylePrompt == null ? "" : stylePrompt) + "|" + text;
+        String cacheKey = "T|" + L10n.effectiveTag() + "|" + resolveModel() + "|" + Prefs.apiTemperature() + "|" + (stylePrompt == null ? "" : stylePrompt) + "|" + text;
         if (!forceRefresh) {
             String cached = CACHE.get(cacheKey);
             if (cached != null) {
@@ -724,16 +724,16 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     }
 
     /**
-     * 目标语言：跟随界面语言（Prefs.language()）。
+     * 目标语言：跟随界面语言（L10n.effectiveTag()）。
      * zh → 简体中文；en → English；ja → 日本語；ko → 한국어。
      * 切换后翻译方向联动：任意输入一律译成当前目标语言。
      */
     public static String targetLang() {
-        String l = Prefs.language();
+        String l = L10n.effectiveTag();
         return "ja".equals(l) || "ko".equals(l) || "en".equals(l) ? l : "zh";
     }
     public static boolean targetIsEn() {
-        return "en".equals(Prefs.language());
+        return "en".equals(L10n.effectiveTag());
     }
     public static boolean targetIsForeign() {
         return !"zh".equals(targetLang());
@@ -1436,28 +1436,40 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 msgs.put(new JSONObject().put("role", "user")
                         .put("content", "【原文】\n" + text + styleRef));
                 body.put("messages", msgs);
-                String reqBody = body.toString();
 
-                for (int attempt = 0; attempt < 2; attempt++) {
+                // 多引擎 failover：彻底替换（改写）同样支持主 API 失效自动切备用引擎；全部失败由调用方本地兜底
+                EngineFailover failover = EngineFailover.start(Prefs.engineChain(key));
+                if (failover.size() == 0) {
+                    cb.onError(Prefs.getContext().getString(R.string.api_key_empty));
+                    return;
+                }
+                while (failover.hasCurrent()) {
+                    final Engine eng = failover.current();
+                    final String engEndpoint = secureBase(eng.baseUrl, "https://api.deepseek.com") + "/chat/completions";
                     try {
-                        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint()).openConnection();
+                        body.put("model", eng.effectiveModel(resolveModel(true)));
+                        body.remove("thinking");
+                        if (eng.baseUrl.contains("deepseek.com")) {
+                            body.put("thinking", new JSONObject().put("type", "disabled"));
+                        }
+                        HttpURLConnection conn = (HttpURLConnection) new URL(engEndpoint).openConnection();
                         conn.setRequestMethod("POST");
                         conn.setRequestProperty("Content-Type", "application/json");
-                        conn.setRequestProperty("Authorization", "Bearer " + key.trim());
+                        conn.setRequestProperty("Authorization", "Bearer " + eng.apiKey.trim());
                         conn.setConnectTimeout(15000);
                         conn.setReadTimeout(25000);
                         conn.setDoOutput(true);
                         try (OutputStream os = conn.getOutputStream()) {
-                            os.write(reqBody.getBytes(StandardCharsets.UTF_8));
+                            os.write(body.toString().getBytes(StandardCharsets.UTF_8));
                         }
                         int code = conn.getResponseCode();
                         if (code != 200) {
                             String errBody = readStream(conn.getErrorStream());
-                            if (attempt == 0 && (code == 429 || code >= 500)) {
-                                try { Thread.sleep(500); } catch (InterruptedException ignored) {}
-                                continue;
+                            AppLog.w("Api", "引擎[" + eng.display() + "] 彻底替换请求失败 code=" + code + " body=" + brief(errBody));
+                            if (EngineFailover.isSwitchableCode(code) && failover.hasBackup()) {
+                                AppLog.w("Api", "引擎[" + eng.display() + "] 彻底替换失败，切换下一备用引擎");
+                                if (failover.advance()) continue;
                             }
-                            AppLog.w("Api", "彻底替换请求失败 code=" + code + " body=" + brief(errBody));
                             cb.onError(describeError(code, errBody));
                             return;
                         }
@@ -1469,20 +1481,21 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                             cb.onError(Prefs.getContext().getString(R.string.err_model_empty));
                             return;
                         }
-                        AppLog.i("Api", "彻底替换成功 耗时=" + (System.currentTimeMillis() - t0) + "ms 结果=" + brief(content));
+                        AppLog.i("Api", "彻底替换成功 引擎=" + eng.display() + " 耗时=" + (System.currentTimeMillis() - t0) + "ms 结果=" + brief(content));
                         cb.onSuccess(content);
                         return;
                     } catch (java.io.IOException io) {
-                        if (attempt == 0) {
-                            AppLog.w("Api", "rework net error, retry in 800ms: " + io);
-                            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
-                            continue;
+                        AppLog.w("Api", "引擎[" + eng.display() + "] 彻底替换网络失败：" + io
+                                + (failover.hasBackup() ? "，切换下一备用引擎" : "，无备用引擎"));
+                        if (EngineFailover.isSwitchableError(io) && failover.hasBackup()) {
+                            if (failover.advance()) continue;
                         }
-                        AppLog.e("Api", "rework retry still failing", io);
+                        AppLog.e("Api", "rework net fail", io);
                         cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
                         return;
                     }
                 }
+                cb.onError(Prefs.getContext().getString(R.string.err_network_timeout));
             } catch (Throwable e) {
                 AppLog.e("Api", "彻底替换请求异常", e);
                 cb.onError(describeException(e instanceof Exception ? (Exception) e : new Exception(e)));
@@ -1621,7 +1634,7 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                 // v4.7 TSD 结构化人设生成（参考 CAT-LLM 显式风格定义，规避"添加无关特征"）：
                 // 强制逐条核验用户特征、未提到的一律不得出现；输出结构化字段而非自由散文。
                 // v5.1 按界面语言生成（zh/en/ja/ko），避免外语界面生成出中文人设
-                String lang = Prefs.language();
+                String lang = L10n.effectiveTag();
                 String system = personaGenSystem(lang);
 
                 JSONObject body = new JSONObject();
@@ -2025,39 +2038,55 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
     private static String[] requestCandidates(final String key, final String system, final String[][] shots,
                                               final String user, final int nWant, final long t0,
                                               final String tag, final String orig, final boolean rework) throws Exception {
-        JSONObject body = new JSONObject();
-        body.put("model", resolveModel());
-        if (Prefs.apiBaseUrl().contains("deepseek.com")) {
-            body.put("thinking", new JSONObject().put("type", "disabled"));
-        }
-        body.put("temperature", rework ? Prefs.tempReplace() : 0.5);
-        body.put("max_tokens", Math.max(2000, nWant * 240));
         JSONArray msgs = new JSONArray();
         msgs.put(new JSONObject().put("role", "system").put("content", system));
         if (shots != null) {
             for (String[] shot : shots) addShot(msgs, shot[0], shot[1]);
         }
         msgs.put(new JSONObject().put("role", "user").put("content", user));
-        body.put("messages", msgs);
-        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint()).openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Authorization", "Bearer " + key.trim());
-        conn.setConnectTimeout(15000);
-        conn.setReadTimeout(30000);
-        conn.setDoOutput(true);
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+        // 多引擎 failover：候选生成（彻底替换/改写）同样支持主 API 失效自动切备用引擎
+        EngineFailover failover = EngineFailover.start(Prefs.engineChain(key));
+        if (failover.size() == 0) {
+            throw new Exception("候选生成失败：无可用引擎（未配置API Key） tag=" + tag);
         }
-        int code = conn.getResponseCode();
-        if (code != 200) {
-            throw new Exception("候选生成失败 code=" + code + " tag=" + tag);
-        }
-        JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
-        String content = resp.getJSONArray("choices").getJSONObject(0)
-                .getJSONObject("message").getString("content").trim();
-        content = stripWrapper(content);
-        content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
+        Exception lastErr = new Exception("候选生成失败：全部引擎均失败 tag=" + tag);
+        while (failover.hasCurrent()) {
+            final Engine eng = failover.current();
+            final String model = eng.effectiveModel(resolveModel());
+            final String engEndpoint = secureBase(eng.baseUrl, "https://api.deepseek.com") + "/chat/completions";
+            JSONObject body = new JSONObject();
+            body.put("model", model);
+            if (eng.baseUrl.contains("deepseek.com")) {
+                body.put("thinking", new JSONObject().put("type", "disabled"));
+            }
+            body.put("temperature", rework ? Prefs.tempReplace() : 0.5);
+            body.put("max_tokens", Math.max(2000, nWant * 240));
+            body.put("messages", msgs);
+            try {
+                HttpURLConnection conn = (HttpURLConnection) new URL(engEndpoint).openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + eng.apiKey.trim());
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(30000);
+                conn.setDoOutput(true);
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                }
+                int code = conn.getResponseCode();
+                if (code != 200) {
+                    lastErr = new Exception("候选生成失败 code=" + code + " tag=" + tag + " 引擎=" + eng.display());
+                    if (EngineFailover.isSwitchableCode(code) && failover.hasBackup()) {
+                        AppLog.w("Api", "引擎[" + eng.display() + "] 候选生成失败 code=" + code + "，切换下一备用引擎");
+                        if (failover.advance()) continue;
+                    }
+                    throw lastErr;
+                }
+                JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
+                String content = resp.getJSONArray("choices").getJSONObject(0)
+                        .getJSONObject("message").getString("content").trim();
+                content = stripWrapper(content);
+                content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
         // 容错解析：AI 返回的 JSON 数组可能未闭合（缺 ]）或混入乱码，先尝试严格解析，失败则宽松提取字符串元素
         java.util.List<String> list = new java.util.ArrayList<>();
         try {
@@ -2095,9 +2124,19 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
             }
         }
         String[] out = list.toArray(new String[0]);
-        AppLog.i("Api", "候选生成[轨" + tag + "] 耗时=" + (System.currentTimeMillis() - t0) + "ms nWant=" + nWant
+        AppLog.i("Api", "候选生成[轨" + tag + "] 引擎=" + eng.display() + " 耗时=" + (System.currentTimeMillis() - t0) + "ms nWant=" + nWant
                 + " got=" + out.length + " 原文=" + brief(orig));
         return out;
+            } catch (java.io.IOException io) {
+                lastErr = new Exception("候选生成失败：网络错误 tag=" + tag + " 引擎=" + eng.display(), io);
+                if (EngineFailover.isSwitchableError(io) && failover.hasBackup()) {
+                    AppLog.w("Api", "引擎[" + eng.display() + "] 候选生成网络失败：" + io + "，切换下一备用引擎");
+                    if (failover.advance()) continue;
+                }
+                throw lastErr;
+            }
+        }
+        throw lastErr;
     }
 
     public interface SelectCallback {
@@ -2153,36 +2192,44 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     final String dim = judgeDim(kk, K);
                     if (!dim.isEmpty()) user.append(dim).append('\n');
                     user.append("\n只输出 JSON：");
-                    JSONObject body = new JSONObject();
-                    body.put("model", resolveModel());
-                    if (Prefs.apiBaseUrl().contains("deepseek.com")) {
-                        body.put("thinking", new JSONObject().put("type", "disabled"));
-                    }
-                    body.put("temperature", 0);
-                    body.put("max_tokens", 260);
                     JSONArray msgs = new JSONArray();
                     msgs.put(new JSONObject().put("role", "system").put("content", sysBase.toString()));
                     msgs.put(new JSONObject().put("role", "user").put("content", user.toString()));
-                    body.put("messages", msgs);
                     long t0 = System.currentTimeMillis();
-                    HttpURLConnection conn = (HttpURLConnection) new URL(endpoint()).openConnection();
-                    conn.setRequestMethod("POST");
-                    conn.setRequestProperty("Content-Type", "application/json");
-                    conn.setRequestProperty("Authorization", "Bearer " + key.trim());
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(30000);   // 长文本+多候选需更长读取时间
-                    conn.setDoOutput(true);
-                    try (OutputStream os = conn.getOutputStream()) {
-                        os.write(body.toString().getBytes(StandardCharsets.UTF_8));
-                    }
-                    int code = conn.getResponseCode();
-                    if (code != 200) {
-                        AppLog.w("Api", "裁判[" + kk + "]请求失败 code=" + code + "，视为弃权");
-                        return;
-                    }
-                    JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
-                    String verdict = resp.getJSONArray("choices").getJSONObject(0)
-                            .getJSONObject("message").getString("content").trim();
+                    // 多引擎 failover：裁判请求同样支持主 API 失效自动切备用引擎
+                    EngineFailover failover = EngineFailover.start(Prefs.engineChain(key));
+                    while (failover.hasCurrent()) {
+                        final Engine eng = failover.current();
+                        final String model = eng.effectiveModel(resolveModel());
+                        final String engEndpoint = secureBase(eng.baseUrl, "https://api.deepseek.com") + "/chat/completions";
+                        JSONObject body = new JSONObject();
+                        body.put("model", model);
+                        if (eng.baseUrl.contains("deepseek.com")) {
+                            body.put("thinking", new JSONObject().put("type", "disabled"));
+                        }
+                        body.put("temperature", 0);
+                        body.put("max_tokens", 260);
+                        body.put("messages", msgs);
+                        try {
+                            HttpURLConnection conn = (HttpURLConnection) new URL(engEndpoint).openConnection();
+                            conn.setRequestMethod("POST");
+                            conn.setRequestProperty("Content-Type", "application/json");
+                            conn.setRequestProperty("Authorization", "Bearer " + eng.apiKey.trim());
+                            conn.setConnectTimeout(10000);
+                            conn.setReadTimeout(30000);   // 长文本+多候选需更长读取时间
+                            conn.setDoOutput(true);
+                            try (OutputStream os = conn.getOutputStream()) {
+                                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                            }
+                            int code = conn.getResponseCode();
+                            if (code != 200) {
+                                AppLog.w("Api", "裁判[" + kk + "]引擎[" + eng.display() + "]请求失败 code=" + code + "，视为弃权");
+                                if (EngineFailover.isSwitchableCode(code) && failover.advance()) continue;
+                                return;
+                            }
+                            JSONObject resp = new JSONObject(readStream(conn.getInputStream()));
+                            String verdict = resp.getJSONArray("choices").getJSONObject(0)
+                                    .getJSONObject("message").getString("content").trim();
                     int lb = verdict.indexOf('{'), rb = verdict.lastIndexOf('}');
                     if (lb >= 0 && rb > lb) {
                         JSONObject j = new JSONObject(verdict.substring(lb, rb + 1));
@@ -2205,6 +2252,13 @@ public static void miaoify(String text, String key, String stylePrompt, Callback
                     }
                     AppLog.i("Api", "AI裁判[" + kk + "] 耗时=" + (System.currentTimeMillis() - t0) + "ms 视角choice=" + choices[kk]
                             + " 置信=" + confs[kk] + " 理由=" + reasons[kk]);
+                            return;
+                        } catch (java.io.IOException io) {
+                            AppLog.w("Api", "裁判[" + kk + "]引擎[" + eng.display() + "]网络失败：" + io + "，视为弃权");
+                            if (EngineFailover.isSwitchableError(io) && failover.advance()) continue;
+                            return;
+                        }
+                    }
                 } catch (Throwable t) {
                     AppLog.w("Api", "裁判[" + kk + "]异常，视为弃权：" + t);
                 } finally {

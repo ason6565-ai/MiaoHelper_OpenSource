@@ -20,6 +20,7 @@
     <string name="menu_experimental">実験機能</string>
     <string name="menu_language">言語</string>
     <string name="lang_chinese">中文</string>
+    <string name="lang_system">システムに従う</string>
     <string name="lang_english">English</string>
     <string name="lang_japanese">日本語</string>
     <string name="lang_korean">한국어</string>
@@ -263,6 +264,8 @@
     <string name="nov_voice_pre">（口調：</string>
     <string name="nov_voice_suf">）</string>
     <string name="pb_apply">採用</string>
+    <string name="pb_no_result">（結果なし）</string>
+    <string name="ms_fallback_local">ローカル辞書に切替、効果は限定的</string>
     <string name="pb_title">訳文プレビュー</string>
     <string name="pb_title_chg_fmt">訳文プレビュー ・ 変更 %1$s%%</string>
     <string name="pg_custom">カスタムペルソナ</string>

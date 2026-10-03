@@ -502,7 +502,7 @@ public class NovelGenActivity extends AppCompatActivity {
 
     private void genCharByAi(String desc) {
         final String fd = desc;
-        String lang = Prefs.language();
+        String lang = L10n.effectiveTag();
         String system;
         String userMsg;
         if ("en".equals(lang)) {

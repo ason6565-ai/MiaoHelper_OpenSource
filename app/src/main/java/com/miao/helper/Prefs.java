@@ -40,8 +40,8 @@ public class Prefs {
     public static boolean realtime()     { return sp().getBoolean("realtime", false); }
     /** 句尾口癖总开关（默认开；关闭后本地引擎不再追加句尾口癖） */
     public static boolean tailEnabled()  { return sp().getBoolean("tailEnabled", true); }
-    /** 界面语言：zh / en（默认 zh） */
-    public static String language()      { return sp().getString("language", "zh"); }
+    /** 界面语言：system / zh / en / ja / ko（默认 system=跟随系统） */
+    public static String language()      { return sp().getString("language", "system"); }
     public static void setLanguage(String v) { sp().edit().putString("language", v).apply(); }
     /** 隐私政策是否已接受（首次启动弹窗确认；接受后不再弹出） */
     public static boolean privacyAccepted() { return sp().getBoolean("privacyAccepted", false); }

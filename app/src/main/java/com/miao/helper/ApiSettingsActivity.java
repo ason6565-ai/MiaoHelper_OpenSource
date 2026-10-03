@@ -106,14 +106,23 @@ public class ApiSettingsActivity extends AppCompatActivity {
                 Prefs.set("apiProvider", pos);
                 if (pos < Prefs.PROVIDERS.length - 1) {
                     final String base = Prefs.PROVIDERS[pos][1];
-                    final String model = Prefs.PROVIDERS[pos][2];
-                    Prefs.set("apiBaseUrl", base);
-                    Prefs.set("apiModel", model);
+                    String model = Prefs.PROVIDERS[pos][2];
+                    // 厂商切换不再无条件覆盖模型：当前模型若是用户自定义（不属于任何厂商预设）则保留，
+                    // 否则（仍为预设）才跟随切到新厂商预设模型，避免用户所选模型被强制重置
+                    String cur = Prefs.apiModel();
+                    boolean preset = false;
+                    for (String[] prov : Prefs.PROVIDERS) {
+                        if (prov[2].equals(cur)) { preset = true; break; }
+                    }
+                    if (!preset && cur != null && !cur.trim().isEmpty()) model = cur.trim();
+                    final String fModel = model;
                     etBaseUrl.clearFocus();
                     etModel.clearFocus();
+                    Prefs.set("apiBaseUrl", base);
+                    Prefs.set("apiModel", fModel);
                     etBaseUrl.post(() -> {
                         etBaseUrl.setText(base);
-                        etModel.setText(model);
+                        etModel.setText(fModel);
                     });
                 }
             }

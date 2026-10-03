@@ -79,7 +79,7 @@ public class PersonaGenActivity extends AppCompatActivity {
                     // 解析生成结果：提取人设名称和人设描述（标记随界面语言 zh/en/ja/ko）
                     String name = "";
                     String prompt = text;
-                    String lang = Prefs.language();
+                    String lang = L10n.effectiveTag();
                     String nameMarker = ApiMiaoifier.personaNameMarker(lang);
                     String descMarker = ApiMiaoifier.personaDescMarker(lang);
                     int nameIdx = text.indexOf("【" + nameMarker + "】");

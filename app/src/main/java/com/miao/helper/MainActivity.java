@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     /** 按界面语言加载隐私政策全文（与 PrivacyPolicyActivity 同一来源） */
     private String loadPrivacyText() {
-        String asset = "en".equals(Prefs.language()) ? "privacy_policy_en.txt" : "privacy_policy.txt";
+        String asset = "en".equals(L10n.effectiveTag()) ? "privacy_policy_en.txt" : "privacy_policy.txt";
         StringBuilder sb = new StringBuilder();
         try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(
                 getAssets().open(asset), java.nio.charset.StandardCharsets.UTF_8))) {
@@ -261,24 +261,27 @@ public class MainActivity extends AppCompatActivity {
             .show();
     }
 
-    /** 语言选择子菜单 */
+    /** 语言选择子菜单：跟随系统 / 简体中文 / English / 日本語 / 한국어 */
     private void showLanguageMenu() {
-        final String[] langs = {getString(R.string.lang_chinese), getString(R.string.lang_english),
-                getString(R.string.lang_japanese), getString(R.string.lang_korean)};
+        final String[] langs = {getString(R.string.lang_system), getString(R.string.lang_chinese),
+                getString(R.string.lang_english), getString(R.string.lang_japanese), getString(R.string.lang_korean)};
         String cur = Prefs.language();
         int checked;
-        if ("ja".equals(cur)) checked = 2;
-        else if ("ko".equals(cur)) checked = 3;
-        else checked = "en".equals(cur) ? 1 : 0;
+        if ("ja".equals(cur)) checked = 3;
+        else if ("ko".equals(cur)) checked = 4;
+        else if ("en".equals(cur)) checked = 2;
+        else if ("zh".equals(cur)) checked = 1;
+        else checked = 0;
         new MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.menu_language))
             .setSingleChoiceItems(langs, checked, (d, which) -> {
                 String tag;
                 switch (which) {
-                    case 1: tag = "en"; break;
-                    case 2: tag = "ja"; break;
-                    case 3: tag = "ko"; break;
-                    default: tag = "zh";
+                    case 0: tag = "system"; break;
+                    case 1: tag = "zh"; break;
+                    case 2: tag = "en"; break;
+                    case 3: tag = "ja"; break;
+                    default: tag = "ko";
                 }
                 applyLanguage(tag);
                 d.dismiss();
@@ -286,11 +289,13 @@ public class MainActivity extends AppCompatActivity {
             .show();
     }
 
-    /** 切换界面语言（zh/en/ja/ko）：AppCompat 官方 API，自动应用并重建当前界面 */
+    /** 切换界面语言（system/zh/en/ja/ko）：system 用空 LocaleList 恢复跟随系统；其余用 AppCompat 官方 API */
     private void applyLanguage(String tag) {
         if (tag.equals(Prefs.language())) return;
         Prefs.setLanguage(tag);
-        androidx.core.os.LocaleListCompat ll = androidx.core.os.LocaleListCompat.forLanguageTags(tag);
+        androidx.core.os.LocaleListCompat ll = "system".equals(tag)
+                ? androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+                : androidx.core.os.LocaleListCompat.forLanguageTags(tag);
         androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(ll);
         // 浮窗是 Service 常驻 View，语言只在创建时固定：切语言后重建，让按钮/菜单文案跟随
         MiaoService s = MiaoService.get();

@@ -884,7 +884,7 @@ public class StyleManager {
 
     /** 按当前界面语言返回对应语言的内置人设数组 */
     private static Style[] uiLanguageBase() {
-        String lang = Prefs.language();
+        String lang = L10n.effectiveTag();
         if ("en".equals(lang)) return PERSONA_EN;
         if ("ja".equals(lang)) return PERSONA_JA;
         if ("ko".equals(lang)) return PERSONA_KO;
@@ -1034,14 +1034,14 @@ public class StyleManager {
 
     /** 按界面语言返回禁止颜文字的指令 */
     private static String noKaomojiDirective() {
-        String lang = Prefs.language();
+        String lang = L10n.effectiveTag();
         if ("en".equals(lang)) return "\n[Extra] No kaomoji, emoji or (^_^)-style symbols. Plain text only.";
         if ("ja".equals(lang)) return "\n【追加】顔文字・絵文字・(^_^) などの記号は禁止。プレーンテキストのみ出力すること。";
         if ("ko".equals(lang)) return "\n【추가】이모티콘·이모지·(^_^) 같은 기호는 금지. 순수 텍스트만 출력할 것.";
         return "\n【额外要求】不要使用任何颜文字、表情符号或 (^_^) 类符号，只输出纯文字。";
     }
 
-    /** 模板市场：把 mar 模板的 core_prompt 组装成完整翻译 prompt（铁律 + 模板风格 + few-shot 骨架） */
+    /** 模板市场：把 market 模板的 core_prompt 组装成完整翻译 prompt（铁律 + 模板风格 + few-shot 骨架） */
     public static String buildTemplatePrompt(String corePrompt, String[][] examples) {
         return buildTemplatePrompt(corePrompt, examples, null);
     }
@@ -1078,7 +1078,7 @@ public class StyleManager {
         Style[] all = allPersonas();
         int i = Math.min(Math.max(idx, 0), all.length - 1);
         String p = personaPrompt(i);
-        String lang = Prefs.language();
+        String lang = L10n.effectiveTag();
         boolean en = "en".equals(lang);
         boolean ja = "ja".equals(lang);
         boolean ko = "ko".equals(lang);
@@ -1278,7 +1278,7 @@ public class StyleManager {
     /** 按指定人设生成 few-shot 示例（试验台对非当前风格做 API 重译时使用） */
     public static String[][] shotsFor(int idx) {
         LocalRule r = personaLocal(idx);
-        String lang = Prefs.language();
+        String lang = L10n.effectiveTag();
         if ("en".equals(lang)) {
             // 英文界面：给英文中性示例，只示范“改写而非对话”，避免把人设拉回中文
             return new String[][]{
